@@ -133,6 +133,7 @@ def create_ticket_jira(ticket, counter, total, grand_counter, grand_total)
   status_name = ticket['status']
   story_rank = ticket['importance']
   story_points = ticket['story_importance']
+  #headers = headers_user_login(reporter_name)
 
   # Prepend the description text with a link to the original assembla ticket on the first line.
   description = "Assembla ticket [##{ticket_number}|#{ENV['ASSEMBLA_URL_TICKETS']}/#{ticket_number}] | "
@@ -211,7 +212,7 @@ def create_ticket_jira(ticket, counter, total, grand_counter, grand_total)
   begin
     response = RestClient::Request.execute(method: :post, url: URL_JIRA_ISSUES, payload: payload.to_json, headers: JIRA_HEADERS)
     # TODO: Investigate why the following does not work, e.g. reporter can create own issues.
-    # response = RestClient::Request.execute(method: :post, url: URL_JIRA_ISSUES, payload: payload.to_json, headers: headers_user_login(reporter_name))
+    #response = RestClient::Request.execute(method: :post, url: URL_JIRA_ISSUES, payload: payload.to_json, headers: headers)
     body = JSON.parse(response.body)
     jira_ticket_id = body['id']
     jira_ticket_key = body['key']

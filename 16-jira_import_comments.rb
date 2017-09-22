@@ -77,15 +77,13 @@ def jira_create_comment(issue_id, user_id, comment, counter)
   result = nil
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/comment"
   user_login = @user_id_to_login[user_id]
-  author_link = user_login ? "[~#{user_login}]" : "unknown (#{user_id})"
-  body = "Author #{author_link} | Created on #{date_time(comment['created_on'])}\n\n#{reformat_markdown(comment['comment'], @list_of_logins, @list_of_images, 'comments')}"
+  headers = headers_user_login(user_login)
+  body = "Assembla | Created on #{date_time(comment['created_on'])}\n\n#{reformat_markdown(comment['comment'], @list_of_logins, @list_of_images, 'comments')}"
   payload = {
     body: body
   }.to_json
   begin
-    response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS)
-    # TODO: Investigate why the following does not work, e.g. reporter can create own comments.
-    # response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers_user_login(user_login))
+    response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
     result = JSON.parse(response.body)
     percentage = ((counter * 100) / @comments_total).round.to_s.rjust(3)
     puts "#{percentage}% [#{counter}|#{@comments_total}] POST #{url} => OK"

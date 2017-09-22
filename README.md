@@ -783,10 +783,9 @@ With such a complicated tool, there will always be some loose ends and/or additi
 * Assembla tickets with tag `bug` should be converted into Jira issue of type `bug`.
 * Automatically create custom fields instead of requiring the user to do this manually (see above).
 * Data directory for Jira should have subdirectory per project `data/jira/:project-name`, e.g. like Assembla: `data/assembla/:space-name`
-* Create new project scrum board automatically using the API instead of requiring the user to create in manually.
+* Create new project scrum board automatically using the API instead of requiring the user to create it manually.
 * Implement ranking
-* Implement extra markdown: ticket number and code snippets.
-* Assign original authors as creators of tickets, comments, attachments on creation (this might not be possible)
+* Assign original authors as creators of tickets, attachments on creation (this might not be possible)
 * Refactor: cleanup code, remove duplication, fix rubocop warnings, and make more object-oriented using classes.
 
 ## References
