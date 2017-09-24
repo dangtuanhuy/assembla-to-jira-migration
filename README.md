@@ -703,8 +703,7 @@ Numbered - Bullet list
 ```
 Wiki links
 [[ticket:NUMBER]]
-[[user:NAME]]
-[[user:NAME|TEXT]]
+#ticket
 ```
 
 ### Reformat (will be reformatted into Jira markdown)
@@ -712,11 +711,13 @@ Wiki links
 ```
 [[image:IMAGE]] => !name(IMAGE)|thumbnail!
 [[image:IMAGE|text]] => !name(IMAGE)|thumbnail!
-@login => [~login]
-@inline code@ => {{inline code}} (monospaced)
+@NAME => [~NAME]
+[[user:NAME]] => [~NAME]
+[[user:NAME|text]] => [~NAME]
+@INLINE_CODE@ => {{INLINE_CODE}} (monospaced)
 [[url:URL|TEXT]] => [TEXT|URL]
 [[url:URL]] => [URL|URL]
-#Assembla-ticket-number => Issue-Key
+<pre><code> code-snippet </code></pre> => {code:java} code-snippet {code}
 ```
 
 ### Code blocks
@@ -758,10 +759,13 @@ end
 where reformat_markdown will do the following global substitutions:
 
 ```
+gsub(/<pre><code>/i,'{code:java}')
+gsub(/<\/code><\/pre>/i,'{code}')
 gsub(/\[\[url:(.*)\|(.*)\]\]/, '[\2|\1]')
 gsub(/\[\[url:(.*)\]\]/, '[\1|\1]')
 gsub(/@([^@]*)@/, '{\1}')
 gsub(/@([a-z.-_]*)/i) { |name| markdown_name(name, list_of_logins) }.
+gsub(/\[\[user:(.*)(\|(.*))?\]\]/i) { |name| markdown_name(name, list_of_logins) }.
 gsub(/\[\[image:(.*)(\|(.*))?\]\]/i) { |image| markdown_image(image, list_of_images, content_type) }
 ```
 
@@ -778,6 +782,7 @@ gsub(/\[\[image:(.*)(\|(.*))?\]\]/i) { |image| markdown_image(image, list_of_ima
 With such a complicated tool, there will always be some loose ends and/or additional work to be done at a later time. Hopefully in the not so distant future, I'll have some time to tackle one or more of the following items:
 
 * Implement Assembla cardwall columns (statuses = blocked, testable, ready for acceptance, in acceptance testing, ready for deploy) in line with the original Assembla workflow.
+* Jira data dumps directory should be `data/jira/project-name` and NOT just `data/jira`.
 * For ticket links across spaces, retain the original external link.
 * Markdown conversion Assembla ticket number `#123` to Jira issue key `ECT-327`.
 * Assembla tickets with tag `bug` should be converted into Jira issue of type `bug`.

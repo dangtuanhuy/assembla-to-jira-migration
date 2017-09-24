@@ -587,7 +587,13 @@ end
 @cache_markdown_names = {}
 
 def markdown_name(name, list_of_logins)
-  name = name[1..-1].sub(/@.*$/, '').strip
+  if name[0] == '@'
+    name = name[1..-1].sub(/@.*$/, '').strip
+  elsif name[0..6] == '[[user:'
+    name = name[7..-3].gsub(/\|.*$/, '').strip
+  else
+   goodbye("markdown_name(name='#{name}') has unknown format")
+  end
   return @cache_markdown_names[name] if @cache_markdown_names[name]
   ok = list_of_logins[name]
   result = ok ? "[~#{name}]" : "@#{name}"
@@ -620,12 +626,14 @@ end
 #
 # [[image:IMAGE]] => !name(IMAGE)|thumbnail!
 # [[image:IMAGE|text]] => !name(IMAGE)|thumbnail!
-# @login => [~login]
-# @inline code@ => {{inline code}} (monospaced)
+# @NAME => [~NAME]
+# [[user:NAME]] => [~NAME]
+# [[user:NAME|text]] => [~NAME]
+# @INLINE_CODE@ => {{INLINE_CODE}} (monospaced)
 # [[url:URL|TEXT]] => [TEXT|URL]
 # [[url:URL]] => [URL|URL]
 # <pre><code> code-snippet </code></pre> => {code:java} code-snippet {code}
-#
+
 def reformat_markdown(content, list_of_logins, list_of_images, content_type)
   return content if content.nil? || content.length.zero?
   lines = content.split("\n")
@@ -638,6 +646,7 @@ def reformat_markdown(content, list_of_logins, list_of_images, content_type)
                 gsub(/\[\[url:(.*)\]\]/i, '[\1|\1]').
                 gsub(/@([^@]*)@( |$)/, '{{\1}}\2').
                 gsub(/@([a-z.-_]*)/i) { |name| markdown_name(name, list_of_logins) }.
+                gsub(/\[\[user:(.*)(\|(.*))?\]\]/i) { |name| markdown_name(name, list_of_logins) }.
                 gsub(/\[\[image:(.*)(\|(.*))?\]\]/i) { |image| markdown_image(image, list_of_images, content_type) }
   end
   markdown.join("\n")
