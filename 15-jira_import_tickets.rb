@@ -57,11 +57,13 @@ end
 puts "Attachments: #{@attachments_jira.length}"
 puts
 
-@jira_issues = []
 @fields_jira = []
 
 @is_not_a_user = []
 @cannot_be_assigned_issues = []
+
+# This is populated as the tickets are created.
+@assembla_number_to_jira_key = {}
 
 def jira_get_field_by_name(name)
   @fields_jira.find{ |field| field['name'] == name }
@@ -120,11 +122,11 @@ def get_issue_type(ticket)
   result
 end
 
-def create_ticket_jira(ticket, counter, total, grand_counter, grand_total)
+def create_ticket_jira(ticket, counter, total)
   project_id = @project['id']
   ticket_id = ticket['id']
   ticket_number = ticket['number']
-  summary = reformat_markdown(ticket['summary'], @list_of_logins, @list_of_images, 'summary')
+  summary = reformat_markdown(ticket['summary'], logins: @list_of_logins, images: @list_of_images, content_type: 'summary', tickets: @assembla_number_to_jira_key)
   created_on = ticket['created_on']
   completed_date = date_format_yyyy_mm_dd(ticket['completed_date'])
   reporter_name = @user_id_to_login[ticket['reporter_id']]
@@ -144,7 +146,7 @@ def create_ticket_jira(ticket, counter, total, grand_counter, grand_total)
                 end
   description += "Author #{author_name} | "
   description += "Created on #{date_time(created_on)}\n\n"
-  description += "#{reformat_markdown(ticket['description'], @list_of_logins, @list_of_images, 'description')}"
+  description += "#{reformat_markdown(ticket['description'], logins: @list_of_logins, images: @list_of_images, content_type: 'description', tickets: @assembla_number_to_jira_key)}"
 
   labels = get_labels(ticket)
 
@@ -269,10 +271,12 @@ def create_ticket_jira(ticket, counter, total, grand_counter, grand_total)
   end
 
   dump_payload = ok ? '' : ' ' + payload.inspect.sub(/:description=>"[^"]+",/,':description=>"...",')
-  percentage = ((grand_counter * 100) / grand_total).round.to_s.rjust(3)
-  puts "#{percentage}% [#{counter}|#{total}|#{grand_counter}|#{grand_total} #{issue_type[:name].upcase}] POST #{URL_JIRA_ISSUES} #{ticket_number}#{dump_payload} => #{ok ? '' : 'N'}OK (#{message}) retries = #{retries}"
+  percentage = ((counter * 100) / total).round.to_s.rjust(3)
+  puts "#{percentage}% [#{counter}|#{total}|#{issue_type[:name].upcase}] POST #{URL_JIRA_ISSUES} #{ticket_number}#{dump_payload} => #{ok ? '' : 'N'}OK (#{message}) retries = #{retries}"
 
-  @jira_issues << {
+  @assembla_number_to_jira_key[ticket_number] = jira_ticket_key if ok
+
+  return {
       result: (ok ? 'OK' : 'NOK'),
       retries: retries,
       message: (ok ? '' : message.gsub(' | ', "\n\n")),
@@ -461,67 +465,17 @@ end
 
 # --- Import all Assembla tickets into Jira --- #
 
-sanity_check_totals = {}
-tickets_seen = {}
+@total_tickets = @tickets_assembla.length
 
-grand_total = @tickets_assembla.length
-puts "\nTotal tickets: #{grand_total}"
-[true, false].each do |sanity_check|
-  duplicate_tickets = []
-  imported_tickets = []
-  grand_counter = 0
-  @issue_types.each do |issue_type|
-    @tickets = @tickets_assembla.select { |ticket| get_issue_type(ticket)[:name] == issue_type }
-    total = @tickets.length
-    @tickets.each_with_index do |ticket, index|
-      ticket_number = ticket['number']
-      tickets_seen[ticket_number] = true if sanity_check
-      if imported_tickets.include?(ticket_number)
-        if sanity_check
-          duplicate_tickets << ticket_number
-        else
-          puts "SKIP create_ticket_jira(#{ticket_number}, #{index + 1}, #{total}, #{grand_counter}, #{grand_total})"
-        end
-      else
-        imported_tickets << ticket_number
-        grand_counter += 1
-        unless sanity_check
-          create_ticket_jira(ticket, index + 1, total, grand_counter, grand_total)
-        end
-      end
-    end
-    if sanity_check
-      sanity_check_totals[issue_type] = total
-    else
-      puts "Total #{issue_type}: #{total}"
-      tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets-#{issue_type}.csv"
-      write_csv_file(tickets_jira_csv, @jira_issues.select{ |issue| issue[:issue_type_name] == issue_type})
-    end
-  end
-  if sanity_check
-    puts "\nSanity check:"
-    sanity_total = 0
-    sanity_check_totals.keys.each do |k|
-      total = sanity_check_totals[k]
-      puts "Total #{k}: #{total}"
-      sanity_total += total
-    end
-    if sanity_total == grand_total
-      puts "Total all: #{grand_total}"
-    else
-      goodbye("Missing tickets: #{grand_total - sanity_total}")
-    end
-    if duplicate_tickets.length.positive?
-      goodbye("Duplicated ticket_number=[#{duplicate_tickets.join(',')}]")
-    end
-    tickets_missed = @tickets_assembla.select { |ticket| tickets_seen[ticket['number']].nil? }
-    if tickets_missed.length.positive?
-      goodbye("Missed tickets: #{tickets_missed.length}")
-    end
-    puts "Sanity check => OK\n\n"
-  else
-    puts "Total all: #{grand_total}"
-    tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets-all.csv"
-    write_csv_file(tickets_jira_csv, @jira_issues)
-  end
+# IMPORTANT: Make sure that the tickets are ordered chronologically from first (oldest) to last (newest)
+@tickets_assembla.sort! { |x, y| x['created_on'] <=> y['created_on'] }
+
+@jira_issues = []
+
+@tickets_assembla.each_with_index do |ticket, index|
+  @jira_issues << create_ticket_jira(ticket, index + 1, @total_tickets)
 end
+
+puts "Total tickets: #{@total_ticket}"
+tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
+write_csv_file(tickets_jira_csv, @jira_issues)

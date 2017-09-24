@@ -10,7 +10,7 @@ dirname_assembla = get_output_dirname(space, 'assembla')
 
 # Jira issue link types and tickets
 issuelink_types_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-issuelink-types.csv"
-tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets-all.csv"
+tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @issuelink_types_jira = csv_to_array(issuelink_types_jira_csv)
 @tickets_jira = csv_to_array(tickets_jira_csv)
 

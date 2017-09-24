@@ -79,7 +79,7 @@ puts "Sanity check => OK"
 # Jira tickets
 resolutions_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-resolutions.csv"
 statuses_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-statuses.csv"
-tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets-all.csv"
+tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 
 @resolutions_jira = csv_to_array(resolutions_jira_csv)
 @statuses_jira = csv_to_array(statuses_jira_csv)

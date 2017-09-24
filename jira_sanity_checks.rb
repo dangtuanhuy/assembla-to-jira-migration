@@ -22,7 +22,7 @@ attachments_assembla_csv = "#{dirname_assembla}/ticket-attachments.csv"
 @attachments_assembla = csv_to_array(attachments_assembla_csv)
 
 # Jira tickets
-tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets-all.csv"
+tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @tickets_jira = csv_to_array(tickets_jira_csv)
 
 # Convert assembla_ticket_id to jira_ticket
@@ -84,7 +84,7 @@ puts 'Assembla tickets unique => OK'
 
 # JIRA csv files: jira_ticket_id, jira_ticket_key, assembla_ticket_id, assembla_ticket_number, issue_type_id and issue_type_name
 
-tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets-all.csv"
+tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @tickets_jira = csv_to_array(tickets_jira_csv)
 
 @tickets_jira.each_with_index do |ticket_jira, index|

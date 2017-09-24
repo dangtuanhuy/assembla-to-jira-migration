@@ -35,15 +35,15 @@ puts "Empty comments: #{@comments_assembla_empty.length}"
 puts "Remaining comments: #{@comments_assembla.length}"
 
 # Jira tickets
-tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets-all.csv"
+tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @tickets_jira = csv_to_array(tickets_jira_csv)
 
-# Convert assembla_ticket_id to jira_ticket
-@assembla_id_to_jira = {}
+# Convert assembla_ticket_id to jira_ticket_id and assembla_ticket_number to jira_ticket_key
+@assembla_id_to_jira_id = {}
+@assembla_number_to_jira_key = {}
 @tickets_jira.each do |ticket|
-  jira_id = ticket['jira_ticket_id']
-  assembla_id = ticket['assembla_ticket_id']
-  @assembla_id_to_jira[assembla_id] = jira_id
+  @assembla_id_to_jira_id[ticket['assembla_ticket_id']] = ticket['jira_ticket_id']
+  @assembla_number_to_jira_key[ticket['assembla_ticket_number']] = ticket['jira_ticket_key']
 end
 
 # Jira attachments (images)
@@ -65,7 +65,7 @@ if tickets_created_on
   puts "Filter newer than: #{tickets_created_on}"
   comments_initial = @comments_assembla.length
   # Only want comments which belong to remaining tickets
-  @comments_assembla.select! { |item| @assembla_id_to_jira[item['ticket_id']] }
+  @comments_assembla.select! { |item| @assembla_id_to_jira_id[item['ticket_id']] }
   puts "Comments: #{comments_initial} => #{@comments_assembla.length} ∆#{comments_initial - @comments_assembla.length}"
 end
 puts "Tickets: #{@tickets_jira.length}"
@@ -78,7 +78,7 @@ def jira_create_comment(issue_id, user_id, comment, counter)
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/comment"
   user_login = @user_id_to_login[user_id]
   headers = headers_user_login(user_login)
-  body = "Assembla | Created on #{date_time(comment['created_on'])}\n\n#{reformat_markdown(comment['comment'], @list_of_logins, @list_of_images, 'comments')}"
+  body = "Assembla | Created on #{date_time(comment['created_on'])}\n\n#{reformat_markdown(comment['comment'], logins: @list_of_logins, images: @list_of_images, content_type: 'comments', strikethru: true)}"
   payload = {
     body: body
   }.to_json
@@ -105,9 +105,9 @@ end
   id = comment['id']
   ticket_id = comment['ticket_id']
   user_id = comment['user_id']
-  issue_id = @assembla_id_to_jira[ticket_id]
+  issue_id = @assembla_id_to_jira_id[ticket_id]
   user_login = @user_id_to_login[user_id],
-  comment['comment'] = reformat_markdown(comment['comment'], @list_of_logins, @list_of_images, 'comments')
+  comment['comment'] = reformat_markdown(comment['comment'], logins: @list_of_logins, images: @list_of_images,  tickets: @assembla_number_to_jira_key, content_type: 'comments', strikethru: true)
   result = jira_create_comment(issue_id, user_id, comment, index + 1)
   next unless result
   comment_id = result['id']

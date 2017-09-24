@@ -22,7 +22,7 @@ puts
 
 # --- Jira --- #
 jira_projects_csv = "#{OUTPUT_DIR_JIRA}/jira-projects.csv"
-jira_tickets_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets-all.csv"
+jira_tickets_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 
 @projects_jira = csv_to_array(jira_projects_csv)
 @tickets_jira = csv_to_array(jira_tickets_csv)

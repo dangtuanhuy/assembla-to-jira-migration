@@ -402,6 +402,24 @@ def jira_get_statuses
   result
 end
 
+def jira_get_issue(issue_id)
+  result = nil
+  url = "#{URL_JIRA_ISSUES}/#{issue_id}"
+  begin
+    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS)
+    result = JSON.parse(response.body)
+    if result
+      result.delete_if { |k, _| k =~ /self|expand/i }
+      puts "GET #{url} => OK"
+    end
+  rescue RestClient::ExceptionWithResponse => e
+    rest_client_exception(e, 'GET', url)
+  rescue => e
+    puts "GET #{url} => NOK (#{e.message})"
+  end
+  result
+end
+
 def jira_get_issue_types
   result = nil
   begin
@@ -555,38 +573,15 @@ def warning(message)
   puts "\nWARNING: #{message}"
 end
 
-# Take original Assembla markdown and reformat it to the relevant Jira markdown.
+
+# Markdown conversion
 #
-# h1. TITLE => same
-# h2. TITLE => same
-# *bold* => same
-# _italic_ => same
-# @inline code@ => {{inline code}} (monospaced)
+# See: https://github.com/kgish/assembla-to-jira/blob/develop/README.md#markdown
 #
-# Bullet list => same
-# Numbered list => same
-# Numbered - Bullet list => same?
-#
-# [[image:IMAGE]] => !name(IMAGE)|thumbnail!
-# [[image:IMAGE|text]] => !name(IMAGE)|thumbnail!
-#
-# [[url:URL|TEXT]] => [TEXT|URL]
-# [[url:URL]] => [URL|URL]
-#
-# @login => [~login]
-#
-# Code snippet => ignore
-#
-# Wiki links => ignore
-#
-# [[ticket:NUMBER]] => ignore
-#
-# [[user:NAME]] => ignore
-# [[user:NAME|TEXT]] => ignore
 
 @cache_markdown_names = {}
 
-def markdown_name(name, list_of_logins)
+def markdown_name(name, logins)
   if name[0] == '@'
     name = name[1..-1].sub(/@.*$/, '').strip
   elsif name[0..6] == '[[user:'
@@ -595,10 +590,29 @@ def markdown_name(name, list_of_logins)
    goodbye("markdown_name(name='#{name}') has unknown format")
   end
   return @cache_markdown_names[name] if @cache_markdown_names[name]
-  ok = list_of_logins[name]
+  ok = logins[name]
   result = ok ? "[~#{name}]" : "@#{name}"
   puts "Reformat markdown name='#{name}' => #{ok ? '' : 'N'}OK" unless ok
   @cache_markdown_names[name] = result
+end
+
+@cache_markdown_tickets = {}
+
+def markdown_ticket(ticket, tickets, strikethru = false)
+  return ticket unless ticket[0] == '#'
+  ticket_number = ticket[1..-1]
+  return @cache_markdown_tickets[ticket_number] if @cache_markdown_tickets[ticket_number]
+  key = tickets[ticket_number]
+  if key
+    result = key
+  else
+    result = "##{ticket_number}"
+    if strikethru
+      result = "-#{result}-"
+    end
+    puts "Reformat markdown ticket='#{ticket_number}' => Cannot find"
+  end
+  @cache_markdown_tickets[ticket_number] = result
 end
 
 @content_types_thumbnail = {}
@@ -609,9 +623,9 @@ JIRA_API_IMAGES_THUMBNAIL.split(',').each do |item|
   # puts "@content_types_thumbnail['#{content_type}'] = #{@content_types_thumbnail[content_type]}"
 end
 
-def markdown_image(image, list_of_images, content_type)
+def markdown_image(image, images, content_type)
   _, id, text = image[2...-2].split(/:|\|/)
-  name = list_of_images[id]
+  name = images[id]
   if name
     result = "!#{name}#{@content_types_thumbnail[content_type] ? '|thumbnail' : ''}!"
   else
@@ -621,33 +635,26 @@ def markdown_image(image, list_of_images, content_type)
   result
 end
 
-#
-# Reformat Assembla markdown to Jira markdown
-#
-# [[image:IMAGE]] => !name(IMAGE)|thumbnail!
-# [[image:IMAGE|text]] => !name(IMAGE)|thumbnail!
-# @NAME => [~NAME]
-# [[user:NAME]] => [~NAME]
-# [[user:NAME|text]] => [~NAME]
-# @INLINE_CODE@ => {{INLINE_CODE}} (monospaced)
-# [[url:URL|TEXT]] => [TEXT|URL]
-# [[url:URL]] => [URL|URL]
-# <pre><code> code-snippet </code></pre> => {code:java} code-snippet {code}
-
-def reformat_markdown(content, list_of_logins, list_of_images, content_type)
+def reformat_markdown(content, opts = {})
+  logins = opts[:logins]
+  images = opts[:images]
+  content_type = opts[:content_type]
+  tickets = opts[:tickets]
+  strikethru = opts[:strikethru]
   return content if content.nil? || content.length.zero?
   lines = content.split("\n")
   markdown = []
   lines.each do |line|
+    line.gsub!(/#(\d+)/) { |ticket| markdown_ticket(ticket, tickets, strikethru) } if tickets
     markdown << line.
                 gsub(/<pre><code>/i,'{code:java}').
                 gsub(/<\/code><\/pre>/i,'{code}').
                 gsub(/\[\[url:(.*)\|(.*)\]\]/i, '[\2|\1]').
                 gsub(/\[\[url:(.*)\]\]/i, '[\1|\1]').
                 gsub(/@([^@]*)@( |$)/, '{{\1}}\2').
-                gsub(/@([a-z.-_]*)/i) { |name| markdown_name(name, list_of_logins) }.
-                gsub(/\[\[user:(.*)(\|(.*))?\]\]/i) { |name| markdown_name(name, list_of_logins) }.
-                gsub(/\[\[image:(.*)(\|(.*))?\]\]/i) { |image| markdown_image(image, list_of_images, content_type) }
+                gsub(/@([a-z.-_]*)/i) { |name| markdown_name(name, logins) }.
+                gsub(/\[\[user:(.*)(\|(.*))?\]\]/i) { |name| markdown_name(name, logins) }.
+                gsub(/\[\[image:(.*)(\|(.*))?\]\]/i) { |image| markdown_image(image, images, content_type) }
   end
   markdown.join("\n")
 end

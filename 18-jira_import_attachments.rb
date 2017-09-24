@@ -3,7 +3,7 @@
 load './lib/common.rb'
 
 # Jira tickets
-tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets-all.csv"
+tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @tickets_jira = csv_to_array(tickets_jira_csv)
 
 @assembla_id_to_jira = {}
@@ -20,6 +20,9 @@ puts "Total attachments: #{@attachments_total}"
 
 attachments_dirname = "#{OUTPUT_DIR_JIRA}/attachments"
 FileUtils.mkdir_p(attachments_dirname) unless File.directory?(attachments_dirname)
+
+# IMPORTANT: Make sure that the downloads are ordered chronologically from first (oldest) to last (newest)
+@downloaded_attachments.sort! { |x, y| x['created_at'] <=> y['created_at'] }
 
 @jira_attachments = []
 

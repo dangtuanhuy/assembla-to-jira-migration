@@ -32,7 +32,7 @@ end
 puts "\nTotal Assembla tickets: #{@total_assembla_tickets}"
 
 # Jira tickets
-tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets-all.csv"
+tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @tickets_jira = csv_to_array(tickets_jira_csv)
 
 # Convert assembla_ticket_id to jira_ticket
