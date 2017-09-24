@@ -23,8 +23,6 @@ FileUtils.mkdir_p(attachments_dirname) unless File.directory?(attachments_dirnam
 
 @jira_attachments = []
 
-@headers = { 'Authorization': "Basic #{Base64.encode64(JIRA_API_ADMIN_USER + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])}", 'X-Atlassian-Token': 'no-check' }
-
 # created_at,assembla_attachment_id,assembla_ticket_id,filename,content_type
 @downloaded_attachments.each_with_index do |attachment, index|
   assembla_attachment_id = attachment['assembla_attachment_id']
@@ -34,13 +32,15 @@ FileUtils.mkdir_p(attachments_dirname) unless File.directory?(attachments_dirnam
   filepath = "#{attachments_dirname}/#{filename}"
   content_type = attachment['content_type']
   created_at = attachment['created_at']
+  created_by = attachment['created_by']
   url = "#{URL_JIRA_ISSUES}/#{jira_ticket_id}/attachments"
   counter = index + 1
   percentage = ((counter * 100) / @attachments_total).round.to_s.rjust(3)
   puts "#{percentage}% [#{counter}|#{@attachments_total}] POST #{url} '#{filename}' (#{content_type}) => OK"
   payload = { mulitpart: true, file: File.new(filepath, 'rb') }
+  headers = { 'Authorization': "Basic #{Base64.encode64(created_by + ':' + created_by)}", 'X-Atlassian-Token': 'no-check' }
   begin
-    response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: @headers)
+    response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
     result = JSON.parse(response.body)
     jira_attachment_id = result[0]['id']
     @jira_attachments << {

@@ -9,8 +9,10 @@ space = get_space(SPACE_NAME)
 dirname_assembla = get_output_dirname(space, 'assembla')
 
 # Assembla attachments
+users_assembla_csv = "#{dirname_assembla}/users.csv"
 tickets_assembla_csv = "#{dirname_assembla}/tickets.csv"
 attachments_assembla_csv = "#{dirname_assembla}/ticket-attachments.csv"
+@users_assembla = csv_to_array(users_assembla_csv)
 @tickets_assembla = csv_to_array(tickets_assembla_csv)
 @attachments_assembla = csv_to_array(attachments_assembla_csv)
 
@@ -18,6 +20,11 @@ total_attachments = @attachments_assembla.length
 puts "Total attachments: #{total_attachments}"
 
 @jira_attachments = []
+
+@assembla_id_to_login = {}
+@users_assembla.each do |user|
+  @assembla_id_to_login[user['id']] = user['login']
+end
 
 # --- Filter by date if TICKET_CREATED_ON is defined --- #
 tickets_created_on = get_tickets_created_on
@@ -52,6 +59,7 @@ FileUtils.mkdir_p(attachments_dirname) unless File.directory?(attachments_dirnam
   url = attachment['url']
   id = attachment['id']
   created_at = attachment['created_at']
+  created_by = @assembla_id_to_login[attachment['created_by']]
   assembla_ticket_id = attachment['ticket_id']
   content_type = attachment['content_type']
   counter = index + 1
@@ -81,6 +89,7 @@ FileUtils.mkdir_p(attachments_dirname) unless File.directory?(attachments_dirnam
     IO.binwrite(filepath, content)
     @jira_attachments << {
       created_at: created_at,
+      created_by: created_by,
       assembla_attachment_id: id,
       assembla_ticket_id: assembla_ticket_id,
       filename: filename,
