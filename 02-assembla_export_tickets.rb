@@ -58,7 +58,6 @@ dirname_assembla = get_output_dirname(space, 'assembla')
 tickets_assembla_csv = "#{dirname_assembla}/tickets.csv"
 tickets = csv_to_array(tickets_assembla_csv)
 
-# @total_tickets = @debug && tickets.length > 100 ? 100 : tickets.length
 @total_tickets = tickets.length
 
 puts "Total tickets: #{@total_tickets}"

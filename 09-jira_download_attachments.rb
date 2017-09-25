@@ -2,16 +2,11 @@
 
 load './lib/common.rb'
 
-SPACE_NAME = ENV['JIRA_API_PROJECT_NAME']
-JIRA_PROJECT_NAME = SPACE_NAME + (@debug ? ' TEST' : '')
-
-space = get_space(SPACE_NAME)
-dirname_assembla = get_output_dirname(space, 'assembla')
-
 # Assembla attachments
-users_assembla_csv = "#{dirname_assembla}/users.csv"
-tickets_assembla_csv = "#{dirname_assembla}/tickets.csv"
-attachments_assembla_csv = "#{dirname_assembla}/ticket-attachments.csv"
+users_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/users.csv"
+tickets_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
+attachments_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-attachments.csv"
+
 @users_assembla = csv_to_array(users_assembla_csv)
 @tickets_assembla = csv_to_array(tickets_assembla_csv)
 @attachments_assembla = csv_to_array(attachments_assembla_csv)

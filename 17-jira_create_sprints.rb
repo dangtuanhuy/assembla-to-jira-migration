@@ -2,19 +2,15 @@
 
 load './lib/common.rb'
 
-SPACE_NAME = ENV['JIRA_API_PROJECT_NAME']
-JIRA_PROJECT_NAME = SPACE_NAME + (@debug ? ' TEST' : '')
-
 MILESTONE_PLANNER_TYPES = %w(none backlog current unknown)
 
-space = get_space(SPACE_NAME)
-dirname = get_output_dirname(space, 'assembla')
-
-assembla_milestones_csv = "#{dirname}/milestones.csv"
+# --- Assembla --- #
+assembla_milestones_csv = "#{OUTPUT_DIR_ASSEMBLA}/milestones.csv"
 @milestones_assembla = csv_to_array(assembla_milestones_csv)
 
 puts "\nTotal milestones: #{@milestones_assembla.length}"
 
+# --- Jira --- #
 jira_projects_csv = "#{OUTPUT_DIR_JIRA}/jira-projects.csv"
 jira_tickets_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 
@@ -142,10 +138,10 @@ def jira_update_sprint_state(sprint, state)
   result
 end
 
-project = @projects_jira.detect { |p| p['name'] == JIRA_PROJECT_NAME }
-goodbye("Cannot find project with name='#{JIRA_PROJECT_NAME}'") unless project
+project = @projects_jira.detect { |p| p['name'] == JIRA_API_PROJECT_NAME }
+goodbye("Cannot find project with name='#{JIRA_API_PROJECT_NAME}'") unless project
 
-@board = jira_get_board_by_project_name(JIRA_PROJECT_NAME)
+@board = jira_get_board_by_project_name(JIRA_API_PROJECT_NAME)
 
 @jira_sprints = []
 

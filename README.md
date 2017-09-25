@@ -51,7 +51,7 @@ Each step will generate a log of the results in the form of a csv file for refer
 
 ### Assembla export
 
-1. Space (space_tools, users, user roles, tags, milestones, ticket statuses, ticket custom fields, documents, wiki pages and tickets)
+1. Space (spaces, space_tools, users, user roles, tags, milestones, ticket statuses, ticket custom fields, documents, wiki pages and tickets)
 2. Tickets (comments, attachments, tags, associatations)
 3. Report users
 4. Report tickets
@@ -60,26 +60,21 @@ Each step will generate a log of the results in the form of a csv file for refer
 
 5. Create project (and board)
 6. Create issue link types
-7. Get issue types
-8. Get issue priorities
-9. Get issue resolutions
-10. Get user roles
-11. Get issue statuses
-12. Get projects
-13. Import users
-14. Download ticket attachments
-15. Import tickets
-16. Update ticket links
-17. Import ticket comments
-18. Import ticket attachments
-19. Update ticket status (resolutions)
-20. Update ticket associations
-21. Update ticket watchers
+7. Get settings (issue types, priorities, resolutions, roles, statuses and projects)
+8. Import users
+9. Download ticket attachments
+10. Import tickets
+11. Update ticket links
+12. Import ticket comments
+13. Import ticket attachments
+14. Update ticket status (resolutions)
+15. Update ticket associations
+16. Update ticket watchers
 
 ### Scrum/Kanban board
 
-22. Create sprints
-23. Update board
+17. Create sprints
+18. Update board
 
 ## Preparations
 
@@ -201,7 +196,7 @@ $ cp .env.example .env
 
 You can run the export in a number of stages, output files being generated at each point in the process.
 
-The output files are located in the directory `data/assembla/:space/:project` as follows:
+The output files are located in the directory `data/assembla/:space/` as follows:
 
 ```
 $ ruby 01-assembla_export_space.rb # => space_tools.csv, users.csv, user_roles.csv tags.csv \
@@ -268,7 +263,7 @@ POST /rest/api/2/issueLinkType
 Execute the followng command:
 
 ```
-$ ruby 07-jira_create_issuelink_types.rb # => data/jira/jira-issuelink-types.csv
+$ ruby 06-jira_create_issuelink_types.rb # => data/jira/jira-issuelink-types.csv
 ```
 
 ### Get general information
@@ -282,13 +277,17 @@ GET /rest/api/2/{issuetype|priority|resolution|role|status|project}
 Execute the following commands:
 
 ```
-$ ruby 07-jira_get_issue_types.rb # => data/jira/jira-issue-types.csv
-$ ruby 08-jira_get_priorities.rb  # => data/jira/jira-priorities.csv
-$ ruby 09-jira_get_resolutions.rb # => data/jira/jira-resolutions.csv
-$ ruby 10-jira_get_roles.rb       # => data/jira/jira-roles.csv
-$ ruby 11-jira_get_statuses.rb    # => data/jira/jira-statuses.csv
-$ ruby 12-jira_get_projects.rb    # => data/jira/jira-projects.csv
+$ ruby 07-jira_get_info.rb # => data/jira/jira-issue-types.csv
 ```
+
+which will generate the following output file in the `data/jira` directory:
+
+* jira-issue-types.csv
+* jira-priorities.csv
+* jira-resolutions.csv
+* jira-roles.csv
+* jira-statuses.csv
+* jira-projects.csv
 
 ### Import users
 
@@ -305,7 +304,7 @@ POST /rest/api/2/user
 Read in the Assembla user file `data/:space/:project/users.csv` and create the Jira users if they do not already exist.
 
 ```
-$ ruby 13-jira_import_users.rb # => data/jira/jira-users.csv
+$ ruby 08-jira_import_users.rb # => data/jira/jira-users.csv
 ```
 
 The following user:
@@ -321,7 +320,7 @@ Before the attachments can be imported, they must first be downloaded to a local
 This is accomplished by executing the following command:
 
 ```
-$ ruby 14-jira_download_attachments.rb # => data/jira/jira-attachments-download.csv
+$ ruby 09-jira_download_attachments.rb # => data/jira/jira-attachments-download.csv
 ```
 
 The downloaded attachments are placed in the `data/jira/attachments` directory with the same filename, and the meta information is logged to the file `data/jira/jira-attachments-download.csv` containing the following columns:
@@ -370,7 +369,7 @@ POST /rest/api/2/issue
 Now you are ready to import all of the tickets. Execute the following command:
 
 ```
-$ ruby 15-jira_import_tickets.rb # => data/jira/jira-tickets.csv
+$ ruby 10-jira_import_tickets.rb # => data/jira/jira-tickets.csv
 ```
 
 Results are saved in the output file `data/jira/jira-tickets.csv` with the following columns:
@@ -392,7 +391,7 @@ The output file `data/jira/jira-ticket-links.csv` generated in the previous step
 Run the following command in order to do this:
 
 ```
-$ ruby 16-jira_update_ticket_links.rb
+$ ruby 11-jira_update_ticket_links.rb
 ```
 
 Note: for one reason or another, not all Assembla links point to valid tickets (deleted, moved or whatever), so these will be marked as invalid by strikethru, e.g. -#123-.
@@ -409,7 +408,7 @@ POST /rest/api/2/issue/{issueIdOrKey}/comment
 Now you are ready to import all of the comments. Execute the following command:
 
 ```
-$ ruby 17-jira_import_comments.rb # => data/jira/jira-comments.csv
+$ ruby 12-jira_import_comments.rb # => data/jira/jira-comments.csv
 ```
 
 Results are saved in the output file `data/jira/jira-comments.csv` with the following columns:
@@ -425,7 +424,7 @@ jira_comment_id|jira_ticket_id|assembla_comment_id|assembla_ticket_id|user_login
 Now you are ready to import all of the attachments that were downloaded earlier. Execute the following command:
 
 ```
-$ ruby 18-jira_import_attachments.rb # => data/jira/jira-attachments-import.csv
+$ ruby 13-jira_import_attachments.rb # => data/jira/jira-attachments-import.csv
 ```
 
 ### Update ticket status
@@ -433,7 +432,7 @@ $ ruby 18-jira_import_attachments.rb # => data/jira/jira-attachments-import.csv
 Now you are ready to update the Jira tickets in line with the original Assembla state. Execute the following command:
 
 ```
-$ ruby 19-jira_update_status.rb # => data/jira/jira-update-status.csv
+$ ruby 14-jira_update_status.rb # => data/jira/jira-update-status.csv
 ```
 
 ### Update ticket associations
@@ -499,7 +498,7 @@ If for some reason you do not want to do this, simply comment out the line, or i
 Now you are ready to update the Jira tickets to reflect the original Assembla associations. Execute the following command:
 
 ```
-$ ruby 20-jira_update_association.rb # => data/jira/jira-update-associations.csv
+$ ruby 15-jira_update_association.rb # => data/jira/jira-update-associations.csv
 ```
 
 ### Update ticket watchers
@@ -512,7 +511,7 @@ POST /rest/api/2/issue/{issueIdOrKey}/watchers
 Now you are ready to convert the Assembla followers list to the Jira issue watchers list. Execute the following command:
 
 ```
-$ ruby 21-jira_update_watchers.rb # => data/jira/jira-update-watchers.csv
+$ ruby 16-jira_update_watchers.rb # => data/jira/jira-update-watchers.csv
 ```
 
 ## Scrum Board
@@ -534,7 +533,7 @@ When the scrum board was created with the project, all issues are assigned to th
 Now you are ready to setup the sprints by executing the following command:
 
 ```
-$ ruby 22-jira_create_sprints.rb # => data/jira/jira-create-sprints.csv
+$ ruby 17-jira_create_sprints.rb # => data/jira/jira-create-sprints.csv
 ```
 
 The issues are redistibuted to the sprints they belong to and the most recent sprint is set as the `active` sprint.
@@ -546,7 +545,7 @@ The final step after the board and sprints have been created is to copy the Asse
 In order to achieve this, execute the following command:
 
 ```
-$ ruby 23-jira_update_board.rb # => data/jira/jira-update-board.csv
+$ ruby 18-jira_update_board.rb # => data/jira/jira-update-board.csv
 ```
 
 ### Create statuses

@@ -2,21 +2,15 @@
 
 load './lib/common.rb'
 
-SPACE_NAME = ENV['JIRA_API_PROJECT_NAME']
-JIRA_PROJECT_NAME = SPACE_NAME + (@debug ? ' TEST' : '')
-
 MAX_RETRY = 3
 
 # --- ASSEMBLA Tickets --- #
 
-space = get_space(SPACE_NAME)
-dirname_assembla = get_output_dirname(space, 'assembla')
-
-tickets_assembla_csv = "#{dirname_assembla}/tickets.csv"
-users_assembla_csv = "#{dirname_assembla}/users.csv"
-milestones_assembla_csv = "#{dirname_assembla}/milestones.csv"
-tags_assembla_csv = "#{dirname_assembla}/ticket-tags.csv"
-associations_assembla_csv = "#{dirname_assembla}/ticket-associations.csv"
+tickets_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
+users_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/users.csv"
+milestones_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/milestones.csv"
+tags_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-tags.csv"
+associations_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-associations.csv"
 
 @tickets_assembla = csv_to_array(tickets_assembla_csv)
 @users_assembla = csv_to_array(users_assembla_csv)
@@ -314,15 +308,15 @@ def create_ticket_jira(ticket, counter, total)
 end
 
 # Ensure that the project exists, otherwise try and create it and if that fails ask the user to create it first.
-@project = jira_get_project_by_name(JIRA_PROJECT_NAME)
+@project = jira_get_project_by_name(JIRA_API_PROJECT_NAME)
 if @project
-  puts "Found project '#{JIRA_PROJECT_NAME}' id='#{@project['id']}' key='#{@project['key']}'"
+  puts "Found project '#{JIRA_API_PROJECT_NAME}' id='#{@project['id']}' key='#{@project['key']}'"
 else
-  @project = jira_create_project(JIRA_PROJECT_NAME, JIRA_API_PROJECT_TYPE)
+  @project = jira_create_project(JIRA_API_PROJECT_NAME, JIRA_API_PROJECT_TYPE)
   if @project
-    puts "Created project '#{JIRA_PROJECT_NAME}' id='#{@project['id']}' key='#{@project['key']}'"
+    puts "Created project '#{JIRA_API_PROJECT_NAME}' id='#{@project['id']}' key='#{@project['key']}'"
   else
-    goodbye("You must first create a Jira project called '#{JIRA_PROJECT_NAME}' in order to continue")
+    goodbye("You must first create a Jira project called '#{JIRA_API_PROJECT_NAME}' in order to continue")
   end
 end
 

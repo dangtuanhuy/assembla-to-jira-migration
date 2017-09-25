@@ -157,10 +157,18 @@ def get_response_count(response)
   end
 end
 
-def get_space(name)
+def assembla_get_spaces
   response = http_request("#{ASSEMBLA_API_HOST}/spaces")
-  json = JSON.parse(response.body)
-  space = json.find { |s| s['name'] == name }
+  result = JSON.parse(response.body)
+  result&.each do |r|
+    r.delete_if { |k, _| k.to_s =~ /tabs_order/i }
+  end
+  result
+end
+
+def get_space(name)
+  spaces = csv_to_array("#{OUTPUT_DIR_ASSEMBLA}/spaces.csv")
+  space = spaces.find { |s| s['name'] == name }
   unless space
     goodbye("Couldn't find space with name = '#{name}'")
   end

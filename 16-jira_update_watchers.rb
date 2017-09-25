@@ -2,14 +2,8 @@
 
 load './lib/common.rb'
 
-SPACE_NAME = ENV['JIRA_API_PROJECT_NAME']
-JIRA_PROJECT_NAME = SPACE_NAME + (@debug ? ' TEST' : '')
-
-space = get_space(SPACE_NAME)
-dirname_assembla = get_output_dirname(space, 'assembla')
-
 # Assembla users
-users_csv = "#{dirname_assembla}/report-users.csv"
+users_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
 users = csv_to_array(users_csv)
 @user_id_to_login = {}
 users.each do |user|

@@ -2,14 +2,8 @@
 
 load './lib/common.rb'
 
-SPACE_NAME = ENV['JIRA_API_PROJECT_NAME']
-JIRA_PROJECT_NAME = SPACE_NAME + (@debug ? ' TEST' : '')
-
-space = get_space(SPACE_NAME)
-dirname_assembla = get_output_dirname(space, 'assembla')
-
 # Assembla users
-assembla_users_csv = "#{dirname_assembla}/report-users.csv"
+assembla_users_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
 @users_assembla = csv_to_array(assembla_users_csv)
 
 # TODO: Move to common.rb
@@ -22,7 +16,7 @@ assembla_users_csv = "#{dirname_assembla}/report-users.csv"
 end
 
 # Assembla comments
-comments_assembla_csv = "#{dirname_assembla}/ticket-comments.csv"
+comments_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-comments.csv"
 @comments_assembla = csv_to_array(comments_assembla_csv)
 total_comments = @comments_assembla.length
 

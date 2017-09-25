@@ -42,4 +42,6 @@ ITEMS = [
   # due_date,assigned_to_name,picture_url
 ].freeze
 
+write_csv_file("#{OUTPUT_DIR_ASSEMBLA}/spaces.csv", assembla_get_spaces)
+
 export_assembla_items(ITEMS)

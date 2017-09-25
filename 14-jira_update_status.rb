@@ -2,9 +2,6 @@
 
 load './lib/common.rb'
 
-SPACE_NAME = ENV['JIRA_API_PROJECT_NAME']
-JIRA_PROJECT_NAME = SPACE_NAME + (@debug ? ' TEST' : '')
-
 JIRA_API_STATUSES = ENV['JIRA_API_STATUSES']
 
 @assembla_status_to_jira = {}
@@ -13,11 +10,8 @@ JIRA_API_STATUSES.split(',').each do |status|
   @assembla_status_to_jira[from.downcase] = to || from
 end
 
-space = get_space(SPACE_NAME)
-dirname_assembla = get_output_dirname(space, 'assembla')
-
 # Assembla tickets
-tickets_csv = "#{dirname_assembla}/tickets.csv"
+tickets_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
 @tickets_assembla = csv_to_array(tickets_csv)
 
 # --- Filter by date if TICKET_CREATED_ON is defined --- #
