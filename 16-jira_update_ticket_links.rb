@@ -5,7 +5,9 @@ load './lib/common.rb'
 # --- JIRA Tickets --- #
 
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
+ticket_links_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-ticket-links.csv"
 @tickets_jira = csv_to_array(tickets_jira_csv)
+@ticket_links_jira = csv_to_array(ticket_links_jira_csv)
 
 @tickets = {}
 @tickets_jira.each do |ticket|
@@ -36,7 +38,7 @@ def jira_update_summary_and_descr(issue_id, summary, description)
   result
 end
 
-@tickets_jira.each do |ticket|
+@ticket_links_jira.each do |ticket|
   jira_ticket_key = ticket['jira_ticket_key']
   issue = jira_get_issue(jira_ticket_key)
   fields = issue['fields']
@@ -47,7 +49,7 @@ end
   description_in = fields['description'].strip
   summary_in = fields['summary'].strip
 
-  blck = ->(t){ markdown_ticket(t, @tickets, true) }
+  blck = ->(t){ markdown_ticket_link(t, @tickets, true) }
 
   summary_out = summary_in.gsub(/#(\d+)/, &blck)
   summary = summary_out if summary_in != summary_out

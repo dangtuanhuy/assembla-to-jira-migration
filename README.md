@@ -381,11 +381,13 @@ reporter_name|priority_name|status_name|labels|description|assembla_ticket_id|as
 theme_name|milestone_name|story_rank
 ```
 
-For the individual issue types `data/jira/jira-tickets-{issue-type}.csv` where `issue-type` is: bug, epic, spike, story, task or sub-task.
+An additional output file `data/jira/jira-ticket-links.csv` is created which contains those embedded ticket links that could not be resolved. This is used in the following step.
 
 ### Update ticket links
 
 In the ticket summary and description, ticket links `#123` need to be converted to the relevant Jira issue links `PRJ-456`, which can only be done AFTER all the tickets have been imported.
+
+The output file `data/jira/jira-ticket-links.csv` generated in the previous step is used as the input.
 
 Run the following command in order to do this:
 
@@ -393,7 +395,7 @@ Run the following command in order to do this:
 $ ruby 16-jira_update_ticket_links.rb
 ```
 
-Note: for one reason or another, not all Assembla links point to valid tickets (deleted, moved or whatever), so these will be marked as invalid by strikethru.
+Note: for one reason or another, not all Assembla links point to valid tickets (deleted, moved or whatever), so these will be marked as invalid by strikethru, e.g. -#123-.
 
 ### Import comments
 

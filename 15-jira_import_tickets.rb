@@ -146,7 +146,8 @@ def create_ticket_jira(ticket, counter, total)
                 end
   description += "Author #{author_name} | "
   description += "Created on #{date_time(created_on)}\n\n"
-  description += "#{reformat_markdown(ticket['description'], logins: @list_of_logins, images: @list_of_images, content_type: 'description', tickets: @assembla_number_to_jira_key)}"
+  reformatted_description = "#{reformat_markdown(ticket['description'], logins: @list_of_logins, images: @list_of_images, content_type: 'description', tickets: @assembla_number_to_jira_key)}"
+  description += reformatted_description
 
   labels = get_labels(ticket)
 
@@ -219,6 +220,18 @@ def create_ticket_jira(ticket, counter, total)
     jira_ticket_id = body['id']
     jira_ticket_key = body['key']
     message = "id='#{jira_ticket_id}' key='#{jira_ticket_key}'"
+
+    # Check for unresolved ticket links that have to be resolved later.
+    summary_ticket_links = !/#\d+/.match(summary).nil?
+    description_ticket_links = !/#\d+/.match(reformatted_description).nil?
+    if summary_ticket_links || description_ticket_links
+      @jira_ticket_links << {
+          jira_ticket_key: jira_ticket_key,
+          summary: summary_ticket_links,
+          description: description_ticket_links
+      }
+    end
+
     ok = true
   rescue RestClient::ExceptionWithResponse => e
     error = JSON.parse(e.response)
@@ -272,11 +285,11 @@ def create_ticket_jira(ticket, counter, total)
 
   dump_payload = ok ? '' : ' ' + payload.inspect.sub(/:description=>"[^"]+",/,':description=>"...",')
   percentage = ((counter * 100) / total).round.to_s.rjust(3)
-  puts "#{percentage}% [#{counter}|#{total}|#{issue_type[:name].upcase}] POST #{URL_JIRA_ISSUES} #{ticket_number}#{dump_payload} => #{ok ? '' : 'N'}OK (#{message}) retries = #{retries}"
+  puts "#{percentage}% [#{counter}|#{total}|#{issue_type[:name].upcase}] POST #{URL_JIRA_ISSUES} #{ticket_number}#{dump_payload} => #{ok ? '' : 'N'}OK (#{message}) retries = #{retries}#{summary_ticket_links || description_ticket_links ? ' (*)' : ''}"
 
   @assembla_number_to_jira_key[ticket_number] = jira_ticket_key if ok
 
-  return {
+  {
       result: (ok ? 'OK' : 'NOK'),
       retries: retries,
       message: (ok ? '' : message.gsub(' | ', "\n\n")),
@@ -305,7 +318,7 @@ end
 if @project
   puts "Found project '#{JIRA_PROJECT_NAME}' id='#{@project['id']}' key='#{@project['key']}'"
 else
-  @project = jira_create_project(project_name, JIRA_API_PROJECT_TYPE)
+  @project = jira_create_project(JIRA_PROJECT_NAME, JIRA_API_PROJECT_TYPE)
   if @project
     puts "Created project '#{JIRA_PROJECT_NAME}' id='#{@project['id']}' key='#{@project['key']}'"
   else
@@ -471,11 +484,17 @@ end
 @tickets_assembla.sort! { |x, y| x['created_on'] <=> y['created_on'] }
 
 @jira_issues = []
+@jira_ticket_links = []
 
 @tickets_assembla.each_with_index do |ticket, index|
   @jira_issues << create_ticket_jira(ticket, index + 1, @total_tickets)
 end
 
-puts "Total tickets: #{@total_ticket}"
+puts "Total tickets: #{@total_tickets}"
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 write_csv_file(tickets_jira_csv, @jira_issues)
+
+puts "Total unresolved ticket links: #{@jira_ticket_links.length}"
+puts "[#{@jira_ticket_links.map { |rec| rec[:jira_ticket_key] }.join(',')}]"
+ticket_links_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-ticket-links.csv"
+write_csv_file(ticket_links_jira_csv, @jira_ticket_links)

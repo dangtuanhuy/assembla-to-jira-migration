@@ -596,12 +596,12 @@ def markdown_name(name, logins)
   @cache_markdown_names[name] = result
 end
 
-@cache_markdown_tickets = {}
+@cache_markdown_ticket_links = {}
 
-def markdown_ticket(ticket, tickets, strikethru = false)
+def markdown_ticket_link(ticket, tickets, strikethru = false)
   return ticket unless ticket[0] == '#'
   ticket_number = ticket[1..-1]
-  return @cache_markdown_tickets[ticket_number] if @cache_markdown_tickets[ticket_number]
+  return @cache_markdown_ticket_links[ticket_number] if @cache_markdown_ticket_links[ticket_number]
   key = tickets[ticket_number]
   if key
     result = key
@@ -612,7 +612,7 @@ def markdown_ticket(ticket, tickets, strikethru = false)
     end
     puts "Reformat markdown ticket='#{ticket_number}' => Cannot find"
   end
-  @cache_markdown_tickets[ticket_number] = result
+  @cache_markdown_ticket_links[ticket_number] = result
 end
 
 @content_types_thumbnail = {}
@@ -645,7 +645,7 @@ def reformat_markdown(content, opts = {})
   lines = content.split("\n")
   markdown = []
   lines.each do |line|
-    line.gsub!(/#(\d+)/) { |ticket| markdown_ticket(ticket, tickets, strikethru) } if tickets
+    line.gsub!(/#(\d+)/) { |ticket| markdown_ticket_link(ticket, tickets, strikethru) } if tickets
     markdown << line.
                 gsub(/<pre><code>/i,'{code:java}').
                 gsub(/<\/code><\/pre>/i,'{code}').
