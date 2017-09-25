@@ -3,15 +3,22 @@
 load './lib/common.rb'
 
 @tickets_jira = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-tickets.csv")
+@comments_jira = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-comments.csv")
+
+# IMPORTANT: Also look in comments
 
 @tickets_jira.each do |ticket|
   description = ticket['description']
   lines = description.split("\n")
   lines.shift
   lines.each do |line|
-    puts "#{ticket['jira_ticket_key']} #{line}" if /europeana\-[^na].*\/ticket/.match(line)
+    puts "#{ticket['jira_ticket_key']} #{line}" if /europeana\-.*\/ticket/.match(line)
   end
 end
+
+### --- Europeana APIs --- ###
+
+### --- Europeana Collections --- ###
 
 # Collections
 # EC-152 figure out a method for deploying to production that will not interrupt production service. see this post for [one possible approach|https://europeanadev.assembla.com/spaces/europeana-npc/tickets/91-create-jenkins-build-jobs?comment=700005603#comment:700005603].
@@ -71,24 +78,24 @@ end
 # EC-2374 We have recently noticed that the Entity API had not been updated following an update of spec that was done a while ago, see [API ticket 760|https://app.assembla.com/spaces/europeana-apis/tickets/760]. In particular, the field "contains" and "totalItems" were not changed to respectively "items" and "total".
 
 # 1914-1918
-# EC-50 Compare with https://europeanadev.assembla.com/spaces/europeana-1914-1918/tickets/366
+# EC-50  https://europeanadev.assembla.com/spaces/europeana-1914-1918/tickets/366
 # EC-160 https://europeanadev.assembla.com/spaces/europeana-1914-1918/tickets/8
 # EC-160 https://europeanadev.assembla.com/spaces/europeana-1914-1918/tickets/9
-# EC-171 * https://europeanadev.assembla.com/spaces/europeana-1914-1918/tickets/510
-# EC-171 * https://europeanadev.assembla.com/spaces/europeana-1914-1918/tickets/366
+# EC-171 https://europeanadev.assembla.com/spaces/europeana-1914-1918/tickets/510
+# EC-171 https://europeanadev.assembla.com/spaces/europeana-1914-1918/tickets/366
 
 # Infrastructure
-# EC-2379 Follows ticket 215: https://europeanadev.assembla.com/spaces/europeana-infrastructure/tickets/215-upgrade-cf-cli-on-jenkins-nodes/details
+# EC-2379 https://europeanadev.assembla.com/spaces/europeana-infrastructure/tickets/215-upgrade-cf-cli-on-jenkins-nodes/details
 
 # Professional
-# EC-1970 Also related, see the Pro ticket re RSS feeds and JSON API in Bolt CMS: https://europeanadev.assembla.com/spaces/europeana-professional/tickets/633
+# EC-1970 https://europeanadev.assembla.com/spaces/europeana-professional/tickets/633
 
 # Ingestion
-# EC-164 To create copy fields that allow us for truly querying for exact matches on title, who, what and other important fields, see https://europeanadev.assembla.com/spaces/europeana-ingestion/tickets/1619-improve-relevancy-of-results-for-the-prototype-entity-autocompletion-api?comment=711706813#comment:711706813
+# EC-164 https://europeanadev.assembla.com/spaces/europeana-ingestion/tickets/1619-improve-relevancy-of-results-for-the-prototype-entity-autocompletion-api?comment=711706813#comment:711706813
 # EC-686 https://europeanadev.assembla.com/spaces/europeana-ingestion/tickets/1666-entities-api-design#/activity/ticket:
 
 # r-d
-# EC-1948 Presently, there is no way of identifying the user session within the logs that are stored in ELK, which is crucial to identify user search patterns. See ticket: https://europeanadev.assembla.com/spaces/europeana-r-d/tickets/13
+# EC-1948 https://europeanadev.assembla.com/spaces/europeana-r-d/tickets/13
 
 # creative
-# EC-1950 * Revisit the mass-tagging and search macro features ideas for channels/thematic collections, https://europeanadev.assembla.com/spaces/europeana-creative/tickets/45 and in greate detail https://docs.google.com/document/d/15nqqs7M9V25iku9NsiEfXl-vJpWh31LmyaYVA__cvho/edit
+# EC-1950 https://europeanadev.assembla.com/spaces/europeana-creative/tickets/45 and in greate detail https://docs.google.com/document/d/15nqqs7M9V25iku9NsiEfXl-vJpWh31LmyaYVA__cvho/edit

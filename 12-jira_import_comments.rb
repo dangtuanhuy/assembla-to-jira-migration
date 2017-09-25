@@ -100,6 +100,7 @@ end
   ticket_id = comment['ticket_id']
   user_id = comment['user_id']
   issue_id = @assembla_id_to_jira_id[ticket_id]
+  issue_key = @assembla_id_to_jira_key[ticket_id]
   user_login = @user_id_to_login[user_id],
   comment['comment'] = reformat_markdown(comment['comment'], logins: @list_of_logins, images: @list_of_images,  tickets: @assembla_number_to_jira_key, content_type: 'comments', strikethru: true)
   result = jira_create_comment(issue_id, user_id, comment, index + 1)
@@ -108,6 +109,7 @@ end
   @jira_comments << {
     jira_comment_id: comment_id,
     jira_ticket_id: issue_id,
+    jira_ticket_key: issue_key,
     assembla_comment_id: id,
     assembla_ticket_id: ticket_id,
     user_login: user_login,

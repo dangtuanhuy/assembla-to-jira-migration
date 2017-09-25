@@ -424,8 +424,10 @@ jira_comment_id|jira_ticket_id|assembla_comment_id|assembla_ticket_id|user_login
 Now you are ready to import all of the attachments that were downloaded earlier. Execute the following command:
 
 ```
-$ ruby 13-jira_import_attachments.rb # => data/jira/jira-attachments-import.csv
+$ ruby 13-jira_import_attachments.rb [restart_offset] # => data/jira/jira-attachments-import.csv
 ```
+
+Note: The Jira server sometimes has problems processing attachments too quickly and might return an error. In that case, just restart the command and pass it the offset where you want to restart from.
 
 ### Update ticket status
 

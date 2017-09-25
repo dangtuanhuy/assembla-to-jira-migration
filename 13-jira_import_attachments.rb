@@ -2,9 +2,22 @@
 
 load './lib/common.rb'
 
+restart_offset = 0
+
+# If argv0 is passed use it as restart offset (e.g. earlier ended prematurely)
+unless ARGV[0].nil?
+  goodbye("Invalid arg='#{ARGV[0]}', must be one a number") unless /^\d+$/.match(ARGV[0])
+  restart_offset = ARGV[0].to_i
+  puts "Restart at offset: #{restart_offset}"
+end
+
 # Jira tickets
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @tickets_jira = csv_to_array(tickets_jira_csv)
+
+@total_tickets = @tickets_jira.length
+
+goodbye("Invalid arg='#{ARGV[0]}', cannot be greater than the number of tickets=#{@total_tickets}") if restart_offset > @total_tickets
 
 @assembla_id_to_jira = {}
 @tickets_jira.each do |ticket|
@@ -35,6 +48,7 @@ puts "Total attachments: #{@attachments_total}"
   created_by = attachment['created_by']
   url = "#{URL_JIRA_ISSUES}/#{jira_ticket_id}/attachments"
   counter = index + 1
+  next if counter < restart_offset
   percentage = ((counter * 100) / @attachments_total).round.to_s.rjust(3)
   puts "#{percentage}% [#{counter}|#{@attachments_total}] POST #{url} '#{filename}' (#{content_type}) => OK"
   payload = { mulitpart: true, file: File.new(filepath, 'rb') }

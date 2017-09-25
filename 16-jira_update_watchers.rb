@@ -11,7 +11,7 @@ users.each do |user|
 end
 
 # Assembla tickets
-tickets_csv = "#{dirname_assembla}/tickets.csv"
+tickets_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
 @tickets_assembla = csv_to_array(tickets_csv)
 
 # --- Filter by date if TICKET_CREATED_ON is defined --- #
