@@ -106,5 +106,4 @@ required_issuelink_types.each do |required_issuelink_type|
   jira_create_issuelink_type(required_issuelink_type)
 end
 
-FileUtils.mkdir_p(OUTPUT_DIR_JIRA) unless File.directory?(OUTPUT_DIR_JIRA)
 write_csv_file("#{OUTPUT_DIR_JIRA}/jira-issuelink-types.csv", jira_get_issuelink_types)

@@ -50,9 +50,6 @@ end
 
 @attachments_total = @attachments_assembla.length
 
-attachments_dirname = "#{OUTPUT_DIR_JIRA}/attachments"
-FileUtils.mkdir_p(attachments_dirname) unless File.directory?(attachments_dirname)
-
 @authorization = "Basic #{Base64.encode64(JIRA_API_ADMIN_USER + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])}"
 
 @attachments_assembla.each_with_index do |attachment, index|
@@ -64,7 +61,7 @@ FileUtils.mkdir_p(attachments_dirname) unless File.directory?(attachments_dirnam
   content_type = attachment['content_type']
   counter = index + 1
   filename = attachment['filename']
-  filepath = "#{attachments_dirname}/#{filename}"
+  filepath = "#{OUTPUT_DIR_JIRA_ATTACHMENTS}/#{filename}"
   nr = 0
   while File.exist?(filepath)
     nr += 1

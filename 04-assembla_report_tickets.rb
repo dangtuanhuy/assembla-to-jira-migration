@@ -8,11 +8,8 @@
 
 load './lib/common.rb'
 
-space = get_space(ASSEMBLA_SPACE)
-dirname_assembla = get_output_dirname(space, 'assembla')
-
-tickets_csv = "#{dirname_assembla}/tickets.csv"
-report_tickets_csv = "#{dirname_assembla}/report-tickets.csv"
+tickets_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
+report_tickets_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-tickets.csv"
 
 @tickets = csv_to_array(tickets_csv)
 @report_tickets = []
@@ -31,7 +28,7 @@ report_tickets_csv = "#{dirname_assembla}/report-tickets.csv"
 end
 
 %w(tags comments attachments associations).each do |file|
-  file_csv = "#{dirname_assembla}/ticket-#{file}.csv"
+  file_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-#{file}.csv"
   records = csv_to_array(file_csv)
   records.each do |record|
     ticket_id = record['ticket_id']

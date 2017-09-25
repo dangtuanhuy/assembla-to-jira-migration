@@ -18,9 +18,6 @@ downloaded_attachments_csv = "#{OUTPUT_DIR_JIRA}/jira-attachments-download.csv"
 
 puts "Total attachments: #{@attachments_total}"
 
-attachments_dirname = "#{OUTPUT_DIR_JIRA}/attachments"
-FileUtils.mkdir_p(attachments_dirname) unless File.directory?(attachments_dirname)
-
 # IMPORTANT: Make sure that the downloads are ordered chronologically from first (oldest) to last (newest)
 @downloaded_attachments.sort! { |x, y| x['created_at'] <=> y['created_at'] }
 
@@ -32,7 +29,7 @@ FileUtils.mkdir_p(attachments_dirname) unless File.directory?(attachments_dirnam
   assembla_ticket_id = attachment['assembla_ticket_id']
   jira_ticket_id = @assembla_id_to_jira[attachment['assembla_ticket_id']]
   filename = attachment['filename']
-  filepath = "#{attachments_dirname}/#{filename}"
+  filepath = "#{OUTPUT_DIR_JIRA_ATTACHMENTS}/#{filename}"
   content_type = attachment['content_type']
   created_at = attachment['created_at']
   created_by = attachment['created_by']

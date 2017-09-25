@@ -42,4 +42,4 @@ ITEMS = [
   # due_date,assigned_to_name,picture_url
 ].freeze
 
-export_items(ITEMS)
+export_assembla_items(ITEMS)

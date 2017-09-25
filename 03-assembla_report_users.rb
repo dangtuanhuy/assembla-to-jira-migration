@@ -33,18 +33,13 @@ FILES = [
   { name: 'wiki-pages', fields: %w[user_id] }
 ].freeze
 
-def create_user_index(user, space)
-  # Some sanity checks just in case
-  goodbye('create_user_index() => NOK (user is undefined)') unless user
-  goodbye('create_user_index() => NOK (user must be a hash)') unless user.is_a?(Hash)
-  goodbye('create_user_index() => NOK (user id is undefined)') unless user['id']
-
+def create_user_index(user)
   id = user['id']
   login = user['login']
   name = user['name']
 
   unless @users_index[user['id']].nil?
-    puts "create_user_index(space='#{space['name']}',id=#{id},login=#{login},name='#{name}' => OK (already exists)"
+    puts "create_user_index(id=#{id},login=#{login},name='#{name}' => OK (already exists)"
     return
   end
 
@@ -64,26 +59,23 @@ def create_user_index(user, space)
   user_index['login'] = login
   user_index['name'] = name
   @users_index[id] = user_index
-  puts "create_user_index(space='#{space['name']}',id=#{id},login=#{login},name='#{name}' => OK"
+  puts "create_user_index(id=#{id},login=#{login},name='#{name}' => OK"
 
   user_index
 end
 
-space = get_space(ASSEMBLA_SPACE)
-output_dirname = get_output_dirname(space, 'assembla')
-csv_to_array("#{output_dirname}/users.csv").each do |row|
+csv_to_array("#{OUTPUT_DIR_ASSEMBLA}/users.csv").each do |row|
   @users << row
 end
 
-puts "#{ASSEMBLA_SPACE}: found #{@users.length} users"
+puts "\nTotal users: #{@users.length}\n\n"
 @users.each do |user|
-  create_user_index(user, space)
+  create_user_index(user)
 end
 
 FILES.each do |file|
   fname = file[:name]
-  pathname = "#{output_dirname}/#{fname}.csv"
-  puts pathname
+  pathname = "#{OUTPUT_DIR_ASSEMBLA}/#{fname}.csv"
   csv_to_array(pathname).each do |h|
     file[:fields].each do |f|
       user_id = h[f]
@@ -96,7 +88,7 @@ FILES.each do |file|
         h['id'] = user_id
         h['login'] = "unknown-#{@num_unknowns}"
         h['name'] = "Unknown ##{@num_unknowns}"
-        user_index = create_user_index(h, space)
+        user_index = create_user_index(h)
       end
       user_index['count'] += 1
       user_item = user_index[fname]
@@ -106,7 +98,9 @@ FILES.each do |file|
   end
 end
 
-pathname_report = "#{output_dirname}/report-users.csv"
+pathname_report = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
+
+puts "\nReport:"
 CSV.open(pathname_report, 'wb') do |csv|
   @users_index.sort_by { |u| -u[1]['count'] }.each_with_index do |user_index, index|
     fields = FILES.map { |file| file[:fields].map { |field| "#{file[:name]}:#{field}" } }.flatten
@@ -129,4 +123,5 @@ CSV.open(pathname_report, 'wb') do |csv|
     puts "#{count.to_s.rjust(4)} #{id} #{login}"
   end
 end
-puts pathname_report
+
+puts "\n#{pathname_report}"

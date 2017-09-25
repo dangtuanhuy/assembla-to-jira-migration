@@ -26,6 +26,8 @@ JIRA_API_UNKNOWN_USER = ENV['JIRA_API_UNKNOWN_USER'].freeze
 
 JIRA_API_IMAGES_THUMBNAIL = (ENV['JIRA_API_IMAGES_THUMBNAIL'] || 'description:false,comments:true').freeze
 
+JIRA_API_PROJECT_NAME = ENV['JIRA_API_PROJECT_NAME'].freeze
+
 # Jira project type us 'scrum' by default
 JIRA_API_PROJECT_TYPE = (ENV['JIRA_API_PROJECT_TYPE'] || 'scrum').freeze
 
@@ -43,9 +45,19 @@ URL_JIRA_ISSUELINK_TYPES = "#{JIRA_API_HOST}/issueLinkType"
 URL_JIRA_ISSUELINKS = "#{JIRA_API_HOST}/issueLink"
 URL_JIRA_FILTERS = "#{JIRA_API_HOST}/filter"
 
+def normalize_name(s)
+  s.downcase.tr(' /_', '-')
+end
+
 OUTPUT_DIR = 'data'
-OUTPUT_DIR_ASSEMBLA = "#{OUTPUT_DIR}/assembla"
-OUTPUT_DIR_JIRA = "#{OUTPUT_DIR}/jira"
+OUTPUT_DIR_ASSEMBLA = "#{OUTPUT_DIR}/assembla/#{normalize_name(ASSEMBLA_SPACE)}"
+OUTPUT_DIR_JIRA = "#{OUTPUT_DIR}/jira/#{normalize_name(ASSEMBLA_SPACE)}"
+OUTPUT_DIR_JIRA_ATTACHMENTS = "#{OUTPUT_DIR_JIRA}/attachments"
+
+# Ensure that all of the required directories exist, otherwise create them.
+FileUtils.mkdir_p(OUTPUT_DIR_ASSEMBLA) unless File.directory?(OUTPUT_DIR_ASSEMBLA)
+FileUtils.mkdir_p(OUTPUT_DIR_JIRA) unless File.directory?(OUTPUT_DIR_JIRA)
+FileUtils.mkdir_p(OUTPUT_DIR_JIRA_ATTACHMENTS) unless File.directory?(OUTPUT_DIR_JIRA_ATTACHMENTS)
 
 # The following custom fields MUST be defined AND associated with the proper screens
 CUSTOM_FIELD_NAMES = %w(Assembla-Id Assembla-Milestone Assembla-Theme Assembla-Status Assembla-Reporter Assembla-Assignee Assembla-Completed Epic\ Name Rank Story\ Points)
@@ -195,7 +207,7 @@ def create_csv_file(space, item)
   write_csv_file(filename, item[:results])
 end
 
-def export_items(list)
+def export_assembla_items(list)
   space = get_space(ASSEMBLA_SPACE)
   items = get_items(list, space)
   create_csv_files(space, items)
@@ -227,10 +239,6 @@ def get_output_dirname(space, dir = nil)
   dirname = "#{OUTPUT_DIR}/#{dir ? (normalize_name(dir) + '/' ) : ''}#{normalize_name(space['name'])}"
   FileUtils.mkdir_p(dirname) unless File.directory?(dirname)
   dirname
-end
-
-def normalize_name(s)
-  s.downcase.tr(' /_', '-')
 end
 
 def csv_to_array(pathname)
