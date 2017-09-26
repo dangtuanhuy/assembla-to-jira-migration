@@ -76,6 +76,16 @@ Each step will generate a log of the results in the form of a csv file for refer
 17. Create sprints
 18. Update board
 
+```
+tickets/(\d+)
+tickets/(\d+)-.*#/activity/ticket:
+tickets/(\d+)/details
+tickets/(\d+)-.*/details
+tickets/(\d+)-.*/details#
+tickets/(\d+)/details?comment=(\d+)
+tickets/(\d+)-.*/details?comment=(\d+)
+```
+
 ## Preparations
 
 You will need to go to to the Jira website and login as admin.

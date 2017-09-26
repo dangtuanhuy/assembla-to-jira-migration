@@ -2,23 +2,60 @@
 
 load './lib/common.rb'
 
-# re = %r{ https?://.*\.assembla\.com/spaces/(europeana\-.*)/tickets/ }
-re = %r{https?://.*\.assembla\.com/spaces/(europeana\-.*)/tickets/(\d+)}
+projects = []
+
+JIRA_API_SPACE_TO_PROJECT.split(',').each do |item|
+  space, key = item.split(':')
+  goodbye("Missing space, item=#{item}, JIRA_API_SPACE_TO_PROJECT=#{JIRA_API_SPACE_TO_PROJECT}") unless space
+  goodbye("Missing key, item=#{item}, JIRA_API_SPACE_TO_PROJECT=#{JIRA_API_SPACE_TO_PROJECT}") unless key
+
+  project = jira_get_project_by_key(key)
+  goodbye("Cannot find project with key=#{key}, item=#{item}, JIRA_API_SPACE_TO_PROJECT=#{JIRA_API_SPACE_TO_PROJECT}") unless project
+  project_name = project['name']
+  normalized_name = normalize_name(project_name)
+
+  output_dir = "#{OUTPUT_DIR}/jira/#{normalized_name}"
+
+  tickets = csv_to_array("#{output_dir}/jira-tickets.csv")
+  comments = csv_to_array("#{output_dir}/jira-comments.csv")
+
+  ticket_a_id_to_a_nr = {}
+  ticket_a_nr_to_j_key = {}
+  tickets.each do |ticket|
+    ticket_a_id_to_a_nr[ticket['assembla_ticket_id']] = ticket['assembla_ticket_number']
+    ticket_a_nr_to_j_key[ticket['assembla_ticket_number']] = ticket['jira_ticket_key']
+  end
+
+  projects << {
+    space: space,
+    key: key,
+    name: project_name,
+    output_dir: output_dir,
+    tickets: tickets,
+    comments: comments,
+    ticket_a_id_to_a_nr: ticket_a_id_to_a_nr,
+    ticket_a_nr_to_j_key: ticket_a_nr_to_j_key
+  }
+end
+
+project_by_space = {}
+project.each do |project|
+  project_by_space[project['space']] = project
+end
 
 @tickets_jira = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-tickets.csv")
 @comments_jira = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-comments.csv")
 
 @ticket_a_id_to_a_nr = {}
-@ticket_j_id_to_j_key = {}
 @ticket_a_nr_to_j_key = {}
 @tickets_jira.each do |ticket|
   @ticket_a_id_to_a_nr[ticket['assembla_ticket_id']] = ticket['assembla_ticket_number']
-  @ticket_j_id_to_j_key[ticket['jira_ticket_id']] = ticket['jira_ticket_key']
   @ticket_a_nr_to_j_key[ticket['assembla_ticket_number']] = ticket['jira_ticket_key']
 end
 
 list = []
-spaces = []
+
+# http://localhost:8080/browse/EC-4820?focusedCommentId=30334&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-30334
 
 # jira_ticket_id,jira_ticket_key,assembla_ticket_id,assembla_ticket_number
 @tickets_jira.each do |item|
@@ -28,7 +65,6 @@ spaces = []
   lines.shift
   lines.each do |line|
     if re.match(line)
-      spaces << $1 unless spaces.include?($1)
       list << {
         space: $1,
         type: 'ticket',
@@ -53,7 +89,6 @@ end
   lines.shift
   lines.each do |line|
     if re.match(line)
-      spaces << $1 unless spaces.include?($1)
       list << {
         space: $1,
         type: 'comment',

@@ -45,6 +45,9 @@ URL_JIRA_ISSUELINK_TYPES = "#{JIRA_API_HOST}/issueLinkType"
 URL_JIRA_ISSUELINKS = "#{JIRA_API_HOST}/issueLink"
 URL_JIRA_FILTERS = "#{JIRA_API_HOST}/filter"
 
+# JIRA_API_SPACE_TO_PROJECT=europeana-npc:EC,europeana-apis:EA
+JIRA_API_SPACE_TO_PROJECT = ENV['JIRA_API_SPACE_TO_PROJECT']
+
 def normalize_name(s)
   s.downcase.tr(' /_', '-')
 end
@@ -346,6 +349,22 @@ def jira_get_project_by_name(name)
     end
   rescue => e
     puts "GET #{URL_JIRA_PROJECTS} name='#{name}' => NOK (#{e.message})"
+  end
+  result
+end
+
+def jira_get_project_by_key(key)
+  result = nil
+  begin
+    response = RestClient::Request.execute(method: :get, url: URL_JIRA_PROJECTS, headers: JIRA_HEADERS)
+    body = JSON.parse(response.body)
+    result = body.detect { |h| h['key'] == key }
+    if result
+      result.delete_if { |k, _| k =~ /expand|self|avatarurls/i }
+      puts "GET #{URL_JIRA_PROJECTS} key='#{key}' => OK"
+    end
+  rescue => e
+    puts "GET #{URL_JIRA_PROJECTS} key='#{key}' => NOK (#{e.message})"
   end
   result
 end
