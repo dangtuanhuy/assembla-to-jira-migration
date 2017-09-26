@@ -45,7 +45,7 @@ puts "Total attachments: #{@attachments_total}"
   filepath = "#{OUTPUT_DIR_JIRA_ATTACHMENTS}/#{filename}"
   content_type = attachment['content_type']
   created_at = attachment['created_at']
-  created_by = attachment['created_by']
+  created_by = attachment['created_by'] || JIRA_API_ADMIN_USER
   url = "#{URL_JIRA_ISSUES}/#{jira_ticket_id}/attachments"
   counter = index + 1
   next if counter < restart_offset
@@ -68,6 +68,8 @@ puts "Total attachments: #{@attachments_total}"
     }
   rescue RestClient::ExceptionWithResponse => e
     rest_client_exception(e, 'POST', url)
+  rescue => e
+    puts "#{percentage}% [#{counter}|#{@comments_total}] POST #{url} => NOK (#{e.message})"
   end
 end
 
