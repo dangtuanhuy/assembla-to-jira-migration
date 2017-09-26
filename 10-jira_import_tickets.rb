@@ -281,6 +281,19 @@ def create_ticket_jira(ticket, counter, total)
   percentage = ((counter * 100) / total).round.to_s.rjust(3)
   puts "#{percentage}% [#{counter}|#{total}|#{issue_type[:name].upcase}] POST #{URL_JIRA_ISSUES} #{ticket_number}#{dump_payload} => #{ok ? '' : 'N'}OK (#{message}) retries = #{retries}#{summary_ticket_links || description_ticket_links ? ' (*)' : ''}"
 
+  if ok && ticket['description'] != reformatted_description
+    @tickets_diffs << {
+        assembla_ticket_id: ticket_id,
+        assembla_ticket_number: ticket_number,
+        jira_ticket_id: jira_ticket_id,
+        jira_ticket_key: jira_ticket_key,
+        project_id: project_id,
+        description_before: ticket['description'],
+        description_after: reformatted_description
+    }
+
+  end
+
   @assembla_number_to_jira_key[ticket_number] = jira_ticket_key if ok
 
   {
@@ -480,6 +493,8 @@ end
 @jira_issues = []
 @jira_ticket_links = []
 
+@tickets_diffs = []
+
 @tickets_assembla.each_with_index do |ticket, index|
   @jira_issues << create_ticket_jira(ticket, index + 1, @total_tickets)
 end
@@ -492,3 +507,6 @@ puts "Total unresolved ticket links: #{@jira_ticket_links.length}"
 puts "[#{@jira_ticket_links.map { |rec| rec[:jira_ticket_key] }.join(',')}]"
 ticket_links_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-ticket-links.csv"
 write_csv_file(ticket_links_jira_csv, @jira_ticket_links)
+
+tickets_diffs_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets-diffs.csv"
+write_csv_file(tickets_diffs_jira_csv, @tickets_diffs)

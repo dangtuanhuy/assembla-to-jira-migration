@@ -72,7 +72,8 @@ def jira_create_comment(issue_id, user_id, comment, counter)
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/comment"
   user_login = @user_id_to_login[user_id]
   headers = headers_user_login(user_login)
-  body = "Assembla | Created on #{date_time(comment['created_on'])}\n\n#{reformat_markdown(comment['comment'], logins: @list_of_logins, images: @list_of_images, content_type: 'comments', strikethru: true)}"
+  reformatted_body = reformat_markdown(comment['comment'], logins: @list_of_logins, images: @list_of_images, content_type: 'comments', strikethru: true)
+  body = "Assembla | Created on #{date_time(comment['created_on'])}\n\n#{reformatted_body}"
   payload = {
     body: body
   }.to_json
@@ -81,6 +82,22 @@ def jira_create_comment(issue_id, user_id, comment, counter)
     result = JSON.parse(response.body)
     percentage = ((counter * 100) / @comments_total).round.to_s.rjust(3)
     puts "#{percentage}% [#{counter}|#{@comments_total}] POST #{url} => OK"
+    if comment['comment'] != reformatted_body
+      id = comment['id']
+      ticket_id = comment['ticket_id']
+      issue_id = @assembla_id_to_jira_id[ticket_id]
+      issue_key = @assembla_number_to_jira_key[ticket_id]
+      comment_id = result['id']
+      @comments_diffs << {
+        jira_comment_id: comment_id,
+        jira_ticket_id: issue_id,
+        jira_ticket_key: issue_key,
+        assembla_comment_id: id,
+        assembla_ticket_id: ticket_id,
+        comment_before: comment['comment'],
+        comment_after: reformatted_body
+      }
+    end
   rescue RestClient::ExceptionWithResponse => e
     # TODO: use following helper method for all RestClient calls in other files.
     rest_client_exception(e, 'POST', url)
@@ -94,6 +111,8 @@ end
 @comments_assembla.sort! { |x, y| x['created_on'] <=> y['created_on'] }
 
 @jira_comments = []
+
+@comments_diffs = []
 
 @comments_assembla.each_with_index do |comment, index|
   id = comment['id']
@@ -120,3 +139,6 @@ end
 puts "Total all: #{@comments_total}"
 comments_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-comments.csv"
 write_csv_file(comments_jira_csv, @jira_comments)
+
+comments_diffs_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-comments-diffs.csv"
+write_csv_file(comments_diffs_jira_csv, @comments_diffs)

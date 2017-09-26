@@ -48,19 +48,32 @@ URL_JIRA_FILTERS = "#{JIRA_API_HOST}/filter"
 # JIRA_API_SPACE_TO_PROJECT=europeana-npc:EC,europeana-apis:EA
 JIRA_API_SPACE_TO_PROJECT = ENV['JIRA_API_SPACE_TO_PROJECT']
 
-def normalize_name(s)
-  s.downcase.tr(' /_', '-')
+def normalize_name(name)
+  name.downcase.tr(' /_', '-')
 end
 
-OUTPUT_DIR = 'data'
-OUTPUT_DIR_ASSEMBLA = "#{OUTPUT_DIR}/assembla/#{normalize_name(ASSEMBLA_SPACE)}"
-OUTPUT_DIR_JIRA = "#{OUTPUT_DIR}/jira/#{normalize_name(ASSEMBLA_SPACE)}"
+OUTPUT_DIR = ENV['DATA_DIR'] || 'data'
+
+def output_dir(name, branch)
+  "#{OUTPUT_DIR}/#{branch}/#{normalize_name(name)}"
+end
+
+def output_dir_assembla(name)
+  output_dir(name, 'assembla')
+end
+
+def output_dir_jira(name)
+  output_dir(name, 'jira')
+end
+
+OUTPUT_DIR_ASSEMBLA = output_dir_assembla(ASSEMBLA_SPACE)
+OUTPUT_DIR_JIRA = output_dir_jira(ASSEMBLA_SPACE)
 OUTPUT_DIR_JIRA_ATTACHMENTS = "#{OUTPUT_DIR_JIRA}/attachments"
 
 # Ensure that all of the required directories exist, otherwise create them.
-FileUtils.mkdir_p(OUTPUT_DIR_ASSEMBLA) unless File.directory?(OUTPUT_DIR_ASSEMBLA)
-FileUtils.mkdir_p(OUTPUT_DIR_JIRA) unless File.directory?(OUTPUT_DIR_JIRA)
-FileUtils.mkdir_p(OUTPUT_DIR_JIRA_ATTACHMENTS) unless File.directory?(OUTPUT_DIR_JIRA_ATTACHMENTS)
+[OUTPUT_DIR, OUTPUT_DIR_ASSEMBLA, OUTPUT_DIR_JIRA, OUTPUT_DIR_JIRA_ATTACHMENTS].each do |dir|
+  FileUtils.mkdir_p(dir) unless File.directory?(dir)
+end
 
 # The following custom fields MUST be defined AND associated with the proper screens
 CUSTOM_FIELD_NAMES = %w(Assembla-Id Assembla-Milestone Assembla-Theme Assembla-Status Assembla-Reporter Assembla-Assignee Assembla-Completed Epic\ Name Rank Story\ Points)
@@ -349,22 +362,6 @@ def jira_get_project_by_name(name)
     end
   rescue => e
     puts "GET #{URL_JIRA_PROJECTS} name='#{name}' => NOK (#{e.message})"
-  end
-  result
-end
-
-def jira_get_project_by_key(key)
-  result = nil
-  begin
-    response = RestClient::Request.execute(method: :get, url: URL_JIRA_PROJECTS, headers: JIRA_HEADERS)
-    body = JSON.parse(response.body)
-    result = body.detect { |h| h['key'] == key }
-    if result
-      result.delete_if { |k, _| k =~ /expand|self|avatarurls/i }
-      puts "GET #{URL_JIRA_PROJECTS} key='#{key}' => OK"
-    end
-  rescue => e
-    puts "GET #{URL_JIRA_PROJECTS} key='#{key}' => NOK (#{e.message})"
   end
   result
 end
@@ -680,16 +677,17 @@ def reformat_markdown(content, opts = {})
   lines = content.split("\n")
   markdown = []
   lines.each do |line|
-    line.gsub!(/#(\d+)/) { |ticket| markdown_ticket_link(ticket, tickets, strikethru) } if tickets
+    line.gsub!(/#(\d+)\b/) { |ticket| markdown_ticket_link(ticket, tickets, strikethru) } if tickets
     markdown << line.
                 gsub(/<pre><code>/i,'{code:java}').
                 gsub(/<\/code><\/pre>/i,'{code}').
-                gsub(/\[\[url:(.*)\|(.*)\]\]/i, '[\2|\1]').
-                gsub(/\[\[url:(.*)\]\]/i, '[\1|\1]').
+                gsub(/\[\[url:(.*?)\|(.*?)\]\]/i, '[\2|\1]').
+                gsub(/\[\[url:(.*?)\]\]/i, '[\1|\1]').
+                gsub(/<code>(.*?)<\/code>/i,'{{\1}}').
                 gsub(/@([^@]*)@( |$)/, '{{\1}}\2').
                 gsub(/@([a-z.-_]*)/i) { |name| markdown_name(name, logins) }.
-                gsub(/\[\[user:(.*)(\|(.*))?\]\]/i) { |name| markdown_name(name, logins) }.
-                gsub(/\[\[image:(.*)(\|(.*))?\]\]/i) { |image| markdown_image(image, images, content_type) }
+                gsub(/\[\[user:(.*?)(\|(.*?))?\]\]/i) { |name| markdown_name(name, logins) }.
+                gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, content_type) }
   end
   markdown.join("\n")
 end

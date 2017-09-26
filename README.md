@@ -2,6 +2,19 @@
 
 A collection of advanced tooling for a complete data migration from [Assembla](https://www.assembla.com) to [JIRA](https://www.atlassian.com/software/jira).
 
+Here are the key selling points:
+
+* Import users
+* Import tickets, comments, attachments, link types
+* Insert embedded image thumbnails in description and comments
+* Convert markdown and urls
+* Retain watchers
+* Create scrum or kanban board
+* Map milestones to sprints
+* Populate backlog, future and current sprints
+* Retain ticket states and ranking
+* Jira issues are linked to original Assembla ticket
+
 ## Introduction
 
 Have you ever wanted to use JIRA instead of Assembla, but were afraid that the switch to Jira was too risky because you already have so much important data in Assembla?
@@ -76,15 +89,9 @@ Each step will generate a log of the results in the form of a csv file for refer
 17. Create sprints
 18. Update board
 
-```
-tickets/(\d+)
-tickets/(\d+)-.*#/activity/ticket:
-tickets/(\d+)/details
-tickets/(\d+)-.*/details
-tickets/(\d+)-.*/details#
-tickets/(\d+)/details?comment=(\d+)
-tickets/(\d+)-.*/details?comment=(\d+)
-```
+### Resolve external links
+
+...
 
 ## Preparations
 
@@ -158,6 +165,7 @@ An example configuration file `.env.example` is provided for you to define a num
 
 ```
 # --- General settings --- #
+DATA_DIR=data
 TICKETS_CREATED_ON=YYYY-MM-DD
 DEBUG=false
 
@@ -347,6 +355,8 @@ Important: this step needs to be done before importing tickets (next section) in
 
 ### Import tickets
 
+Alright, this is the moment we've all been waiting for. It's time to import the Assembla tickets and create the matching Jira issues.
+
 ```
 POST /rest/api/2/issue
 {
@@ -390,6 +400,8 @@ reporter_name|priority_name|status_name|labels|description|assembla_ticket_id|as
 theme_name|milestone_name|story_rank
 ```
 
+During the conversion, any differences between the original Assembla ticket description and the newly created Jira issue description is recorded in the `data/jira/jira-tickets-diffs.csv` file. This is a good place to look so you can verify that indeed the markdown conversion produced the expected results.
+
 An additional output file `data/jira/jira-ticket-links.csv` is created which contains those embedded ticket links that could not be resolved. This is used in the following step.
 
 ### Update ticket links
@@ -426,6 +438,8 @@ Results are saved in the output file `data/jira/jira-comments.csv` with the foll
 ```
 jira_comment_id|jira_ticket_id|assembla_comment_id|assembla_ticket_id|user_login|body
 ```
+
+During the conversion, any differences between the original Assembla ticket comments and the newly created Jira issue comments is recorded in the `data/jira/jira-comments-diffs.csv` file. This is a good place to look so you can verify that indeed the markdown conversion produced the expected results.
 
 ### Import attachments
 
@@ -524,6 +538,36 @@ Now you are ready to convert the Assembla followers list to the Jira issue watch
 
 ```
 $ ruby 16-jira_update_watchers.rb # => data/jira/jira-update-watchers.csv
+```
+
+### External ticket/comment links
+
+In the Assembla ticket description and comment body, we might have embedded (external) ticket links that have to be converted to the Jira format.
+
+These links have the following formats:
+
+```
+tickets/(\d+)
+tickets/(\d+)-.*#/activity/ticket:
+tickets/(\d+)/details
+tickets/(\d+)-.*/details
+tickets/(\d+)-.*/details#
+tickets/(\d+)/details?comment=(\d+)
+tickets/(\d+)-.*/details?comment=(\d+)
+```
+
+The Assembla ticket/comment links are matched to the Jira issue key and comment id as follows:
+
+```
+tickets/(\d+) => JIRA_ISSUE_KEY
+comment=(\d+) => JIRA_COMMENT_ID
+```
+
+and then the links are converted like this:
+
+```
+issue => /browse/[JIRA_ISSUE_KEY]
+comment => /browse/[JIRA_ISSUE_KEY]?focusedCommentId=[JIRA_COMMENT_ID]&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-[JIRA_COMMENT_ID]
 ```
 
 ## Scrum Board
@@ -762,6 +806,7 @@ Wiki links
 [[user:NAME]] => [~NAME]
 [[user:NAME|text]] => [~NAME]
 @INLINE_CODE@ => {{INLINE_CODE}} (monospaced)
+<code>INLINE_CODE</code> => {{INLINE_CODE}} (monospaced)
 [[url:URL|TEXT]] => [TEXT|URL]
 [[url:URL]] => [URL|URL]
 <pre><code> code-snippet </code></pre> => {code:java} code-snippet {code}
@@ -806,14 +851,15 @@ end
 where `reformat_markdown` will do the following global substitutions:
 
 ```
-gsub(/<pre><code>/i,'{code:java}')
-gsub(/<\/code><\/pre>/i,'{code}')
-gsub(/\[\[url:(.*)\|(.*)\]\]/, '[\2|\1]')
-gsub(/\[\[url:(.*)\]\]/, '[\1|\1]')
-gsub(/@([^@]*)@/, '{\1}')
-gsub(/@([a-z.-_]*)/i) { |name| markdown_name(name, list_of_logins) }.
-gsub(/\[\[user:(.*)(\|(.*))?\]\]/i) { |name| markdown_name(name, list_of_logins) }.
-gsub(/\[\[image:(.*)(\|(.*))?\]\]/i) { |image| markdown_image(image, list_of_images, content_type) }
+gsub(/<pre><code>/i,'{code:java}').
+gsub(/<\/code><\/pre>/i,'{code}').
+gsub(/\[\[url:(.*?)\|(.*?)\]\]/i, '[\2|\1]').
+gsub(/\[\[url:(.*?)\]\]/i, '[\1|\1]').
+gsub(/<code>(.*?)<\/code>/i,'{{\1}}').
+gsub(/@([^@]*)@( |$)/, '{{\1}}\2').
+gsub(/@([a-z.-_]*)/i) { |name| markdown_name(name, logins) }.
+gsub(/\[\[user:(.*?)(\|(.*?))?\]\]/i) { |name| markdown_name(name, logins) }.
+gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, content_type) }
 ```
 
 ## Trouble-shooting
@@ -835,6 +881,7 @@ With such a complicated tool, there will always be some loose ends and/or additi
 * Assembla tickets with tag `bug` should be converted into Jira issue of type `bug`.
 * Automatically create custom fields instead of requiring the user to do this manually (see above).
 * Data directory for Jira should have subdirectory per project `data/jira/:project-name`, e.g. like Assembla: `data/assembla/:space-name`
+* Use a user-defined Jira project template instead of requiring the user to define stuff manually.
 * Assign original authors as creators of tickets (this might not be possible)
 * Refactor: cleanup code, remove duplication, fix rubocop warnings, and make more object-oriented using classes.
 

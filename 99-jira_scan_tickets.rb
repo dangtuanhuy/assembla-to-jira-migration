@@ -4,17 +4,18 @@ load './lib/common.rb'
 
 projects = []
 
+projects_csv = csv_to_array("#{output_dir_jira(JIRA_API_PROJECT_NAME)}/jira-projects.csv")
+
 JIRA_API_SPACE_TO_PROJECT.split(',').each do |item|
   space, key = item.split(':')
   goodbye("Missing space, item=#{item}, JIRA_API_SPACE_TO_PROJECT=#{JIRA_API_SPACE_TO_PROJECT}") unless space
   goodbye("Missing key, item=#{item}, JIRA_API_SPACE_TO_PROJECT=#{JIRA_API_SPACE_TO_PROJECT}") unless key
 
-  project = jira_get_project_by_key(key)
+  project = projects_csv.find { |project| project['key'] == key }
   goodbye("Cannot find project with key=#{key}, item=#{item}, JIRA_API_SPACE_TO_PROJECT=#{JIRA_API_SPACE_TO_PROJECT}") unless project
   project_name = project['name']
-  normalized_name = normalize_name(project_name)
 
-  output_dir = "#{OUTPUT_DIR}/jira/#{normalized_name}"
+  output_dir = output_dir_jira(project_name)
 
   tickets = csv_to_array("#{output_dir}/jira-tickets.csv")
   comments = csv_to_array("#{output_dir}/jira-comments.csv")
@@ -39,7 +40,7 @@ JIRA_API_SPACE_TO_PROJECT.split(',').each do |item|
 end
 
 project_by_space = {}
-project.each do |project|
+projects.each do |project|
   project_by_space[project['space']] = project
 end
 
