@@ -229,7 +229,7 @@ def create_ticket_jira(ticket, counter, total)
     ok = true
   rescue RestClient::ExceptionWithResponse => e
     error = JSON.parse(e.response)
-    message = error['errors'].map { |k,v| "#{k}: #{v}"}.join(' | ')
+    message = error['errors'].map { |k, v| "#{k}: #{v}"}.join(' | ')
     retries += 1
     recover = false
     if retries < MAX_RETRY
@@ -346,7 +346,7 @@ puts "\nUsers:"
   @list_of_logins[login] = true
 end
 
-@user_id_to_login.each do |k,v|
+@user_id_to_login.each do |k, v|
   puts "#{k} #{v}"
 end
 
@@ -378,7 +378,7 @@ puts "\nMilestones:"
   @milestone_id_to_name[milestone['id']] = milestone['title']
 end
 
-@milestone_id_to_name.each do |k,v|
+@milestone_id_to_name.each do |k, v|
   puts "#{k} #{v}"
 end
 
@@ -394,7 +394,7 @@ puts "\nIssue types:"
   @issue_type_name_to_id[type['name'].downcase] = type['id']
 end
 
-@issue_type_name_to_id.each do |k,v|
+@issue_type_name_to_id.each do |k, v|
   puts "#{v} #{k}"
 end
 
@@ -419,10 +419,10 @@ if @priorities_jira
     @priority_id_to_name[priority['id']] = priority['name']
   end
 else
-  goodbye("Cannot get priorities!")
+  goodbye('Cannot get priorities!')
 end
 
-@priority_id_to_name.each do |k,v|
+@priority_id_to_name.each do |k, v|
   puts "#{k} #{v}"
 end
 
@@ -433,7 +433,7 @@ puts "\nJira fields:"
 @fields_jira = jira_get_fields
 goodbye('Cannot get fields!') unless @fields_jira
 
-@fields_jira.sort_by{|k| k['id']}.each do |field|
+@fields_jira.sort_by { |k| k['id'] }.each do |field|
   puts "#{field['id']} '#{field['name']}'" unless field['custom']
 end
 
