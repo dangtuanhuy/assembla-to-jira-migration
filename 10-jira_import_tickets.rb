@@ -281,20 +281,20 @@ def create_ticket_jira(ticket, counter, total)
   percentage = ((counter * 100) / total).round.to_s.rjust(3)
   puts "#{percentage}% [#{counter}|#{total}|#{issue_type[:name].upcase}] POST #{URL_JIRA_ISSUES} #{ticket_number}#{dump_payload} => #{ok ? '' : 'N'}OK (#{message}) retries = #{retries}#{summary_ticket_links || description_ticket_links ? ' (*)' : ''}"
 
-  if ok && ticket['description'] != reformatted_description
-    @tickets_diffs << {
-        assembla_ticket_id: ticket_id,
-        assembla_ticket_number: ticket_number,
-        jira_ticket_id: jira_ticket_id,
-        jira_ticket_key: jira_ticket_key,
-        project_id: project_id,
-        description_before: ticket['description'],
-        description_after: reformatted_description
-    }
-
+  if ok
+    if ticket['description'] != reformatted_description
+      @tickets_diffs << {
+          assembla_ticket_id: ticket_id,
+          assembla_ticket_number: ticket_number,
+          jira_ticket_id: jira_ticket_id,
+          jira_ticket_key: jira_ticket_key,
+          project_id: project_id,
+          before: ticket['description'],
+          after: reformatted_description
+      }
+    end
+    @assembla_number_to_jira_key[ticket_number] = jira_ticket_key
   end
-
-  @assembla_number_to_jira_key[ticket_number] = jira_ticket_key if ok
 
   {
       result: (ok ? 'OK' : 'NOK'),
@@ -441,7 +441,7 @@ end
 
 puts "\nJira custom fields:"
 
-@fields_jira.sort_by{|k| k['id']}.each do |field|
+@fields_jira.sort_by { |k| k['id'] }.each do |field|
   puts "#{field['id']} '#{field['name']}'" if field['custom'] && field['name'] !~ /Assembla/
 end
 
@@ -449,7 +449,7 @@ end
 
 puts "\nJira custom Assembla fields:"
 
-@fields_jira.sort_by{|k| k['id']}.each do |field|
+@fields_jira.sort_by { |k| k['id'] }.each do |field|
   puts "#{field['id']} '#{field['name']}'" if field['custom'] && field['name'] =~ /Assembla/
 end
 
@@ -479,7 +479,7 @@ unless missing_fields.length.zero?
   end
   len = nok.length
   unless len.zero?
-    goodbye("Custom field#{len==1?'':'s'} '#{nok.join('\',\'')}' #{len==1?'is':'are'} missing, please define in Jira and make sure to attach it to the appropriate screens")
+    goodbye("Custom field#{len == 1 ? '' : 's'} '#{nok.join('\',\'')}' #{len == 1 ? 'is' : 'are'} missing, please define in Jira and make sure to attach it to the appropriate screens")
   end
 end
 

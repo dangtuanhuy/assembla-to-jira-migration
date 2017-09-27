@@ -611,6 +611,12 @@ end
 # See: https://github.com/kgish/assembla-to-jira/blob/develop/README.md#markdown
 #
 
+# Split content into an array of lines and retain all empty lines,
+# including the (possible) last empty line.
+def split_into_lines(content)
+  "#{content}\n".lines.map(&:chomp)
+end
+
 @cache_markdown_names = {}
 
 def markdown_name(name, logins)
@@ -668,15 +674,19 @@ def markdown_image(image, images, content_type)
 end
 
 def reformat_markdown(content, opts = {})
+  return content if content.nil? || content.length.zero?
   logins = opts[:logins]
   images = opts[:images]
   content_type = opts[:content_type]
   tickets = opts[:tickets]
   strikethru = opts[:strikethru]
-  return content if content.nil? || content.length.zero?
-  lines = content.split("\n")
+  lines = split_into_lines(content)
   markdown = []
   lines.each do |line|
+    if line.strip.length.zero?
+      markdown << line
+      next
+    end
     line.gsub!(/#(\d+)\b/) { |ticket| markdown_ticket_link(ticket, tickets, strikethru) } if tickets
     markdown << line.
                 gsub(/<pre><code>/i,'{code:java}').

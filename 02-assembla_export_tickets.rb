@@ -37,6 +37,7 @@ ITEMS = [
 # 6 - Subtask (ticket2 is subtask of a story and ticket1 is the story)
 # 7 - Dependent (ticket2 depends on ticket1)
 # 8 - Block (ticket2 blocks ticket1)
+
 RELATIONSHIPS = %w{parent child related duplicate sibling story subtask dependent block}.freeze
 
 def get_ticket_attr(space_id, ticket_number, attr, opts)
@@ -53,9 +54,8 @@ def get_ticket_attr(space_id, ticket_number, attr, opts)
 end
 
 space = get_space(ASSEMBLA_SPACE)
-dirname_assembla = get_output_dirname(space, 'assembla')
 
-tickets_assembla_csv = "#{dirname_assembla}/tickets.csv"
+tickets_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
 tickets = csv_to_array(tickets_assembla_csv)
 
 @total_tickets = tickets.length

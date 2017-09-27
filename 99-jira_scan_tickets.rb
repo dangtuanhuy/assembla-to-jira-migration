@@ -2,7 +2,10 @@
 
 load './lib/common.rb'
 
+spaces = []
 projects = []
+
+re = %r{https?://.*\.assembla\.com/spaces/(.*?)/tickets/(\d+)}
 
 projects_csv = csv_to_array("#{output_dir_jira(JIRA_API_PROJECT_NAME)}/jira-projects.csv")
 
@@ -61,49 +64,53 @@ list = []
 # jira_ticket_id,jira_ticket_key,assembla_ticket_id,assembla_ticket_number
 @tickets_jira.each do |item|
   content = item['description']
-  lines = content.split("\n")
+  lines = split_into_lines(content)
   # Ignore the first line
   lines.shift
   lines.each do |line|
-    if re.match(line)
-      list << {
-        space: $1,
-        type: 'ticket',
-        assembla_ticket_number: item['assembla_ticket_number'],
-        jira_ticket_key: item['jira_ticket_key'],
-        assembla_comment_id: '',
-        jira_comment_id: '',
-        link_assembla_ticket_number: $2,
-        link_jira_ticket_key: @ticket_a_nr_to_j_key[$2],
-        match: $&,
-        line: line
-      }
-    end
+    next unless line.strip.length.positive? && re.match(line)
+    spaces << $1 unless spaces.include?($1)
+    list << {
+      space: $1,
+      type: 'ticket',
+      assembla_ticket_number: item['assembla_ticket_number'],
+      jira_ticket_key: item['jira_ticket_key'],
+      assembla_comment_id: '',
+      jira_comment_id: '',
+      link_assembla_ticket_number: $2,
+      link_jira_ticket_key: @ticket_a_nr_to_j_key[$2],
+      match: $&,
+      line: line
+    }
   end
 end
 
 # jira_comment_id,jira_ticket_id,jira_ticket_key,assembla_comment_id,assembla_ticket_id
 @comments_jira.each do |item|
   content = item['body']
-  lines = content.split("\n")
+  lines = split_into_lines(content)
   # Ignore the first line
   lines.shift
   lines.each do |line|
-    if re.match(line)
-      list << {
-        space: $1,
-        type: 'comment',
-        assembla_ticket_number: @ticket_a_id_to_a_nr[item['assembla_ticket_id']],
-        jira_ticket_key: item['jira_ticket_key'],
-        assembla_comment_id: item['assembla_comment_id'],
-        jira_comment_id: item['jira_comment_id'],
-        ink_assembla_ticket_number: $2,
-        link_jira_ticket_key: @ticket_a_nr_to_j_key[$2],
-        match: $&,
-        line: line
-      }
-    end
+    next unless line.strip.length.positive? && re.match(line)
+    list << {
+      space: $1,
+      type: 'comment',
+      assembla_ticket_number: @ticket_a_id_to_a_nr[item['assembla_ticket_id']],
+      jira_ticket_key: item['jira_ticket_key'],
+      assembla_comment_id: item['assembla_comment_id'],
+      jira_comment_id: item['jira_comment_id'],
+      ink_assembla_ticket_number: $2,
+      link_jira_ticket_key: @ticket_a_nr_to_j_key[$2],
+      match: $&,
+      line: line
+    }
   end
+end
+
+puts "Total spaces: #{spaces.length}"
+spaces.each do |space|
+  puts "* #{space}"
 end
 
 write_csv_file("#{OUTPUT_DIR_JIRA}/jira-links-external.csv", list)

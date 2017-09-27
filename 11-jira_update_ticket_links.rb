@@ -56,7 +56,7 @@ end
 
   lines_out = []
 
-  lines_in = description_in.split("\n")
+  lines_in = split_into_lines(description_in)
   lines_in.each_with_index do |line_in, index|
     # Ignore first line 'Assembla [...]\n\n'
     lines_out << if index.zero?

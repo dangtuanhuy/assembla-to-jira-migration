@@ -1,4 +1,4 @@
-description_before
+before
 "can we use the styleguide.europeana.eu css? ( *yes* / no )
 can we use our own javascript? ( *yes* / no )
 
