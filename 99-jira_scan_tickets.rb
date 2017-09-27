@@ -59,7 +59,7 @@ end
 
 @project_by_space = {}
 projects.each do |project|
-  project_by_space[project['space']] = project
+  @project_by_space[project['space']] = project
 end
 
 @tickets_jira = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-tickets.csv")
@@ -102,7 +102,7 @@ list = []
   lines.each do |line|
     found = false
     # next unless line.strip.length.positive? && re_ticket.match(line)
-    next unless line.strip.length.positive? && (re_ticket_match(line) || re_comment_match(line))
+    next unless line.strip.length.positive? && (re_ticket.match(line) || re_comment.match(line))
     space = $1
     link_assembla_ticket_nr = $2
     link_assembla_comment_id = $3
