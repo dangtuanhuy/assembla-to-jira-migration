@@ -2,7 +2,7 @@
 
 load './lib/common.rb'
 
-spaces = []
+spaces = {}
 projects = []
 
 re = %r{https?://.*\.assembla\.com/spaces/(.*?)/tickets/(\d+)}
@@ -69,17 +69,21 @@ list = []
   lines.shift
   lines.each do |line|
     next unless line.strip.length.positive? && re.match(line)
-    spaces << $1 unless spaces.include?($1)
+    space = $1
+    ticket_nr = $2
+    match = $&
+    spaces[space] = 0 unless spaces[space]
+    spaces[space] += 1
     list << {
-      space: $1,
+      space: space,
       type: 'ticket',
       assembla_ticket_number: item['assembla_ticket_number'],
       jira_ticket_key: item['jira_ticket_key'],
       assembla_comment_id: '',
       jira_comment_id: '',
-      link_assembla_ticket_number: $2,
-      link_jira_ticket_key: @ticket_a_nr_to_j_key[$2],
-      match: $&,
+      link_assembla_ticket_number: ticket_nr,
+      link_jira_ticket_key: @ticket_a_nr_to_j_key[ticket_nr],
+      match: match,
       line: line
     }
   end
@@ -93,24 +97,27 @@ end
   lines.shift
   lines.each do |line|
     next unless line.strip.length.positive? && re.match(line)
+    space = $1
+    ticket_nr = $2
+    match = $&
     list << {
-      space: $1,
+      space: space,
       type: 'comment',
       assembla_ticket_number: @ticket_a_id_to_a_nr[item['assembla_ticket_id']],
       jira_ticket_key: item['jira_ticket_key'],
       assembla_comment_id: item['assembla_comment_id'],
       jira_comment_id: item['jira_comment_id'],
-      ink_assembla_ticket_number: $2,
-      link_jira_ticket_key: @ticket_a_nr_to_j_key[$2],
-      match: $&,
+      link_assembla_ticket_number: ticket_nr,
+      link_jira_ticket_key: @ticket_a_nr_to_j_key[ticket_nr],
+      match: match,
       line: line
     }
   end
 end
 
 puts "Total spaces: #{spaces.length}"
-spaces.each do |space|
-  puts "* #{space}"
+spaces.each do |k, v|
+  puts "* #{k} (#{v}) => #{projects.find { |project| project[:space] == k } ? 'OK' : 'SKIP'}"
 end
 
 write_csv_file("#{OUTPUT_DIR_JIRA}/jira-links-external.csv", list)

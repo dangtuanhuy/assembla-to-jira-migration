@@ -703,27 +703,23 @@ def reformat_markdown(content, opts = {})
 end
 
 def rest_client_exception(e, method, url, payload = {})
-  message = 'Unknown message'
+  message = 'Unknown error'
   begin
     err = JSON.parse(e.response)
-  rescue
-    err = {}
-  end
-  if err['errors'] && !err['errors'].empty?
-    message = err['errors'].map { |k, v| "#{k}: #{v}" }.join(' | ')
-  elsif err['errorMessages'] && !err['errorMessages'].empty?
-    message = err['errorMessages'].join(' | ')
-  elsif err['error']
-    message = err['error']
-    if err['error_description']
-      message += ": #{err['error_description']}"
+    if err['errors'] && !err['errors'].empty?
+      message = err['errors'].map { |k, v| "#{k}: #{v}" }.join(' | ')
+    elsif err['errorMessages'] && !err['errorMessages'].empty?
+      message = err['errorMessages'].join(' | ')
+    elsif err['error']
+      message = err['error']
+      if err['error_description']
+        message += ": #{err['error_description']}"
+      end
+    elsif err['status-code']
+      message = "Status code: #{err['status-code']}"
     end
-  elsif err['status-code']
-    message = "Status code: #{err['status-code']}"
-  elsif e.class == RestClient::NotFound
-    message = '404 Not Found'
-  else
-    message = err.inspect[0...250]
+  rescue
+    message = e.to_s
   end
   puts "#{method} #{url}#{payload.empty? ? '' : ' ' + payload.inspect} => NOK (#{message})"
 end

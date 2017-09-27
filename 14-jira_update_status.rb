@@ -111,6 +111,8 @@ def jira_get_transitions(issue_id)
     puts "\nGET #{url} => OK"
   rescue RestClient::ExceptionWithResponse => e
     rest_client_exception(e, 'GET', url)
+  rescue RestClient::Exception => e
+    rest_client_exception(e, 'GET', url)
   rescue => e
     puts "\nGET #{url} => NOK (#{e.message})"
   end
@@ -235,7 +237,14 @@ def jira_update_status(issue_id, status, counter)
   result
 end
 
+first_id = @tickets_assembla.first['id']
+goodbye('Cannot find first_id') unless first_id
+
+issue_id = @assembla_id_to_jira[first_id]
+goodbye("Cannot find issue_id, first_id='#{first_id}'") unless first_id
+
 @transitions = jira_get_transitions(@assembla_id_to_jira[@tickets_assembla.first['id']])
+goodbye("No transitions available, first_id='#{first_id}', issue_id=#{issue_id}") unless @transitions && @transitions
 
 @transition_target_name_to_id = {}
 @transitions.each do |transition|
