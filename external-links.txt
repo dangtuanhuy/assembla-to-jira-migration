@@ -1,0 +1,8 @@
+https?://(.*?).assembla.com/spaces/(.*?)/tickets/(\d+)
+https://(.*).assembla.com/spaces/(.*)/tickets/(\d+)-summary
+https://(.*).assembla.com/spaces/(.*)/tickets/(\d+)-summary/details
+https://(.*).assembla.com/spaces/(.*)/tickets/(\d+)-summary/details#
+https://(.*).assembla.com/spaces/(.*)/tickets/(\d+)-summary/details?tab=activity
+https://(.*).assembla.com/spaces/(.*)/tickets/(\d+)/details?comment=(\d+)
+https://(.*).assembla.com/spaces/(.*)/tickets/(\d+)-summary?comment=(\d+)#comment:(\d+)
+https://(.*).assembla.com/spaces/(.*)/tickets/(\d+)-summary/activity/ticket:
