@@ -34,10 +34,10 @@ tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 
 # Convert assembla_ticket_id to jira_ticket_id and assembla_ticket_number to jira_ticket_key
 @assembla_id_to_jira_id = {}
-@assembla_number_to_jira_key = {}
+@assembla_id_to_jira_key = {}
 @tickets_jira.each do |ticket|
   @assembla_id_to_jira_id[ticket['assembla_ticket_id']] = ticket['jira_ticket_id']
-  @assembla_number_to_jira_key[ticket['assembla_ticket_number']] = ticket['jira_ticket_key']
+  @assembla_id_to_jira_key[ticket['assembla_ticket_id']] = ticket['jira_ticket_key']
 end
 
 # Jira attachments (images)
@@ -92,7 +92,7 @@ def jira_create_comment(issue_id, user_id, comment, counter)
     id = comment['id']
     ticket_id = comment['ticket_id']
     issue_id = @assembla_id_to_jira_id[ticket_id]
-    issue_key = @assembla_number_to_jira_key[ticket_id]
+    issue_key = @assembla_id_to_jira_key[ticket_id]
     comment_id = result['id']
     @comments_diffs << {
         jira_comment_id: comment_id,
@@ -119,7 +119,7 @@ end
   ticket_id = comment['ticket_id']
   user_id = comment['user_id']
   issue_id = @assembla_id_to_jira_id[ticket_id]
-  issue_key = @assembla_number_to_jira_key[ticket_id]
+  issue_key = @assembla_id_to_jira_key[ticket_id]
   user_login = @user_id_to_login[user_id],
   result = jira_create_comment(issue_id, user_id, comment, index + 1)
   next unless result

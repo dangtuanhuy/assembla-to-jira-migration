@@ -2,33 +2,16 @@
 
 load './lib/common.rb'
 
-spaces = {}
-projects = []
+@projects = []
 
-# Tickets:
-# https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)
-# https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)-summary
-# https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)-summary/details#?
-# https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)-summary/details\?tab=activity
-# https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)-summary/activity/ticket:
-#
-# Comments:
-# https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)/details?comment=(\d+)
-# https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)-summary?comment=(\d+)
-# https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)-summary?comment=(\d+)#comment:(\d+)
-
-re_ticket = %r{https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)(\-.*)?(\?.*\b)?}
-
-re_comment = %r{https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)(/details|\-.*?)\?comment=(\d+)(#comment:\d+)?}
-
-projects_csv = csv_to_array("#{output_dir_jira(JIRA_API_PROJECT_NAME)}/jira-projects.csv")
+@projects_csv = csv_to_array("#{output_dir_jira(JIRA_API_PROJECT_NAME)}/jira-projects.csv")
 
 JIRA_API_SPACE_TO_PROJECT.split(',').each do |item|
   space, key = item.split(':')
   goodbye("Missing space, item=#{item}, JIRA_API_SPACE_TO_PROJECT=#{JIRA_API_SPACE_TO_PROJECT}") unless space
   goodbye("Missing key, item=#{item}, JIRA_API_SPACE_TO_PROJECT=#{JIRA_API_SPACE_TO_PROJECT}") unless key
 
-  project = projects_csv.find { |project| project['key'] == key }
+  project = @projects_csv.find { |project| project['key'] == key }
   goodbye("Cannot find project with key=#{key}, item=#{item}, JIRA_API_SPACE_TO_PROJECT=#{JIRA_API_SPACE_TO_PROJECT}") unless project
   project_name = project['name']
 
@@ -47,7 +30,7 @@ JIRA_API_SPACE_TO_PROJECT.split(',').each do |item|
     comment_a_id_to_j_id[comment['assembla_comment_id']] = comment['jira_comment_id']
   end
 
-  projects << {
+  @projects << {
     space: space,
     key: key,
     name: project_name,
@@ -58,8 +41,8 @@ JIRA_API_SPACE_TO_PROJECT.split(',').each do |item|
 end
 
 @project_by_space = {}
-projects.each do |project|
-  @project_by_space[project['space']] = project
+@projects.each do |project|
+  @project_by_space[project[:space]] = project
 end
 
 @tickets_jira = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-tickets.csv")
@@ -77,7 +60,10 @@ def link_ticket_a_nr_to_j_key(space, assembla_ticket_nr)
   project = @project_by_space[space]
   goodbye("Cannot get project, space='#{space}'") unless project
   jira_issue_key = project[:ticket_a_nr_to_j_key][assembla_ticket_nr]
-  goodbye("Cannot get jira_issue_key, space='#{space}', assembla_ticket_nr='#{assembla_ticket_nr}'") unless jira_issue_key
+  unless jira_issue_key
+    puts("Cannot get jira_issue_key, space='#{space}', assembla_ticket_nr='#{assembla_ticket_nr}'")
+    jira_issue_key = 'unknown'
+  end
   jira_issue_key
 end
 
@@ -87,88 +73,135 @@ def link_comment_a_id_to_j_id(space, assembla_comment_id)
   project = @project_by_space[space]
   goodbye("Cannot get project, space='#{space}'") unless project
   jira_comment_id = project[:comment_a_id_to_j_id][assembla_comment_id]
-  goodbye("Cannot get jira_comment_id, space='#{space}', assembla_comment_id='#{assembla_comment_id}'") unless jira_comment_id
+  unless jira_comment_id
+    puts("Cannot get jira_comment_id, space='#{space}', assembla_comment_id='#{assembla_comment_id}'")
+    jira_comment_id = "unknown"
+  end
   jira_comment_id
 end
 
-list = []
+# Tickets:
+# https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)
+# https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)-summary
+# https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)-summary/details#?
+# https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)-summary/details\?tab=activity
+# https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)-summary/activity/ticket:
+#
+# Comments:
+# https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)/details?comment=(\d+)
+# https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)-summary?comment=(\d+)
+# https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)-summary?comment=(\d+)#comment:(\d+)
 
-# jira_ticket_id,jira_ticket_key,assembla_ticket_id,assembla_ticket_number
-@tickets_jira.each do |item|
-  content = item['description']
-  lines = split_into_lines(content)
-  # Ignore the first line
-  lines.shift
-  lines.each do |line|
-    found = false
-    # next unless line.strip.length.positive? && re_ticket.match(line)
-    next unless line.strip.length.positive? && (re_ticket.match(line) || re_comment.match(line))
-    space = $1
-    link_assembla_ticket_nr = $2
-    link_assembla_comment_id = $3
-    match = $&
-    spaces[space] = 0 unless spaces[space]
-    spaces[space] += 1
-    list << {
-      space: space,
-      type: 'ticket',
-      assembla_ticket_number: item['assembla_ticket_number'],
-      jira_ticket_key: item['jira_ticket_key'],
-      assembla_comment_id: '',
-      jira_comment_id: '',
-      link_assembla_ticket_number: link_assembla_ticket_nr,
-      link_jira_ticket_key: link_ticket_a_nr_to_j_key(space, link_assembla_ticket_nr),
-      link_assembla_comment_id: link_assembla_comment_id,
-      link_jira_comment_id: link_comment_a_id_to_j_id(space, link_assembla_comment_id),
-      match: match,
-      line: line
-    }
+@re_ticket = %r{https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)(?:\-.*)?(?:\?.*\b)?}
+@re_comment = %r{https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+).*?\?comment=(\d+)(?:#comment:\d+)?}
+
+@list = []
+@spaces = {}
+
+def collect_list(type, item)
+  goodbye("Collect list: invalid type=#{type}, must be 'ticket' or 'comment'") unless %w(ticket comment).include?(type)
+
+  content = item[type == 'ticket' ? 'description' : 'body']
+  assembla_ticket_nr = type == 'ticket' ? item['assembla_ticket_number'] : @ticket_a_id_to_a_nr[item['assembla_ticket_id']]
+  jira_ticket_key = item['jira_ticket_key']
+
+  if assembla_ticket_nr == "202"
+    puts
   end
-end
 
-# jira_comment_id,jira_ticket_id,jira_ticket_key,assembla_comment_id,assembla_ticket_id
-@comments_jira.each do |item|
-  content = item['body']
+  # Split content into lines, and ignore the first line.
   lines = split_into_lines(content)
-  # Ignore the first line
   lines.shift
   lines.each do |line|
-    # next unless line.strip.length.positive? && re_ticket.match(line)
-    next unless line.strip.length.positive?
-    if re_comment.match(line)
+    next unless line.strip.length.positive? && (@re_comment.match(line) || @re_ticket.match(line))
     space = $1
-    ticket_nr = $2
+
+    assembla_link_ticket_nr = $2
+    # jira_link_ticket_key => calculated from link_ticket_a_nr_to_j_key(assembla_link_ticket_nr)
+
+    assembla_link_comment_id = $3
+    # jira_link_comment_id => calculated from link_comment_a_id_to_j_id(assembla_link_comment_id)
+
     match = $&
-    list << {
-      space: space,
-      type: 'comment',
-      assembla_ticket_number: @ticket_a_id_to_a_nr[item['assembla_ticket_id']],
-      jira_ticket_key: item['jira_ticket_key'],
-      assembla_comment_id: item['assembla_comment_id'],
-      jira_comment_id: item['jira_comment_id'],
-      link_assembla_ticket_number: ticket_nr,
-      link_jira_ticket_key: @ticket_a_nr_to_j_key[ticket_nr],
-      match: match,
-      line: line
-    }
-    elsif re_ticket.match(line)
+
+    # IMPORTANT: Following must come after previous three statements (to preserve values $2, $3 and $&)
+    project = @project_by_space[space]
+
+    @spaces[space] = 0 unless @spaces[space]
+    @spaces[space] += 1
+
+    is_link_comment = !assembla_link_comment_id.nil?
+
+    assembla_comment_id = ''
+    jira_comment_id = ''
+    jira_link_ticket_key = ''
+    assembla_link_comment_id ||= ''
+    jira_link_comment_id = ''
+
+    # TICKET:  jira_ticket_id,jira_ticket_key,assembla_ticket_id,assembla_ticket_number
+    # COMMENT: jira_comment_id,jira_ticket_id,jira_ticket_key,assembla_comment_id,assembla_ticket_id
+
+    # type                         TICKET                 COMMENT
+    #                              ======                 =======
+    # is_link_comment(True/False)  F(ticket)  T(comment)  F(ticket) T(comment)
+    #                              ---------  ----------  --------- ----------
+    # assembla_ticket_nr           x          x           x         x
+    # jira_ticket_key              x          x           x         x
+    # assembla_link_ticket_nr      x          x           x         x
+    # jira_link_ticket_key         x          x           x         x (calculated)
+    #
+    # assembla_comment_id          o          o           x         x
+    # jira_comment_id              o          o           x         x
+    # assembla_link_comment_id     o          x           o         x
+    # jira_link_comment_id         o          x           o         x (calculated)
+
+    if project
+      jira_link_ticket_key = link_ticket_a_nr_to_j_key(space, assembla_link_ticket_nr)
+      if is_link_comment
+        jira_link_comment_id = link_comment_a_id_to_j_id(space, assembla_link_comment_id)
+      end
     end
+
+    @list << {
+      result: project ? 'OK' : 'SKIP',
+      space: space,
+      type: type,
+      is_link_comment: is_link_comment,
+      assembla_ticket_nr: assembla_ticket_nr,
+      jira_ticket_key: jira_ticket_key,
+      assembla_comment_id: assembla_comment_id,
+      jira_comment_id: jira_comment_id,
+      assembla_link_ticket_nr: assembla_link_ticket_nr,
+      jira_link_ticket_key: jira_link_ticket_key,
+      assembla_link_comment_id: assembla_link_comment_id,
+      jira_link_comment_id: jira_link_comment_id,
+      match: match,
+      line: line
+    }
   end
 end
 
-puts "\nTotal spaces: #{spaces.length}"
-spaces.each do |k, v|
-  puts "* #{k} (#{v}) => #{projects.find { |project| project[:space] == k } ? 'OK' : 'SKIP'}"
+@tickets_jira.each do |item|
+  collect_list('ticket', item)
+end
+
+@comments_jira.each do |item|
+  collect_list('comment', item)
+end
+
+puts "\nTotal spaces: #{@spaces.length}"
+@spaces.each do |k, v|
+  puts "* #{k} (#{v}) => #{@projects.find { |project| project[:space] == k } ? 'OK' : 'SKIP'}"
 end
 puts
 
-write_csv_file("#{OUTPUT_DIR_JIRA}/jira-links-external.csv", list)
+write_csv_file("#{OUTPUT_DIR_JIRA}/jira-links-external.csv", @list)
 
 # http://localhost:8080/browse/EC-4820?focusedCommentId=30334&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-30334
 
-projects.each do |project|
+@projects.each do |project|
   space = project[:space]
-  rows = list.select { |row| row[:space] == space }
+  rows = @list.select { |row| row[:space] == space }
   puts "\n#{space} => #{rows.length}"
   rows.each do |row|
     puts "#{row[:type]} '#{row[:match]}'"

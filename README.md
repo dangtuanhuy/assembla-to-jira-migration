@@ -191,6 +191,8 @@ JIRA_API_UNKNOWN_USER=unknown.user
 JIRA_API_IMAGES_THUMBNAIL=description:false,comments:true
 # Status mappings (from:to, if :to missing then same as from)
 JIRA_API_STATUSES=New:To Do,In Progress,Ready for Testing,Done,Invalid:Done
+# Cross project ticket linking
+JIRA_API_SPACE_TO_PROJECT=space1-name:project1-key,space2-name:project2-key
 
 # --- Jira Agile settings --- #
 JIRA_AGILE_HOST=https://jira.example.org/rest/agile/1.0
@@ -545,23 +547,44 @@ $ ruby 16-jira_update_watchers.rb # => data/jira/:space/jira-update-watchers.csv
 
 In the Assembla ticket description and comment body, we might have embedded (external) ticket links that have to be converted to the Jira format.
 
-These links have the following formats:
+These tickets can only be resolved using existing dumps files (`data/jira/:space-name/jira-tickets.csv` and `data/jira/:space-name/jira-comments.csv`) from previous migrations that are indicated in the `.env` file as follows:
 
 ```
-tickets/(\d+)
-tickets/(\d+)-.*#/activity/ticket:
-tickets/(\d+)/details
-tickets/(\d+)-.*/details
-tickets/(\d+)-.*/details#
-tickets/(\d+)/details?comment=(\d+)
-tickets/(\d+)-.*/details?comment=(\d+)
+JIRA_API_SPACE_TO_PROJECT=space1-name:project1-key,space2-name:project2-key
 ```
 
-The Assembla ticket/comment links are matched to the Jira issue key and comment id as follows:
+Only values of `space-name` present in the `JIRA_API_SPACE_TO_PROJECT` parameter in order to be translated into the Jira equivalent.
+
+For links that point to tickets, the captured format looks like:
 
 ```
-tickets/(\d+) => JIRA_ISSUE_KEY
-comment=(\d+) => JIRA_COMMENT_ID
+BASE = https?://.*?\.assembla\.com/spaces/(:space-name)
+
+BASE/tickets/(:ticket-number)
+BASE/tickets/(:ticket-number)-.*#/activity/ticket:
+BASE/tickets/(:ticket-number)/details
+BASE/tickets/(:ticket-number)-.*/details
+BASE/tickets/(:ticket-number)-.*/details#
+
+REGEX = https?:\/\/.*?\.assembla\.com\/spaces\/(.*?)\/tickets\/(\d+)(?:\-.*)?(?:\?.*\b)?
+
+$1 = space-name
+$2 = ticket-number
+```
+
+For links that refer to comments, we have:
+
+```
+BASE = https?://.*?\.assembla\.com/spaces/(:space-name)
+
+BASE/tickets/(:ticket-number)/details?comment=(:comment-id)
+BASE/tickets/(:ticket-number)-.*/details?comment=(:comment-id)
+
+REGEX = https?:\/\/.*?\.assembla\.com\/spaces\/(.*?)\/tickets\/(\d+).*?\?comment=(\d+)(?:#comment:\d+)?
+
+$1 = space-name
+$2 = ticket-number
+$3 => comment-id
 ```
 
 and then the links are converted like this:
@@ -875,6 +898,7 @@ gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, c
 
 With such a complicated tool, there will always be some loose ends and/or additional work to be done at a later time. Hopefully in the not so distant future, I'll have some time to tackle one or more of the following items:
 
+* Use the base url in `.env` for Assembla and Jira: `ASSEMBLA_BASE_URL=https://app.assembla.com` and `JIRA_BASE_URL=https://kiffingish.atlassian.net`.
 * Implement Assembla cardwall columns (statuses = blocked, testable, ready for acceptance, in acceptance testing, ready for deploy) in line with the original Assembla workflow.
 * Update readme screenshots and relevant screen associations, e.g. only `Scrum Default Issue Screen` is required.
 * Jira data dumps directory should be `data/jira/:space/project-name` and NOT just `data/jira/:space`.
