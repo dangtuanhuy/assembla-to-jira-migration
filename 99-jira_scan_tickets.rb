@@ -129,6 +129,7 @@ def collect_list(type, item)
     # jira_link_comment_id => calculated from link_comment_a_id_to_j_id(assembla_link_comment_id)
 
     match = $&
+    replace_with = ''
 
     # IMPORTANT: Following must come after previous three statements (to preserve values $2, $3 and $&)
     project = @project_by_space[space]
@@ -166,11 +167,15 @@ def collect_list(type, item)
       jira_link_ticket_key = link_ticket_a_nr_to_j_key(space, assembla_link_ticket_nr)
       if is_link_comment
         jira_link_comment_id = link_comment_a_id_to_j_id(space, assembla_link_comment_id)
+        replace_with = "#{JIRA_API_BASE}/#{JIRA_API_BROWSE_COMMENT.sub('[:jira-ticket-key]', jira_link_ticket_key).sub('[:jira-comment-id]', jira_link_comment_id)}"
+      else
+        replace_with = "#{JIRA_API_BASE}/#{JIRA_API_BROWSE_ISSUE.sub('[:jira-ticket-key]', jira_link_ticket_key)}"
       end
     end
 
     @list << {
       result: project ? 'OK' : 'SKIP',
+      replace: replace_with == '' ? 'NO' : 'YES',
       space: space,
       type: type,
       is_link_comment: is_link_comment,
@@ -183,6 +188,7 @@ def collect_list(type, item)
       assembla_link_comment_id: assembla_link_comment_id,
       jira_link_comment_id: jira_link_comment_id,
       match: match,
+      replace_with: replace_with,
       line: line
     }
   end
@@ -209,6 +215,6 @@ write_csv_file("#{OUTPUT_DIR_JIRA}/jira-links-external.csv", @list)
   rows = @list.select { |row| row[:space] == space }
   puts "\n#{space} => #{rows.length}"
   rows.each do |row|
-    puts "#{row[:type]} '#{row[:match]}'"
+    puts "#{row[:type]} '#{row[:match]}' => '#{row[:replace_with]}'"
   end
 end

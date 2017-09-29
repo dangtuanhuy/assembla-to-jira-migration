@@ -20,7 +20,8 @@ ASSEMBLA_SKIP_ASSOCIATIONS = (ENV['ASSEMBLA_SKIP_ASSOCIATIONS'] || '').split(','
 
 ASSEMBLA_TYPES_IN_SUMMARY = (ENV['ASSEMBLA_TYPES_IN_SUMMARY'] || '').split(',')
 
-JIRA_API_HOST = ENV['JIRA_API_HOST'].freeze
+JIRA_API_BASE = ENV['JIRA_API_BASE'].freeze
+JIRA_API_HOST = "#{JIRA_API_BASE}/#{ENV['JIRA_API_HOST']}"
 JIRA_API_ADMIN_USER = ENV['JIRA_API_ADMIN_USER'].freeze
 JIRA_API_UNKNOWN_USER = ENV['JIRA_API_UNKNOWN_USER'].freeze
 
@@ -47,6 +48,9 @@ URL_JIRA_FILTERS = "#{JIRA_API_HOST}/filter"
 
 # JIRA_API_SPACE_TO_PROJECT=europeana-npc:EC,europeana-apis:EA
 JIRA_API_SPACE_TO_PROJECT = ENV['JIRA_API_SPACE_TO_PROJECT']
+
+JIRA_API_BROWSE_ISSUE = ENV['JIRA_API_BROWSE_ISSUE'] || 'browse/[:jira-ticket-key]'
+JIRA_API_BROWSE_COMMENT = ENV['JIRA_API_BROWSE_COMMENT'] || 'browse/[:jira-ticket-key]?focusedCommentId=[:jira-comment-id]&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-[:jira-comment-id]'
 
 def normalize_name(name)
   name.downcase.tr(' /_', '-')
@@ -78,7 +82,7 @@ end
 # The following custom fields MUST be defined AND associated with the proper screens
 CUSTOM_FIELD_NAMES = %w(Assembla-Id Assembla-Milestone Assembla-Theme Assembla-Status Assembla-Reporter Assembla-Assignee Assembla-Completed Epic\ Name Rank Story\ Points)
 
-JIRA_AGILE_HOST = ENV['JIRA_AGILE_HOST']
+JIRA_AGILE_HOST = "#{JIRA_API_BASE}/#{ENV['JIRA_AGILE_HOST']}"
 URL_JIRA_BOARDS = "#{JIRA_AGILE_HOST}/board"
 URL_JIRA_SPRINTS = "#{JIRA_AGILE_HOST}/sprint"
 
