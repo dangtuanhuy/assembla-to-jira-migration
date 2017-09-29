@@ -49,9 +49,9 @@ end
   description_in = fields['description'].strip
   summary_in = fields['summary'].strip
 
-  blck = ->(t){ markdown_ticket_link(t, @tickets, true) }
+  blk = ->(t){ markdown_ticket_link(t, @tickets, true) }
 
-  summary_out = summary_in.gsub(/#(\d+)/, &blck)
+  summary_out = summary_in.gsub(/#(\d+)/, &blk)
   summary = summary_out if summary_in != summary_out
 
   lines_out = []
@@ -62,7 +62,7 @@ end
     lines_out << if index.zero?
                    line_in
                  else
-                   line_in.gsub(/#(\d+)/, &blck)
+                   line_in.gsub(/#(\d+)/, &blk)
                  end
   end
 

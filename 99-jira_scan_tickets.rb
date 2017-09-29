@@ -11,7 +11,7 @@ JIRA_API_SPACE_TO_PROJECT.split(',').each do |item|
   goodbye("Missing space, item=#{item}, JIRA_API_SPACE_TO_PROJECT=#{JIRA_API_SPACE_TO_PROJECT}") unless space
   goodbye("Missing key, item=#{item}, JIRA_API_SPACE_TO_PROJECT=#{JIRA_API_SPACE_TO_PROJECT}") unless key
 
-  project = @projects_csv.find { |project| project['key'] == key }
+  project = @projects_csv.detect { |p| p['key'] == key }
   goodbye("Cannot find project with key=#{key}, item=#{item}, JIRA_API_SPACE_TO_PROJECT=#{JIRA_API_SPACE_TO_PROJECT}") unless project
   project_name = project['name']
 
@@ -55,6 +55,27 @@ end
   @ticket_a_nr_to_j_key[ticket['assembla_ticket_number']] = ticket['jira_ticket_key']
 end
 
+def jira_update_issue_description(issue_id, description)
+  result = nil
+  url = "#{URL_JIRA_ISSUES}/#{issue_id}"
+  payload = {
+    update: {},
+    fields: {
+      description: description
+    }
+  }.to_json
+  begin
+    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: JIRA_HEADERS)
+    puts "PUT #{url} description => OK"
+    result = true
+  rescue RestClient::ExceptionWithResponse => e
+    rest_client_exception(e, 'PUT', url, payload)
+  rescue => e
+    puts "PUT #{url} description => NOK (#{e.message})"
+  end
+  result
+end
+
 # Convert the Assembla ticket number to the Jira issue key
 def link_ticket_a_nr_to_j_key(space, assembla_ticket_nr)
   project = @project_by_space[space]
@@ -75,7 +96,7 @@ def link_comment_a_id_to_j_id(space, assembla_comment_id)
   jira_comment_id = project[:comment_a_id_to_j_id][assembla_comment_id]
   unless jira_comment_id
     puts("Cannot get jira_comment_id, space='#{space}', assembla_comment_id='#{assembla_comment_id}'")
-    jira_comment_id ='0'
+    jira_comment_id = '0'
   end
   jira_comment_id
 end
@@ -99,126 +120,192 @@ end
 
 @re_comment = %r{https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+).*?\?comment=(\d+)(?:#comment:\d+)?}
 
-# => /browse/[:jira-ticket-key]?focusedCommentId=[:jira-comment-id]&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-[:jira-comment-id]
+# => /browse/[:jira-ticket-key]?focusedCommentId=[:jira-comment-id]&page=com.atlassian.jira.plugin.system
+# .issuetabpanels:comment-tabpanel#comment-[:jira-comment-id]
 
-@list = []
+@list_external_all = []
+@list_external_updated = []
 @spaces = {}
 
-def collect_list(type, item)
-  goodbye("Collect list: invalid type=#{type}, must be 'ticket' or 'comment'") unless %w(ticket comment).include?(type)
+def handle_match(match, type, item, line, assembla_ticket_nr, jira_ticket_key, space, assembla_link_ticket_nr, assembla_link_comment_id)
+  # jira_link_ticket_key => calculated from link_ticket_a_nr_to_j_key(assembla_link_ticket_nr)
+  # jira_link_comment_id => calculated from link_comment_a_id_to_j_id(assembla_link_comment_id)
+
+  replace_with = nil
+
+  project = @project_by_space[space]
+
+  @spaces[space] = 0 unless @spaces[space]
+  @spaces[space] += 1
+
+  is_link_comment = !assembla_link_comment_id.nil?
+
+  assembla_comment_id = type == 'comment' ? item['assembla_comment_id'] : ''
+  jira_comment_id = type == 'comment' ? item['jira_comment_id'] : ''
+  jira_link_ticket_key = ''
+  assembla_link_comment_id ||= ''
+  jira_link_comment_id = ''
+
+  # TICKET:  jira_ticket_id,jira_ticket_key,assembla_ticket_id,assembla_ticket_number
+  # COMMENT: jira_comment_id,jira_ticket_id,jira_ticket_key,assembla_comment_id,assembla_ticket_id
+
+  # type                         TICKET                 COMMENT
+  #                              ======                 =======
+  # is_link_comment(True/False)  F(ticket)  T(comment)  F(ticket) T(comment)
+  #                              ---------  ----------  --------- ----------
+  # assembla_ticket_nr           x          x           x         x
+  # jira_ticket_key              x          x           x         x
+  # assembla_link_ticket_nr      x          x           x         x
+  # jira_link_ticket_key         x          x           x         x (calculated)
+  #
+  # assembla_comment_id          o          o           x         x
+  # jira_comment_id              o          o           x         x
+  # assembla_link_comment_id     o          x           o         x
+  # jira_link_comment_id         o          x           o         x (calculated)
+
+  if project
+    jira_link_ticket_key = link_ticket_a_nr_to_j_key(space, assembla_link_ticket_nr)
+    url = JIRA_API_BROWSE_ISSUE.sub('[:jira-ticket-key]', jira_link_ticket_key)
+    if is_link_comment
+      jira_link_comment_id = link_comment_a_id_to_j_id(space, assembla_link_comment_id)
+      if jira_link_comment_id.to_i.positive?
+        url = JIRA_API_BROWSE_COMMENT.sub('[:jira-ticket-key]', jira_link_ticket_key).sub('[:jira-comment-id]', jira_link_comment_id)
+      end
+    end
+    replace_with = "#{JIRA_API_BASE}/#{url}"
+  end
+
+  line_after = replace_with.nil? ? '' : line.sub(match, replace_with)
+
+  @list_external_all << {
+    result: project ? 'OK' : 'SKIP',
+    replace: replace_with.nil? ? 'NO' : 'YES',
+    space: space,
+    type: type,
+    is_link_comment: is_link_comment,
+    assembla_ticket_nr: assembla_ticket_nr,
+    jira_ticket_key: jira_ticket_key,
+    assembla_comment_id: assembla_comment_id,
+    jira_comment_id: jira_comment_id,
+    assembla_link_ticket_nr: assembla_link_ticket_nr,
+    jira_link_ticket_key: jira_link_ticket_key,
+    assembla_link_comment_id: assembla_link_comment_id,
+    jira_link_comment_id: jira_link_comment_id,
+    match: match,
+    replace_with: replace_with.nil? ? '' : replace_with,
+    line_before: line,
+    line_after: line_after
+  }
+
+  replace_with.nil? ? match : replace_with
+end
+
+def collect_list_external_all(type, item)
+  goodbye("Collect list_external_all: invalid type=#{type}, must be 'ticket' or 'comment'") unless %w(ticket comment).include?(type)
 
   content = item[type == 'ticket' ? 'description' : 'body']
+
   assembla_ticket_nr = type == 'ticket' ? item['assembla_ticket_number'] : @ticket_a_id_to_a_nr[item['assembla_ticket_id']]
   jira_ticket_key = item['jira_ticket_key']
 
+  if content = 'comment'
+    puts
+  end
+
   # Split content into lines, and ignore the first line.
   lines = split_into_lines(content)
-  lines.shift
+  first_line = lines.shift
+  lines_before = lines
+  lines_after = []
+  lines_changed = false
   lines.each do |line|
-    next unless line.strip.length.positive?
+    line_before = line
     line_after = line
-                 .gsub(@re_comment) { |match| "COMMENT[space='#{$1}', link='#{$2}', comment='#{$3}']"}
-                 .gsub(@re_ticket) { |match| "TICKET[space='#{$1}', link='#{$2}']"}
-
-    if line_after != line
-      puts "BEFORE: '#{line}'"
-      puts "AFTER : '#{line_after}'"
+    if line.strip.length.positive?
+      blk = ->(match) { handle_match(match, type,  item, line, assembla_ticket_nr, jira_ticket_key, $1, $2, $3) }
+      # IMPORTANT: @re_comment MUST precede @re_ticket
+      line_after = line.
+             gsub(@re_comment, &blk).
+             gsub(@re_ticket, &blk)
     end
-    # space = $1
-    #
-    # assembla_link_ticket_nr = $2
-    # # jira_link_ticket_key => calculated from link_ticket_a_nr_to_j_key(assembla_link_ticket_nr)
-    #
-    # assembla_link_comment_id = $3
-    # # jira_link_comment_id => calculated from link_comment_a_id_to_j_id(assembla_link_comment_id)
-    #
-    # match = $&
-    # replace_with = ''
-    #
-    # # IMPORTANT: Following must come after previous three statements (to preserve values $2, $3 and $&)
-    # project = @project_by_space[space]
-    #
-    # @spaces[space] = 0 unless @spaces[space]
-    # @spaces[space] += 1
-    #
-    # is_link_comment = !assembla_link_comment_id.nil?
-    #
-    # assembla_comment_id = ''
-    # assembla_comment_id = type == 'comment' ? item['assembla_comment_id'] : ''
-    # jira_comment_id = type == 'comment' ? item['jira_comment_id'] : ''
-    # jira_link_ticket_key = ''
-    # assembla_link_comment_id ||= ''
-    # jira_link_comment_id = ''
-    #
-    # # TICKET:  jira_ticket_id,jira_ticket_key,assembla_ticket_id,assembla_ticket_number
-    # # COMMENT: jira_comment_id,jira_ticket_id,jira_ticket_key,assembla_comment_id,assembla_ticket_id
-    #
-    # # type                         TICKET                 COMMENT
-    # #                              ======                 =======
-    # # is_link_comment(True/False)  F(ticket)  T(comment)  F(ticket) T(comment)
-    # #                              ---------  ----------  --------- ----------
-    # # assembla_ticket_nr           x          x           x         x
-    # # jira_ticket_key              x          x           x         x
-    # # assembla_link_ticket_nr      x          x           x         x
-    # # jira_link_ticket_key         x          x           x         x (calculated)
-    # #
-    # # assembla_comment_id          o          o           x         x
-    # # jira_comment_id              o          o           x         x
-    # # assembla_link_comment_id     o          x           o         x
-    # # jira_link_comment_id         o          x           o         x (calculated)
-    #
-    # if project
-    #   jira_link_ticket_key = link_ticket_a_nr_to_j_key(space, assembla_link_ticket_nr)
-    #   if is_link_comment
-    #     jira_link_comment_id = link_comment_a_id_to_j_id(space, assembla_link_comment_id)
-    #     replace_with = "#{JIRA_API_BASE}/#{JIRA_API_BROWSE_COMMENT.sub('[:jira-ticket-key]', jira_link_ticket_key).sub('[:jira-comment-id]', jira_link_comment_id)}"
-    #   else
-    #     replace_with = "#{JIRA_API_BASE}/#{JIRA_API_BROWSE_ISSUE.sub('[:jira-ticket-key]', jira_link_ticket_key)}"
-    #   end
-    # end
-    #
-    # @list << {
-    #   result: project ? 'OK' : 'SKIP',
-    #   replace: replace_with == '' ? 'NO' : 'YES',
-    #   space: space,
-    #   type: type,
-    #   is_link_comment: is_link_comment,
-    #   assembla_ticket_nr: assembla_ticket_nr,
-    #   jira_ticket_key: jira_ticket_key,
-    #   assembla_comment_id: assembla_comment_id,
-    #   jira_comment_id: jira_comment_id,
-    #   assembla_link_ticket_nr: assembla_link_ticket_nr,
-    #   jira_link_ticket_key: jira_link_ticket_key,
-    #   assembla_link_comment_id: assembla_link_comment_id,
-    #   jira_link_comment_id: jira_link_comment_id,
-    #   match: match,
-    #   replace_with: replace_with,
-    #   line: line
-    # }
+    lines_after << line_after
+    if line_before != line_after
+      # puts "'#{line_before}' => '#{line_after}'"
+      lines_changed = true
+    end
+  end
+  if lines_changed
+    # puts "BEFORE:\n'#{lines_before.join("\n")}'\nAFTER:\n'#{lines.join("\n")}'"
+    @list_external_updated << {
+      type: type,
+      assembla_ticket_nr: assembla_ticket_nr,
+      jira_ticket_key: jira_ticket_key,
+      jira_comment_id: jira_comment_id,
+      before: "#{first_line}\n#{lines_before.join("\n")}",
+      after: "#{first_line}\n#{lines_after.join("\n")}"
+    }
   end
 end
 
 @tickets_jira.each do |item|
-  collect_list('ticket', item)
+  collect_list_external_all('ticket', item)
 end
 
 @comments_jira.each do |item|
-  collect_list('comment', item)
+  collect_list_external_all('comment', item)
 end
 
 puts "\nTotal spaces: #{@spaces.length}"
 @spaces.each do |k, v|
-  puts "* #{k} (#{v}) => #{@projects.find { |project| project[:space] == k } ? 'OK' : 'SKIP'}"
+  puts "* #{k} (#{v}) => #{@projects.detect { |project| project[:space] == k } ? 'OK' : 'SKIP'}"
 end
 puts
 
-write_csv_file("#{OUTPUT_DIR_JIRA}/jira-links-external.csv", @list)
+write_csv_file("#{OUTPUT_DIR_JIRA}/jira-links-external-all.csv", @list_external_all)
+write_csv_file("#{OUTPUT_DIR_JIRA}/jira-links-external-updated.csv", @list_external_updated)
 
 @projects.each do |project|
   space = project[:space]
-  rows = @list.select { |row| row[:space] == space }
+  rows = @list_external_all.select { |row| row[:space] == space }
   puts "\n#{space} => #{rows.length}"
   rows.each do |row|
     puts "#{row[:type]} '#{row[:match]}' => '#{row[:replace_with]}'"
+  end
+end
+
+# Go to work!
+
+@all_external = @list_external_all.select { |x| x[:result] == 'OK' && x[:replace] == 'YES'}
+@all_external_tickets = @all_external.select { |x| x[:type] == 'ticket'}
+@all_external_comments = @all_external.select { |x| x[:type] == 'comment'}
+
+ticket_key_seen = {}
+puts "\nTICKETS:"
+@all_external_tickets.sort { |x, y| x[:jira_ticket_key] <=> y[:jira_ticket_key] }.each do |ticket|
+  type = ticket[:type]
+  is_link_comment = ticket[:is_link_comment]
+  jira_ticket_key = ticket[:jira_ticket_key]
+  ticket_key_seen[jira_ticket_key] ||= 0
+  ticket_key_seen[jira_ticket_key] += 1
+  seen = ticket_key_seen[jira_ticket_key] > 1
+  puts "jira_ticket_key='#{jira_ticket_key}'#{is_link_comment ? ' ' + ticket[:jira_link_comment_id] : ''}#{seen ? ' (*)' : ''}"
+  unless seen
+    puts ticket[:after]
+    # result = jira_update_issue_description(jira_ticket_key, ticket[:after])
+  end
+end
+
+comment_id_seen = {}
+puts "\nComments:"
+@all_external_comments.sort { |x, y| x[:jira_comment_id] <=> y[:jira_comment_id] }.each do |comment|
+  is_link_comment = comment[:is_link_comment]
+  jira_comment_id = comment[:jira_comment_id]
+  comment_id_seen[jira_comment_id] ||= 0
+  comment_id_seen[jira_comment_id] += 1
+  seen = comment_id_seen[jira_comment_id] > 1
+  puts "jira_comment_id='#{jira_comment_id}'#{is_link_comment ? ' ' + comment[:jira_link_comment_id] : ''}#{seen ? ' (*)' : ''}"
+  unless seen
+    puts comment[:after]
+    # result = jira_update_comment_body(jira_comment_id, comment[:after])
   end
 end
