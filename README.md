@@ -174,7 +174,7 @@ DEBUG=false
 ASSEMBLA_API_HOST=https://api.assembla.com/v1
 ASSEMBLA_API_KEY=api-key
 ASSEMBLA_API_SECRET=api-secret
-ASSEMBLA_URL_TICKETS=https://app.assembla.com/spaces/:space/tickets
+ASSEMBLA_URL_TICKETS=https://app.assembla.com/spaces/:space-name/tickets
 ASSEMBLA_SPACE=space
 ASSEMBLA_SKIP_ASSOCIATIONS=parent,child,story,subtask
 # Ticket types extracted from ticket summary, e.g. starting with 'Spike: '
@@ -189,14 +189,16 @@ JIRA_API_ADMIN_USERNAME=john.doe
 JIRA_API_ADMIN_PASSWORD=secret
 JIRA_API_UNKNOWN_USER=unknown.user
 JIRA_API_IMAGES_THUMBNAIL=description:false,comments:true
-# Status mappings (from:to, if :to missing then same as from)
-JIRA_API_STATUSES=New:To Do,In Progress,Ready for Testing,Done,Invalid:Done
+
 # Cross project ticket linking
-JIRA_API_SPACE_TO_PROJECT=space1-name:project1-key,space2-name:project2-key
+JIRA_API_SPACE_TO_PROJECT=space1-name:project1-key,space2-name:project2-name
+JIRA_API_RE_TICKET=https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)(?:\-[^)\]]+)?(?:\?.*\b)?
+JIRA_API_RE_COMMENT=https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+).*?\?comment=(\d+)(?:#comment:\d+)?
+JIRA_API_BROWSE_ISSUE=browse/[:jira-ticket-key]
+JIRA_API_BROWSE_COMMENT=browse/[:jira-ticket-key]?focusedCommentId=:jira-comment-id&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-[:jira-comment-id]
 
 # --- Jira Agile settings --- #
 JIRA_AGILE_HOST=https://jira.example.org/rest/agile/1.0
-JIRA_BOARD_NAME=Name of Scrum Board
 ```
 
 By using the filter `TICKETS_CREATED_ON` you can limited the tickets to those that were created on or after the date indicated. So for example:
@@ -555,7 +557,7 @@ JIRA_API_SPACE_TO_PROJECT=space1-name:project1-key,space2-name:project2-key
 
 Only values of `space-name` present in the `JIRA_API_SPACE_TO_PROJECT` parameter in order to be translated into the Jira equivalent.
 
-For links that point to tickets, the captured format looks like:
+For links that point to TICKETS, the captured format looks like:
 
 ```
 BASE = https?://.*?\.assembla\.com/spaces/(:space-name)
@@ -572,7 +574,7 @@ $1 = space-name
 $2 = ticket-number
 ```
 
-For links that refer to comments, we have:
+For links that refer to COMMENTS, we have:
 
 ```
 BASE = https?://.*?\.assembla\.com/spaces/(:space-name)

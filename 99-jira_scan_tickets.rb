@@ -62,7 +62,7 @@ def link_ticket_a_nr_to_j_key(space, assembla_ticket_nr)
   jira_issue_key = project[:ticket_a_nr_to_j_key][assembla_ticket_nr]
   unless jira_issue_key
     puts("Cannot get jira_issue_key, space='#{space}', assembla_ticket_nr='#{assembla_ticket_nr}'")
-    jira_issue_key = 'unknown'
+    jira_issue_key = '0'
   end
   jira_issue_key
 end
@@ -75,7 +75,7 @@ def link_comment_a_id_to_j_id(space, assembla_comment_id)
   jira_comment_id = project[:comment_a_id_to_j_id][assembla_comment_id]
   unless jira_comment_id
     puts("Cannot get jira_comment_id, space='#{space}', assembla_comment_id='#{assembla_comment_id}'")
-    jira_comment_id = "unknown"
+    jira_comment_id ='0'
   end
   jira_comment_id
 end
@@ -86,14 +86,20 @@ end
 # https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)-summary/details#?
 # https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)-summary/details\?tab=activity
 # https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)-summary/activity/ticket:
-#
+
+# @re_ticket = %r{https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)(?:\-.*)?(?:\?.*\b)?}
+@re_ticket = %r{https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)(?:\-[^)\]]+)?(?:\?.*\b)?}
+
+# => /browse/[:jira-ticket-key]
+
 # Comments:
 # https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)/details?comment=(\d+)
 # https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)-summary?comment=(\d+)
 # https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)-summary?comment=(\d+)#comment:(\d+)
 
-@re_ticket = %r{https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)(?:\-.*)?(?:\?.*\b)?}
 @re_comment = %r{https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+).*?\?comment=(\d+)(?:#comment:\d+)?}
+
+# => /browse/[:jira-ticket-key]?focusedCommentId=[:jira-comment-id]&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-[:jira-comment-id]
 
 @list = []
 @spaces = {}
@@ -105,7 +111,7 @@ def collect_list(type, item)
   assembla_ticket_nr = type == 'ticket' ? item['assembla_ticket_number'] : @ticket_a_id_to_a_nr[item['assembla_ticket_id']]
   jira_ticket_key = item['jira_ticket_key']
 
-  if assembla_ticket_nr == "202"
+  if assembla_ticket_nr == '620'
     puts
   end
 
@@ -133,7 +139,8 @@ def collect_list(type, item)
     is_link_comment = !assembla_link_comment_id.nil?
 
     assembla_comment_id = ''
-    jira_comment_id = ''
+    assembla_comment_id = type == 'comment' ? item['assembla_comment_id'] : ''
+    jira_comment_id = type == 'comment' ? item['jira_comment_id'] : ''
     jira_link_ticket_key = ''
     assembla_link_comment_id ||= ''
     jira_link_comment_id = ''
@@ -196,8 +203,6 @@ end
 puts
 
 write_csv_file("#{OUTPUT_DIR_JIRA}/jira-links-external.csv", @list)
-
-# http://localhost:8080/browse/EC-4820?focusedCommentId=30334&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-30334
 
 @projects.each do |project|
   space = project[:space]
