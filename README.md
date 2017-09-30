@@ -100,7 +100,7 @@ Each step will generate a log of the results in the form of a csv file for refer
 { 'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json' }
 ```
 
-where `user_login` is either the `JIRA_API_ADMIN_USER` for global configurations (create/update projects, issue types, issue link types, etc) or the `reporter_name` (issue creator) for updating certain issue specific attributes (status and associations).
+where `user_login` is either the `JIRA_API_ADMIN_USER` for global configurations (create/update projects, issue types, issue link types and sprints) or the `reporter_name` (issue creator) for updating certain issue specific attributes (status, associations, watchers, issue description and comment body).
 
 ## Preparations
 
@@ -559,6 +559,8 @@ Now you are ready to convert the Assembla followers list to the Jira issue watch
 ```
 $ ruby 16-jira_update_watchers.rb # => data/jira/:space/jira-update-watchers.csv
 ```
+
+Important: the Jira API requests MUST be made with an Authorization Header constructed with the `username` (watcher), otherwise a `403 Forbidden` error will be returned.
 
 ### External ticket/comment links
 
