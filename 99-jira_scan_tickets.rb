@@ -76,6 +76,24 @@ def jira_update_issue_description(issue_id, description)
   result
 end
 
+def jira_update_comment_body(issue_id, comment_id, body)
+  result = nil
+  url = "#{URL_JIRA_ISSUES}/#{issue_id}/comment/#{comment_id}"
+  payload = {
+      body: body
+  }.to_json
+  begin
+    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: JIRA_HEADERS)
+    puts "PUT #{url} description => OK"
+    result = true
+  rescue RestClient::ExceptionWithResponse => e
+    rest_client_exception(e, 'PUT', url, payload)
+  rescue => e
+    puts "PUT #{url} description => NOK (#{e.message})"
+  end
+  result
+end
+
 # Convert the Assembla ticket number to the Jira issue key
 def link_ticket_a_nr_to_j_key(space, assembla_ticket_nr)
   project = @project_by_space[space]
@@ -203,13 +221,18 @@ end
 def collect_list_external_all(type, item)
   goodbye("Collect list_external_all: invalid type=#{type}, must be 'ticket' or 'comment'") unless %w(ticket comment).include?(type)
 
-  content = item[type == 'ticket' ? 'description' : 'body']
-
-  assembla_ticket_nr = type == 'ticket' ? item['assembla_ticket_number'] : @ticket_a_id_to_a_nr[item['assembla_ticket_id']]
-  jira_ticket_key = item['jira_ticket_key']
-
-  if content = 'comment'
-    puts
+  if type == 'ticket'
+    content = item['description']
+    assembla_ticket_nr = item['assembla_ticket_number']
+    jira_ticket_key = item['jira_ticket_key']
+    assembla_comment_id = ''
+    jira_comment_id = ''
+  else
+    content = item['body']
+    assembla_ticket_nr = @ticket_a_id_to_a_nr[item['assembla_ticket_id']]
+    jira_ticket_key = item['jira_ticket_key']
+    assembla_comment_id = item['assembla_comment_id']
+    jira_comment_id = item['jira_comment_id']
   end
 
   # Split content into lines, and ignore the first line.
@@ -222,11 +245,11 @@ def collect_list_external_all(type, item)
     line_before = line
     line_after = line
     if line.strip.length.positive?
-      blk = ->(match) { handle_match(match, type,  item, line, assembla_ticket_nr, jira_ticket_key, $1, $2, $3) }
+      blk = ->(match) { handle_match(match, type, item, line, assembla_ticket_nr, jira_ticket_key, $1, $2, $3) }
       # IMPORTANT: @re_comment MUST precede @re_ticket
       line_after = line.
-             gsub(@re_comment, &blk).
-             gsub(@re_ticket, &blk)
+                   gsub(@re_comment, &blk).
+                   gsub(@re_ticket, &blk)
     end
     lines_after << line_after
     if line_before != line_after
@@ -240,6 +263,7 @@ def collect_list_external_all(type, item)
       type: type,
       assembla_ticket_nr: assembla_ticket_nr,
       jira_ticket_key: jira_ticket_key,
+      assembla_comment_id: assembla_comment_id,
       jira_comment_id: jira_comment_id,
       before: "#{first_line}\n#{lines_before.join("\n")}",
       after: "#{first_line}\n#{lines_after.join("\n")}"
@@ -275,37 +299,24 @@ end
 
 # Go to work!
 
-@all_external = @list_external_all.select { |x| x[:result] == 'OK' && x[:replace] == 'YES'}
-@all_external_tickets = @all_external.select { |x| x[:type] == 'ticket'}
-@all_external_comments = @all_external.select { |x| x[:type] == 'comment'}
+@all_external_tickets = @list_external_updated.select { |x| x[:type] == 'ticket' }
+@all_external_comments = @list_external_updated.select { |x| x[:type] == 'comment' }
 
-ticket_key_seen = {}
 puts "\nTICKETS:"
 @all_external_tickets.sort { |x, y| x[:jira_ticket_key] <=> y[:jira_ticket_key] }.each do |ticket|
-  type = ticket[:type]
-  is_link_comment = ticket[:is_link_comment]
-  jira_ticket_key = ticket[:jira_ticket_key]
-  ticket_key_seen[jira_ticket_key] ||= 0
-  ticket_key_seen[jira_ticket_key] += 1
-  seen = ticket_key_seen[jira_ticket_key] > 1
-  puts "jira_ticket_key='#{jira_ticket_key}'#{is_link_comment ? ' ' + ticket[:jira_link_comment_id] : ''}#{seen ? ' (*)' : ''}"
-  unless seen
-    puts ticket[:after]
-    # result = jira_update_issue_description(jira_ticket_key, ticket[:after])
-  end
+  issue_id = ticket[:jira_ticket_key]
+  description = ticket[:after]
+  # puts "\nissue_id='#{issue_id}'"
+  # puts "description='#{description}'"
+  jira_update_issue_description(issue_id, description)
 end
 
-comment_id_seen = {}
 puts "\nComments:"
 @all_external_comments.sort { |x, y| x[:jira_comment_id] <=> y[:jira_comment_id] }.each do |comment|
-  is_link_comment = comment[:is_link_comment]
-  jira_comment_id = comment[:jira_comment_id]
-  comment_id_seen[jira_comment_id] ||= 0
-  comment_id_seen[jira_comment_id] += 1
-  seen = comment_id_seen[jira_comment_id] > 1
-  puts "jira_comment_id='#{jira_comment_id}'#{is_link_comment ? ' ' + comment[:jira_link_comment_id] : ''}#{seen ? ' (*)' : ''}"
-  unless seen
-    puts comment[:after]
-    # result = jira_update_comment_body(jira_comment_id, comment[:after])
-  end
+  issue_id = comment[:jira_ticket_key]
+  comment_id = comment[:jira_comment_id]
+  body = comment[:after]
+  # puts "\nissue_id='#{issue_id}' comment_id='#{comment_id}'"
+  # puts "body='#{body}'"
+  jira_update_comment_body(issue_id, comment_id, body)
 end
