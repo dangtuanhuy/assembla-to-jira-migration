@@ -46,18 +46,28 @@ end
 end
 
 @tickets_jira = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-tickets.csv")
-@comments_jira = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-comments.csv")
 
 @ticket_a_id_to_a_nr = {}
 @ticket_a_nr_to_j_key = {}
+@ticket_j_key_to_j_reporter = {}
 @tickets_jira.each do |ticket|
   @ticket_a_id_to_a_nr[ticket['assembla_ticket_id']] = ticket['assembla_ticket_number']
   @ticket_a_nr_to_j_key[ticket['assembla_ticket_number']] = ticket['jira_ticket_key']
+  @ticket_j_key_to_j_reporter[ticket['jira_ticket_key']] = ticket['jira_reporter_name']
 end
 
-def jira_update_issue_description(issue_id, description)
+@comments_jira = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-comments.csv")
+
+@comment_j_key_to_j_login = {}
+@comments_jira.each do |comment|
+  @comment_j_key_to_j_login[comment['jira_ticket_key']] = comment['user_login']
+end
+
+def jira_update_issue_description(issue_key, description)
   result = nil
-  url = "#{URL_JIRA_ISSUES}/#{issue_id}"
+  user_login = @ticket_j_key_to_j_reporter[issue_key]
+  headers = headers_user_login(user_login)
+  url = "#{URL_JIRA_ISSUES}/#{issue_key}"
   payload = {
     update: {},
     fields: {
@@ -65,7 +75,7 @@ def jira_update_issue_description(issue_id, description)
     }
   }.to_json
   begin
-    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: JIRA_HEADERS)
+    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: headers)
     puts "PUT #{url} description => OK"
     result = true
   rescue RestClient::ExceptionWithResponse => e
@@ -76,14 +86,16 @@ def jira_update_issue_description(issue_id, description)
   result
 end
 
-def jira_update_comment_body(issue_id, comment_id, body)
+def jira_update_comment_body(issue_key, comment_id, body)
   result = nil
-  url = "#{URL_JIRA_ISSUES}/#{issue_id}/comment/#{comment_id}"
+  user_login = @comment_j_key_to_j_login[issue_key]
+  headers = headers_user_login(user_login)
+  url = "#{URL_JIRA_ISSUES}/#{issue_key}/comment/#{comment_id}"
   payload = {
       body: body
   }.to_json
   begin
-    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: JIRA_HEADERS)
+    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: headers)
     puts "PUT #{url} description => OK"
     result = true
   rescue RestClient::ExceptionWithResponse => e
@@ -304,19 +316,19 @@ end
 
 puts "\nTICKETS:"
 @all_external_tickets.sort { |x, y| x[:jira_ticket_key] <=> y[:jira_ticket_key] }.each do |ticket|
-  issue_id = ticket[:jira_ticket_key]
+  issue_key = ticket[:jira_ticket_key]
   description = ticket[:after]
-  # puts "\nissue_id='#{issue_id}'"
+  # puts "\nissue_key='#{issue_key}'"
   # puts "description='#{description}'"
-  jira_update_issue_description(issue_id, description)
+  jira_update_issue_description(issue_key, description)
 end
 
 puts "\nComments:"
 @all_external_comments.sort { |x, y| x[:jira_comment_id] <=> y[:jira_comment_id] }.each do |comment|
-  issue_id = comment[:jira_ticket_key]
+  issue_key = comment[:jira_ticket_key]
   comment_id = comment[:jira_comment_id]
   body = comment[:after]
-  # puts "\nissue_id='#{issue_id}' comment_id='#{comment_id}'"
+  # puts "\nissue_key='#{issue_key}' comment_id='#{comment_id}'"
   # puts "body='#{body}'"
-  jira_update_comment_body(issue_id, comment_id, body)
+  jira_update_comment_body(issue_key, comment_id, body)
 end

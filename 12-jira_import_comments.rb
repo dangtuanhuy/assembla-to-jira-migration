@@ -120,7 +120,7 @@ end
   user_id = comment['user_id']
   issue_id = @assembla_id_to_jira_id[ticket_id]
   issue_key = @assembla_id_to_jira_key[ticket_id]
-  user_login = @user_id_to_login[user_id],
+  user_login = @user_id_to_login[user_id]
   result = jira_create_comment(issue_id, user_id, comment, index + 1)
   next unless result
   comment_id = result['id']

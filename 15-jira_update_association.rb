@@ -10,10 +10,12 @@ tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 
 # Convert assembla_ticket_id to jira_ticket
 @assembla_id_to_jira = {}
+@jira_id_to_login = {}
 @tickets_jira.each do |ticket|
   jira_id = ticket['jira_ticket_id']
   assembla_id = ticket['assembla_ticket_id']
   @assembla_id_to_jira[assembla_id] = jira_id
+  @jira_id_to_login[jira_id] = ticket['reporter_name']
 end
 
 # Assembla tickets
@@ -113,8 +115,10 @@ puts "\nTotal tickets: #{@relationship_tickets.keys.length}"
 # 'Block' => 'Blocks' (append 's')
 
 # POST /rest/api/2/issueLink
-def jira_update_association(name, ticket1_id, ticket2_id, counter)
+def jira_update_association(name, ticket1_id, ticket2_id, ticket_id, counter)
   result = nil
+  user_login = @jira_id_to_login[ticket_id]
+  headers = headers_user_login(user_login)
   name.capitalize!
   name = 'Relates' if name == 'Related'
   name = 'Blocks' if name == 'Block'
@@ -132,7 +136,7 @@ def jira_update_association(name, ticket1_id, ticket2_id, counter)
   }.to_json
   begin
     percentage = ((counter * 100) / @total_assembla_associations).round.to_s.rjust(3)
-    RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS)
+    RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
     puts "#{percentage}% [#{counter}|#{@total_assembla_associations}] PUT #{url} '#{name}' => OK"
     result = true
   rescue RestClient::ExceptionWithResponse => e
@@ -148,15 +152,28 @@ end
 @associations_assembla.each_with_index do |association, index|
   name = association['relationship_name']
   skip = ASSEMBLA_SKIP_ASSOCIATIONS.include?(name.split.first)
+  unknown = false
   assembla_ticket1_id = association['ticket1_id']
   assembla_ticket2_id = association['ticket2_id']
+  assembla_ticket_id = association['ticket_id']
   jira_ticket1_id = @assembla_id_to_jira[assembla_ticket1_id]
   jira_ticket2_id = @assembla_id_to_jira[assembla_ticket2_id]
-  unless skip
-    results = jira_update_association(name, jira_ticket1_id, jira_ticket2_id, index + 1)
+  jira_ticket_id = @assembla_id_to_jira[assembla_ticket_id]
+  if jira_ticket1_id.to_i.zero?
+    puts "Association name=#{name}, assembla_ticket1_id=#{assembla_ticket1_id} => unknown jira_ticket1_id"
+    unknown = true
+  end
+  if jira_ticket2_id.to_i.zero?
+    puts "Association name=#{name}, assembla_ticket2_id=#{assembla_ticket2_id} => unknown jira_ticket2_id"
+    unknown = true
+  end
+  unless skip or unknown
+    results = jira_update_association(name, jira_ticket1_id, jira_ticket2_id,  jira_ticket_id, index + 1)
   end
   result = if skip
              'SKIP'
+           elsif unknown
+             'UNKNOWN'
            elsif results
              'OK'
            else
@@ -168,7 +185,7 @@ end
     jira_ticket1_id: jira_ticket1_id,
     assembla_ticket2_id: assembla_ticket2_id,
     jira_ticket2_id: jira_ticket2_id,
-    relationship_name: name
+    relationship_name: name.capitalize
   }
 end
 

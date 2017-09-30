@@ -94,6 +94,14 @@ Each step will generate a log of the results in the form of a csv file for refer
 
 ...
 
+### Authorization
+
+```
+{ 'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json' }
+```
+
+where `user_login` is either the `JIRA_API_ADMIN_USER` for global configurations (create/update projects, issue types, issue link types, etc) or the `reporter_name` (issue creator) for updating certain issue specific attributes (status and associations).
+
 ## Preparations
 
 You will need to go to to the Jira website and login as admin.
@@ -180,8 +188,9 @@ ASSEMBLA_SKIP_ASSOCIATIONS=parent,child,story,subtask
 # Ticket types extracted from ticket summary, e.g. starting with 'Spike: '
 ASSEMBLA_TYPES_IN_SUMMARY=epic,spike,bug
 
-# --- Jira API settings --- #
-JIRA_API_HOST=https://jira.example.org/rest/api/2
+# --- Jira API settings --- #/
+JIRA_API_BASE=https://jira.example.org
+JIRA_API_HOST=rest/api/2
 JIRA_API_PROJECT_NAME=Project Name
 # Project type must be scrum (default) or kanban
 JIRA_API_PROJECT_TYPE=scrum
@@ -198,7 +207,7 @@ JIRA_API_BROWSE_ISSUE=browse/[:jira-ticket-key]
 JIRA_API_BROWSE_COMMENT=browse/[:jira-ticket-key]?focusedCommentId=:jira-comment-id&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-[:jira-comment-id]
 
 # --- Jira Agile settings --- #
-JIRA_AGILE_HOST=https://jira.example.org/rest/agile/1.0
+JIRA_AGILE_HOST=rest/agile/1.0
 ```
 
 By using the filter `TICKETS_CREATED_ON` you can limited the tickets to those that were created on or after the date indicated. So for example:
@@ -466,6 +475,8 @@ Now you are ready to update the Jira tickets in line with the original Assembla 
 $ ruby 14-jira_update_status.rb # => data/jira/:space/jira-update-status.csv
 ```
 
+Important: the Jira API requests MUST be made with an Authorization Header constructed with the `reporter_name` (issue creator), otherwise a `403 Forbidden` error will be returned.
+
 ### Update ticket associations
 
 For the default Assembla associations the relationship names are:
@@ -481,6 +492,8 @@ For the default Assembla associations the relationship names are:
 |  6  | Subtask   | is subtask of     | is story      |
 |  7  | Dependent | depends on        |               |
 |  8  | Block     | blocks            |               |
+
+or in understandable spoken word:
 
 ```
 0 - Parent (ticket2 is parent of ticket1 and ticket1 is child of ticket2)
@@ -531,6 +544,8 @@ Now you are ready to update the Jira tickets to reflect the original Assembla as
 ```
 $ ruby 15-jira_update_association.rb # => data/jira/:space/jira-update-associations.csv
 ```
+
+Important: the Jira API requests MUST be made with an Authorization Header constructed with the `reporter_name` (issue creator), otherwise a `403 Forbidden` error will be returned.
 
 ### Update ticket watchers
 
@@ -890,10 +905,11 @@ gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, c
 
 ## Trouble-shooting
 
-* Error "User cannot be assigned issues." => activate, login as user and then deactivate.
+* A `403 Forbidden` error will be returned. Ensure the the Authorization headers is correct.
+* Error "User cannot be assigned issues." Activate, login as user and then deactivate.
 * If issue is an epic then the epic name custom field is required.
 * XSRF check failed => This is a known [bug](https://confluence.atlassian.com/jirakb/rest-api-calls-with-a-browser-user-agent-header-may-fail-csrf-checks-802591455.html).
-* otherwise the ticket import will fail with the error message `Field 'field-name' cannot be set. It is not on the appropriate screen, or unknown`, ensure that the custom field 'field-name' has been created and assigned to the required screens (see above).
+* Ticket or other import fails with the error message `Field 'field-name' cannot be set. It is not on the appropriate screen, or unknown`. Ensure that the custom field 'field-name' has been created and assigned to the required screens (see above).
 * Error `key='customfield_10100 (Assembla-Completed)', reason='Operation value must be a number'`, ensure that the custom field is the correct type: text field read-only.
 
 ## To do
@@ -902,6 +918,7 @@ With such a complicated tool, there will always be some loose ends and/or additi
 
 * Use the base url in `.env` for Assembla and Jira: `ASSEMBLA_BASE_URL=https://app.assembla.com` and `JIRA_BASE_URL=https://kiffingish.atlassian.net`.
 * Implement Assembla cardwall columns (statuses = blocked, testable, ready for acceptance, in acceptance testing, ready for deploy) in line with the original Assembla workflow.
+* Allow data dumps to restart with all newer items since last dump, rather than having to start all over again.
 * Update readme screenshots and relevant screen associations, e.g. only `Scrum Default Issue Screen` is required.
 * Jira data dumps directory should be `data/jira/:space/project-name` and NOT just `data/jira/:space`.
 * For ticket links which link to an external Assembla space, retain the original external link.

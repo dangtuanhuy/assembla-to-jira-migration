@@ -95,18 +95,22 @@ end
 
 # Convert assembla_ticket_id to jira_ticket
 @assembla_id_to_jira = {}
+@jira_id_to_login = {}
 @tickets_jira.each do |ticket|
   jira_id = ticket['jira_ticket_id']
   assembla_id = ticket['assembla_ticket_id']
   @assembla_id_to_jira[assembla_id] = jira_id
+  @jira_id_to_login[jira_id] = ticket['reporter_name']
 end
 
 # GET /rest/api/2/issue/{issueIdOrKey}/transitions
 def jira_get_transitions(issue_id)
   result = nil
+  user_login = @jira_id_to_login[issue_id]
+  headers = headers_user_login(user_login)
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/transitions"
   begin
-    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: url, headers: headers)
     result = JSON.parse(response.body)
     puts "\nGET #{url} => OK"
   rescue RestClient::ExceptionWithResponse => e
@@ -200,10 +204,12 @@ def jira_update_status(issue_id, status, counter)
   end
 
   result = nil
+  user_login = @jira_id_to_login[issue_id]
+  headers = headers_user_login(user_login)
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/transitions"
   begin
     percentage = ((counter * 100) / @total_assembla_tickets).round.to_s.rjust(3)
-    RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS)
+    RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
     puts "#{percentage}% [#{counter}|#{@total_assembla_tickets}] POST #{url} '#{transition[:from][:name]}' to '#{transition[:to][:name]}' => OK"
     result = { transition: transition }
   rescue RestClient::ExceptionWithResponse => e
@@ -226,7 +232,7 @@ def jira_update_status(issue_id, status, counter)
       }.to_json
       url = "#{URL_JIRA_ISSUES}/#{issue_id}"
       begin
-        RestClient::Request.execute(method: :put, url: url, payload: payload, headers: JIRA_HEADERS)
+        RestClient::Request.execute(method: :put, url: url, payload: payload, headers: headers)
       rescue RestClient::ExceptionWithResponse => e
         rest_client_exception(e, 'PUT', url, payload)
       rescue => e
