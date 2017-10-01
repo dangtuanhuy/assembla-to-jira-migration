@@ -99,7 +99,10 @@ Each step will generate a log of the results in the form of a csv file for refer
 ### Authorization
 
 ```
-{ 'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json' }
+{
+  'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}",
+  'Content-Type': 'application/json'
+}
 ```
 
 where `user_login` is either the `JIRA_API_ADMIN_USER` for global configurations (create/update projects, issue types, issue link types and sprints) or the `reporter_name` (issue creator) for updating certain issue specific attributes (status, associations, watchers, issue description and comment body).
