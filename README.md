@@ -1,28 +1,35 @@
 # Assembla-to-Jira
 
-A collection of advanced tooling for a complete data migration from [Assembla](https://www.assembla.com) to [JIRA](https://www.atlassian.com/software/jira). Here are just a few of the reasons this is the best tool you can find:
+A collection of advanced tooling which provides a complete data migration from [Assembla](https://www.assembla.com) to [JIRA](https://www.atlassian.com/software/jira).
 
+![](images/assembla-to-jira.png)
+
+This is by far the best migration tool around, and here are just a few of the many reasons that this version beats all the others hands down:
+
+* Fully automated with minimal manual actions
+* Configuration file with various options
 * Import users
 * Import tickets, comments, attachments and relationships
+* Retain ticket states and rankings
+* Link Jira issues to original Assembla tickets for reference
+* Capture Assembla context in user-defined fields
 * Insert embedded image thumbnails in description and comments
 * Convert markdown and urls
 * Retain watchers of tickets
 * Create scrum or kanban board with workflow
 * Map Assembla milestones to Jira sprints
 * Populate the backlog, future and current sprints
-* Retain ticket states and rankings
-* Link Jira issues to original Assembla tickets for reference
-* Keep Assembla context in user-defined fields
+* Resolve cross linking between external projects
 
 ## Introduction
 
 Have you ever wanted to use JIRA instead of Assembla, but were afraid that the switch to Jira was too risky because you already have so much important data in Assembla?
 
-JIRA does offer a number of standard add-ons to make migration easier, but unfortunately it does not offer any tools for migrating to Assembla.
+JIRA does offer a number of standard add-ons to make migration easier, but unfortunately it does not offer any tools for migrating from Assembla.
 
 However, you are now in luck! By using these Assembla-to-Jira migration tools, it should be very easy to export all of the relevant Assembla data and import most (if not all) of it into a Jira project.
 
-Usage is made of the [Assembla API](http://api-docs.assembla.cc/content/api_reference.html) and the [JIRA API](https://docs.atlassian.com/jira/REST/cloud/) in order to hook up both environments and make the data transformations.
+Usage is made of the [Assembla API](http://api-docs.assembla.cc/content/api_reference.html) and the [JIRA API](https://docs.atlassian.com/jira/REST/cloud/) in order to hook up both environments and make the necessary data transformations.
 
 Most of the actions can be done automatically via a pipeline of scripts, after proper configuration of the required parameters in the `.env` file.
 
