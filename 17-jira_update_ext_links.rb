@@ -55,7 +55,7 @@ end
 @tickets_jira.each do |ticket|
   @ticket_a_id_to_a_nr[ticket['assembla_ticket_id']] = ticket['assembla_ticket_number']
   @ticket_a_nr_to_j_key[ticket['assembla_ticket_number']] = ticket['jira_ticket_key']
-  @ticket_j_key_to_j_reporter[ticket['jira_ticket_key']] = ticket['jira_reporter_name']
+  @ticket_j_key_to_j_reporter[ticket['jira_ticket_key']] = ticket['reporter_name']
 end
 
 @comments_jira = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-comments.csv")
@@ -77,7 +77,8 @@ def jira_update_issue_description(issue_key, description)
     }
   }.to_json
   begin
-    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: headers)
+    # RestClient::Request.execute(method: :put, url: url, payload: payload, headers: headers)
+    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: JIRA_HEADERS)
     puts "PUT #{url} description => OK"
     result = true
   rescue RestClient::ExceptionWithResponse => e
@@ -97,7 +98,8 @@ def jira_update_comment_body(issue_key, comment_id, body)
       body: body
   }.to_json
   begin
-    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: headers)
+    # RestClient::Request.execute(method: :put, url: url, payload: payload, headers: headers)
+    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: JIRA_HEADERS)
     puts "PUT #{url} description => OK"
     result = true
   rescue RestClient::ExceptionWithResponse => e

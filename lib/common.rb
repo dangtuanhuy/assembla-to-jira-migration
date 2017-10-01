@@ -21,6 +21,12 @@ ASSEMBLA_SKIP_ASSOCIATIONS = (ENV['ASSEMBLA_SKIP_ASSOCIATIONS'] || '').split(','
 ASSEMBLA_TYPES_IN_SUMMARY = (ENV['ASSEMBLA_TYPES_IN_SUMMARY'] || '').split(',')
 
 JIRA_API_BASE = ENV['JIRA_API_BASE'].freeze
+
+unless %r{^https?://}.match(JIRA_API_BASE)
+  puts "Invalid value JIRA_API_BASE='#{JIRA_API_BASE}', must start with 'https?://' (see .env file)"
+  exit
+end
+
 JIRA_API_HOST = "#{JIRA_API_BASE}/#{ENV['JIRA_API_HOST']}"
 JIRA_API_ADMIN_USER = ENV['JIRA_API_ADMIN_USER'].freeze
 JIRA_API_UNKNOWN_USER = ENV['JIRA_API_UNKNOWN_USER'].freeze
@@ -51,6 +57,8 @@ JIRA_API_SPACE_TO_PROJECT = ENV['JIRA_API_SPACE_TO_PROJECT']
 
 JIRA_API_BROWSE_ISSUE = ENV['JIRA_API_BROWSE_ISSUE'] || 'browse/[:jira-ticket-key]'
 JIRA_API_BROWSE_COMMENT = ENV['JIRA_API_BROWSE_COMMENT'] || 'browse/[:jira-ticket-key]?focusedCommentId=[:jira-comment-id]&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-[:jira-comment-id]'
+
+JIRA_API_STATUSES = ENV['JIRA_API_STATUSES']
 
 def normalize_name(name)
   name.downcase.tr(' /_', '-')

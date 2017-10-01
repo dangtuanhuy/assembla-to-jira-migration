@@ -1,19 +1,17 @@
 # Assembla-to-Jira
 
-A collection of advanced tooling for a complete data migration from [Assembla](https://www.assembla.com) to [JIRA](https://www.atlassian.com/software/jira).
-
-Here are just a few of the more important key selling points:
+A collection of advanced tooling for a complete data migration from [Assembla](https://www.assembla.com) to [JIRA](https://www.atlassian.com/software/jira). Here are just a few of the reasons this is the best tool you can find:
 
 * Import users
 * Import tickets, comments, attachments and relationships
 * Insert embedded image thumbnails in description and comments
 * Convert markdown and urls
-* Retain watchers during import
+* Retain watchers of tickets
 * Create scrum or kanban board with workflow
 * Map Assembla milestones to Jira sprints
 * Populate the backlog, future and current sprints
-* Retain ticket states and ranking
-* Link Jira issues to original Assembla tickets
+* Retain ticket states and rankings
+* Link Jira issues to original Assembla tickets for reference
 * Keep Assembla context in user-defined fields
 
 ## Introduction
@@ -190,6 +188,7 @@ ASSEMBLA_SKIP_ASSOCIATIONS=parent,child,story,subtask
 ASSEMBLA_TYPES_IN_SUMMARY=epic,spike,bug
 
 # --- Jira API settings --- #/
+# JIRA_API_BASE must start with 'https?://'
 JIRA_API_BASE=https://jira.example.org
 JIRA_API_HOST=rest/api/2
 JIRA_API_PROJECT_NAME=Project Name
@@ -621,7 +620,7 @@ $ ruby 17-jira_update_ext_links.rb => jira-links-external-all.csv
                                       jira-links-external-updated.csv
 ```
 
-Two output files are generated for the records:
+Two output files are generated for reference:
 
 ```
 jira-links-external-all.csv     => all detected external links are listed
@@ -662,6 +661,12 @@ In order to achieve this, execute the following command:
 $ ruby 19-jira_update_board.rb # => data/jira/:space/jira-update-board.csv
 ```
 
+At the time of this writing, the Jira
+
+```
+GET /rest/agile/1.0/board/{boardId}/configuration
+```
+
 ### Create statuses
 
 ```
@@ -698,8 +703,7 @@ Most of the ticket fields are converted from Assembla to Jira via a one-to-one m
 * **space_id**
 * **state**
     * 0 - closed, 1 - open
-* **status** (new, in progress, blocked, testable, ready for acceptance,
-          in acceptance testing, ready for deploy, done, invalid)
+* **status** (new, in progress, blocked, testable, ready for acceptance, in acceptance testing, ready for deploy, done, invalid)
 * **story_importance** (1 - small, 4 - medium, 7 - large) => 10105 Story Points (for stories only)
 * updated_at
 * working_hours

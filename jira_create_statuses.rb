@@ -9,8 +9,6 @@ puts "\nJira statuses: #{@jira_statuses.length}"
   puts "* #{status['name']}"
 end
 
-JIRA_API_STATUSES = ENV['JIRA_API_STATUSES']
-
 @assembla_statuses = []
 JIRA_API_STATUSES.split(',').each do |status|
   from, to = status.split(':')
