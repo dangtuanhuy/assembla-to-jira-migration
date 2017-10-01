@@ -96,10 +96,6 @@ Each step will generate a log of the results in the form of a csv file for refer
 18. Create sprints
 19. Update board
 
-### Resolve external links
-
-...
-
 ### Authorization
 
 ```
