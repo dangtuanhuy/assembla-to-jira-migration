@@ -463,7 +463,9 @@ During the conversion, any differences between the original Assembla ticket comm
 
 ### Import attachments
 
-`curl -D- -u admin:admin -X POST -H "X-Atlassian-Token: no-check" -F "file=@myfile.txt" api/2/issue/{issueIdOrKey}/attachments`
+```
+curl -D- -u admin:admin -X POST -H "X-Atlassian-Token: no-check" -F "file=@myfile.txt" api/2/issue/{issueIdOrKey}/attachments
+```
 
 Now you are ready to import all of the attachments that were downloaded earlier. Execute the following command:
 
@@ -616,7 +618,8 @@ and then the links are converted like this:
 
 ```
 issue => /browse/[JIRA_ISSUE_KEY]
-comment => /browse/[JIRA_ISSUE_KEY]?focusedCommentId=[JIRA_COMMENT_ID]&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-[JIRA_COMMENT_ID]
+comment => /browse/[JIRA_ISSUE_KEY]?focusedCommentId=[JIRA_COMMENT_ID]&page= \
+  com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-[JIRA_COMMENT_ID]
 ```
 
 Execute the following command to update all external links:
@@ -970,15 +973,12 @@ gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, c
 
 With such a complicated tool, there will always be some loose ends and/or additional work to be done at a later time. Hopefully in the not so distant future, I'll have some time to tackle one or more of the following items:
 
-* Use the base url in `.env` for Assembla and Jira: `ASSEMBLA_BASE_URL=https://app.assembla.com` and `JIRA_BASE_URL=https://kiffingish.atlassian.net`.
 * Implement Assembla cardwall columns (statuses = blocked, testable, ready for acceptance, in acceptance testing, ready for deploy) in line with the original Assembla workflow.
 * Allow data dumps to restart with all newer items since last dump, rather than having to start all over again.
 * Update readme screenshots and relevant screen associations, e.g. only `Scrum Default Issue Screen` is required.
-* Jira data dumps directory should be `data/jira/:space/project-name` and NOT just `data/jira/:space`.
 * For ticket links which link to an external Assembla space, retain the original external link.
 * Assembla tickets with tag `bug` should be converted into Jira issue of type `bug`.
 * Automatically create custom fields instead of requiring the user to do this manually (see above).
-* Data directory for Jira should have subdirectory per project `data/jira/:space/:project-name`, e.g. like Assembla: `data/assembla/:space`
 * Use a user-defined Jira project template instead of requiring the user to define stuff manually.
 * Assign original authors as creators of tickets (this might not be possible)
 * Refactor: cleanup code, remove duplication, fix rubocop warnings, and make more object-oriented using classes.

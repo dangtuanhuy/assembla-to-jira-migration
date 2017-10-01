@@ -2,7 +2,7 @@
 
 load './lib/common.rb'
 
-MILESTONE_PLANNER_TYPES = %w(none backlog current unknown)
+MILESTONE_PLANNER_TYPES = %w(none backlog current unknown).freeze
 
 # --- Assembla --- #
 assembla_milestones_csv = "#{OUTPUT_DIR_ASSEMBLA}/milestones.csv"
@@ -17,17 +17,18 @@ jira_tickets_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @projects_jira = csv_to_array(jira_projects_csv)
 @tickets_jira = csv_to_array(jira_tickets_csv)
 
-# milestone: id,start_date,due_date,budget,title,user_id,created_at,created_by,space_id,description,is_completed,completed_date,updated_at,updated_by,release_level,release_notes,planner_type,pretty_release_level
+# milestone: id,start_date,due_date,budget,title,user_id,created_at,created_by,space_id,description,is_completed,
+# completed_date,updated_at,updated_by,release_level,release_notes,planner_type,pretty_release_level
 @milestones_assembla.each do |milestone|
   puts "* #{milestone['id']} #{milestone['title']} (#{MILESTONE_PLANNER_TYPES[milestone['planner_type'].to_i]})" \
        " => #{milestone['is_completed'] ? '' : 'not'} completed"
 end
 puts
 
-@sprints = @milestones_assembla.select{ |milestone| milestone['title'] =~ /sprint/i }
+@sprints = @milestones_assembla.select { |milestone| milestone['title'] =~ /sprint/i }
 
 # Need to sort the sprints so that they appear in the correct order.
-@sprints.sort! { |x,y| y['start_date'] <=> x['start_date'] }
+@sprints.sort! { |x, y| y['start_date'] <=> x['start_date'] }
 
 puts "Total sprints: #{@sprints.length}"
 
@@ -145,20 +146,20 @@ goodbye("Cannot find project with name='#{JIRA_API_PROJECT_NAME}'") unless proje
 
 @jira_sprints = []
 
-# sprint: id,start_date,due_date,budget,title,user_id,created_at,created_by,space_id,description,is_completed,completed_date,updated_at,updated_by,release_level,release_notes,planner_type,pretty_release_level
+# sprint: id,start_date,due_date,budget,title,user_id,created_at,created_by,space_id,description,is_completed,
+# completed_date,updated_at,updated_by,release_level,release_notes,planner_type,pretty_release_level
 # next_sprint: id,state,name,startDate,endDate,originBoardId,assembla_id
 @sprints.each do |sprint|
   next_sprint = jira_get_sprint(@board, sprint) || jira_create_sprint(@board, sprint)
-  if next_sprint
-    @tickets_sprint = @tickets_jira.select { |ticket| ticket['milestone_name'] == sprint['title'] }
-    issues = @tickets_sprint.map { |ticket| ticket['jira_ticket_key'] }
-    while @tickets_sprint.length.positive?
-      @tickets_sprint_slice = @tickets_sprint.slice!(0,50)
-      jira_update_sprint_state(next_sprint, 'active')
-      jira_move_issues_to_sprint(next_sprint, @tickets_sprint_slice)
-    end
-    @jira_sprints << next_sprint.merge(issues: issues.join(',')).merge(assembla_id: sprint['id'])
+  next unless next_sprint
+  @tickets_sprint = @tickets_jira.select { |ticket| ticket['milestone_name'] == sprint['title'] }
+  issues = @tickets_sprint.map { |ticket| ticket['jira_ticket_key'] }
+  while @tickets_sprint.length.positive?
+    @tickets_sprint_slice = @tickets_sprint.slice!(0, 50)
+    jira_update_sprint_state(next_sprint, 'active')
+    jira_move_issues_to_sprint(next_sprint, @tickets_sprint_slice)
   end
+  @jira_sprints << next_sprint.merge(issues: issues.join(',')).merge(assembla_id: sprint['id'])
 end
 
 # First sprint should be 'active' and the other 'closed'
@@ -167,4 +168,3 @@ jira_update_sprint_state(@jira_sprints.first, 'active')
 puts "\nTotal updates: #{@jira_sprints.length}"
 sprints_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-sprints.csv"
 write_csv_file(sprints_jira_csv, @jira_sprints)
-

@@ -67,8 +67,8 @@ end
 
 def jira_update_issue_description(issue_key, description)
   result = nil
-  user_login = @ticket_j_key_to_j_reporter[issue_key]
-  headers = headers_user_login(user_login)
+  # user_login = @ticket_j_key_to_j_reporter[issue_key]
+  # headers = headers_user_login(user_login)
   url = "#{URL_JIRA_ISSUES}/#{issue_key}"
   payload = {
     update: {},
@@ -91,11 +91,11 @@ end
 
 def jira_update_comment_body(issue_key, comment_id, body)
   result = nil
-  user_login = @comment_j_key_to_j_login[issue_key]
-  headers = headers_user_login(user_login)
+  # user_login = @comment_j_key_to_j_login[issue_key]
+  # headers = headers_user_login(user_login)
   url = "#{URL_JIRA_ISSUES}/#{issue_key}/comment/#{comment_id}"
   payload = {
-      body: body
+    body: body
   }.to_json
   begin
     # RestClient::Request.execute(method: :put, url: url, payload: payload, headers: headers)

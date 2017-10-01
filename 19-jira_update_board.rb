@@ -14,7 +14,8 @@ JIRA_API_STATUSES.split(',').each do |status|
   @from_to[from.downcase] = to
 end
 
-@board_columns = @statuses_assembla.reject { |status| status['state'].to_i.zero? }.map {|status| { id: status['id'], name: status['name']}}
+@board_columns = @statuses_assembla.reject { |status| status['state'].to_i.zero? }.
+                 map { |status| { id: status['id'], name: status['name'] } }
 
 puts "\nBoard columns needed: #{@board_columns.length}"
 @board_columns.each do |col|
@@ -27,7 +28,6 @@ puts
 # --- Jira --- #
 jira_projects_csv = "#{OUTPUT_DIR_JIRA}/jira-projects.csv"
 jira_tickets_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
-
 
 @projects_jira = csv_to_array(jira_projects_csv)
 @tickets_jira = csv_to_array(jira_tickets_csv)

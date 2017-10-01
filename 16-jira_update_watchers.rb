@@ -7,7 +7,7 @@ users_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
 users = csv_to_array(users_csv)
 @user_id_to_login = {}
 users.each do |user|
-  @user_id_to_login[user['id']] = user['login'].sub(/@.*$/,'')
+  @user_id_to_login[user['id']] = user['login'].sub(/@.*$/, '')
 end
 
 # Assembla tickets
@@ -36,7 +36,6 @@ tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @j_id_to_j_login = {}
 @tickets_jira.each do |ticket|
   assembla_id = ticket['assembla_ticket_id']
-  assembla_nr = ticket['assembla_ticket_number']
   jira_id = ticket['jira_ticket_id']
   jira_key = ticket['jira_ticket_key']
   @a_id_to_j_id[assembla_id] = jira_id
