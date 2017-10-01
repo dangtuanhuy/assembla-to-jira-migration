@@ -658,13 +658,40 @@ The final step after the board and sprints have been created is to copy the Asse
 In order to achieve this, execute the following command:
 
 ```
-$ ruby 19-jira_update_board.rb # => data/jira/:space/jira-update-board.csv
+$ ruby 19-jira_update_board.rb
 ```
-
-At the time of this writing, the Jira
 
 ```
 GET /rest/agile/1.0/board/{boardId}/configuration
+```
+
+At the time of this writing, the Jira API does not yet support creating new columns. Therefore, when the command above is executed you will see some output:
+
+```
+Board columns needed: 7
+* New => To Do
+* In progress => In Progress
+* Testable => Testable
+* Ready for acceptance => Ready for Acceptance
+* In acceptance testing => In Acceptance Testing
+* Ready for deploy => Ready for Deploy
+
+Board columns actual: 3
+* To Do
+* In Progress
+* Done
+```
+
+Followed by instructions on which columns need to be added manaully with a link showing where this can be done:
+
+```
+Go to Configure 'BOARD_NAME | Column Management' and add the following columns:
+* Testable
+* Ready for Acceptance
+* In Acceptance Testing
+* Ready for Deploy
+
+link: JIRA_API_BASE/secure/RapidView.jspa?rapidView=3&tab=columns
 ```
 
 ### Create statuses
