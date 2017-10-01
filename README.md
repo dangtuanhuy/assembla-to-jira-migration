@@ -78,17 +78,18 @@ Each step will generate a log of the results in the form of a csv file for refer
 8. Import users
 9. Download ticket attachments
 10. Import tickets
-11. Update ticket links
+11. Resolve/update ticket links
 12. Import ticket comments
 13. Import ticket attachments
 14. Update ticket status (resolutions)
 15. Update ticket associations
 16. Update ticket watchers
+17. Resolve/update ticket and comment external links
 
 ### Scrum/Kanban board
 
-17. Create sprints
-18. Update board
+18. Create sprints
+19. Update board
 
 ### Resolve external links
 
@@ -613,6 +614,20 @@ issue => /browse/[JIRA_ISSUE_KEY]
 comment => /browse/[JIRA_ISSUE_KEY]?focusedCommentId=[JIRA_COMMENT_ID]&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-[JIRA_COMMENT_ID]
 ```
 
+Execute the following command to update all external links:
+
+```
+$ ruby 17-jira_update_ext_links.rb => jira-links-external-all.csv
+                                      jira-links-external-updated.csv
+```
+
+Two output files are generated for the records:
+
+```
+jira-links-external-all.csv     => all detected external links are listed
+jira-links-external-updated.csv => only those external links actually updated
+```
+
 ## Scrum Board
 
 You are now ready to setup the scrum board, create sprints, and assign issues to the correct sprints as well as the backlog. In the `.env` file, take notice of the following values:
@@ -632,7 +647,7 @@ When the scrum board was created with the project, all issues are assigned to th
 Now you are ready to setup the sprints by executing the following command:
 
 ```
-$ ruby 17-jira_create_sprints.rb # => data/jira/:space/jira-create-sprints.csv
+$ ruby 18-jira_create_sprints.rb # => data/jira/:space/jira-create-sprints.csv
 ```
 
 The issues are redistibuted to the sprints they belong to and the most recent sprint is set as the `active` sprint.
@@ -644,7 +659,7 @@ The final step after the board and sprints have been created is to copy the Asse
 In order to achieve this, execute the following command:
 
 ```
-$ ruby 18-jira_update_board.rb # => data/jira/:space/jira-update-board.csv
+$ ruby 19-jira_update_board.rb # => data/jira/:space/jira-update-board.csv
 ```
 
 ### Create statuses
