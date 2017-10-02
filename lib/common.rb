@@ -20,6 +20,13 @@ ASSEMBLA_SKIP_ASSOCIATIONS = (ENV['ASSEMBLA_SKIP_ASSOCIATIONS'] || '').split(','
 
 ASSEMBLA_TYPES_IN_SUMMARY = (ENV['ASSEMBLA_TYPES_IN_SUMMARY'] || '').split(',')
 
+JIRA_SERVER_TYPE = ENV['JIRA_SERVER_TYPE'] || 'hosted'
+
+unless %r{cloud|hosted}.match(JIRA_SERVER_TYPE)
+  puts "Invalid value JIRA_SERVER_TYPE='#{JIRA_SERVER_TYPE}', must be 'cloud' or 'hosted' (see .env file)"
+  exit
+end
+
 JIRA_API_BASE = ENV['JIRA_API_BASE'].freeze
 
 unless %r{^https?://}.match(JIRA_API_BASE)

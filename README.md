@@ -68,6 +68,8 @@ The reason for doing this that if something goes wrong you do not lose everythin
 
 Each step will generate a log of the results in the form of a csv file for reference purposes, e.g. detecting which requests failed and why. For example, importing tickets will create the `data/jira/:space/jira-tickets.csv` file.
 
+While the script is being executed, information will be logged to the console. Be sure to inspect the information as certain instruction might be given to follow before continuing to the next step.
+
 ### Assembla export
 
 1. Space (spaces, space_tools, users, user roles, tags, milestones, ticket statuses, ticket custom fields, documents, wiki pages and tickets)
@@ -95,17 +97,6 @@ Each step will generate a log of the results in the form of a csv file for refer
 
 18. Create sprints
 19. Update board
-
-### Authorization
-
-```
-{
-  'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}",
-  'Content-Type': 'application/json'
-}
-```
-
-where `user_login` is either the `JIRA_API_ADMIN_USER` for global configurations (create/update projects, issue types, issue link types and sprints) or the `reporter_name` (issue creator) for updating certain issue specific attributes (status, associations, watchers, issue description and comment body).
 
 ## Preparations
 
@@ -194,7 +185,9 @@ ASSEMBLA_SKIP_ASSOCIATIONS=parent,child,story,subtask
 ASSEMBLA_TYPES_IN_SUMMARY=epic,spike,bug
 
 # --- Jira API settings --- #/
-# JIRA_API_BASE must start with 'https?://'
+# Server type must be 'hosted' or 'cloud'
+JIRA_SERVER_TYPE=cloud
+# Base must start with 'https?://'
 JIRA_API_BASE=https://jira.example.org
 JIRA_API_HOST=rest/api/2
 JIRA_API_PROJECT_NAME=Project Name
@@ -229,6 +222,18 @@ IMPORTANT: Using this settings will result in some ticket links that cannot be r
 ```
 $ cp .env.example .env
 ```
+
+### Jira hosted versus cloud
+
+Although the official Jira documentation claims that the hosted and cloud APIs are identicial, I've found out that this isn't entirely true.
+
+There are a couple of minor differences that must be taken into account:
+
+* Users - The hosted version will automatically set activated to true, the cloud version will NOT.
+* Ranking - The hosted version will allow you to set the issue rank while the cloud version will NOT.
+* Comments - The hosted version will allow original comment authors to import comments while cloud version will NOT. 
+
+In the `.evv` file this is indicated by setting the `JIRA_SERVER_TYPE` configuration parameter to either `hosted` or `cloud`.
 
 ## Export data from Assembla
 
@@ -844,6 +849,16 @@ Most of the ticket fields are converted from Assembla to Jira via a one-to-one m
 * 10305 Capture for JIRA jQuery version
 * **10400 Assembla**
 
+### Authorization
+
+```
+{
+  'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}",
+  'Content-Type': 'application/json'
+}
+```
+
+where `user_login` is either the `JIRA_API_ADMIN_USER` for global configurations (create/update projects, issue types, issue link types and sprints) or the `reporter_name` (issue creator) for updating certain issue specific attributes (status, associations, watchers, issue description and comment body).
 ### Associations
 
 The Assembly associations are converted into Jira issue links.

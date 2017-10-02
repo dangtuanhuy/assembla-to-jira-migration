@@ -71,9 +71,19 @@ def jira_create_comment(issue_id, user_id, comment, counter)
   result = nil
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/comment"
   user_login = @user_id_to_login[user_id]
-  headers = headers_user_login(user_login)
+
+  headers = if JIRA_SERVER_TYPE == 'hosted'
+              headers_user_login(user_login)
+            else
+              JIRA_HEADERS
+            end
   reformatted_body = reformat_markdown(comment['comment'], logins: @list_of_logins, images: @list_of_images, content_type: 'comments', strikethru: true)
-  body = "Assembla | Created on #{date_time(comment['created_on'])}\n\n#{reformatted_body}"
+  body = "Created on #{date_time(comment['created_on'])}\n\n#{reformatted_body}"
+  if JIRA_SERVER_TYPE == 'cloud'
+    author_link = user_login ? "[~#{user_login}]" : "unknown (#{user_id})"
+    body = "Author #{author_link} | " + body
+  end
+  body = "Assembla | #{body}"
   payload = {
     body: body
   }.to_json

@@ -172,10 +172,13 @@ def create_ticket_jira(ticket, counter, total)
       "#{@customfield_name_to_id['Assembla-Theme']}": theme_name,
       "#{@customfield_name_to_id['Assembla-Status']}": status_name,
       "#{@customfield_name_to_id['Assembla-Milestone']}": milestone[:name],
-      "#{@customfield_name_to_id['Assembla-Completed']}": completed_date,
-      "#{@customfield_name_to_id['Rank']}": story_rank
+      "#{@customfield_name_to_id['Assembla-Completed']}": completed_date
     }
   }
+
+  if JIRA_SERVER_TYPE == 'cloud'
+    payload[:fields]["#{@customfield_name_to_id['Rank']}".to_sym] = story_rank
+  end
 
   # Reporter is required
   if reporter_name.nil? || reporter_name.length.zero? || @is_not_a_user.include?(reporter_name)
@@ -510,3 +513,7 @@ write_csv_file(ticket_links_jira_csv, @jira_ticket_links)
 
 tickets_diffs_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets-diffs.csv"
 write_csv_file(tickets_diffs_jira_csv, @tickets_diffs)
+
+if JIRA_SERVER_TYPE == 'cloud'
+  puts "IMPORTANT: Ranking ignored during issue creation (not allowed in the Jira cloud version)"
+end
