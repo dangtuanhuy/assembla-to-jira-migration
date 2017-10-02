@@ -703,6 +703,8 @@ Go to Configure 'BOARD_NAME | Column Management' and add the following columns:
 link: JIRA_API_BASE/secure/RapidView.jspa?rapidView=3&tab=columns
 ```
 
+![](images/jira-configure-board-columns.png)
+
 ### Create statuses
 
 ```
@@ -1009,5 +1011,5 @@ If you require assistance with the migration or need some functionality that is 
 
 Kiffin Gish
 
-kiffin.gish@planet.nl  
-http://gishtech.com
+Email:   kiffin.gish@planet.nl  
+Website: http://gishtech.com
