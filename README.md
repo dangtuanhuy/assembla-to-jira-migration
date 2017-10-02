@@ -892,12 +892,12 @@ Numbered - Bullet list
 ```
 Wiki links
 [[ticket:NUMBER]]
-#ticket
 ```
 
 ### Reformat (will be reformatted into Jira markdown)
 
 ```
+#TICKET_NR => JIRA_TICKET_KEY
 [[image:IMAGE]] => !name(IMAGE)|thumbnail!
 [[image:IMAGE|text]] => !name(IMAGE)|thumbnail!
 @NAME => [~NAME]
@@ -1009,6 +1009,5 @@ If you require assistance with the migration or need some functionality that is 
 
 Kiffin Gish
 
-kiffin.gish@planet.nl
-
+kiffin.gish@planet.nl  
 http://gishtech.com
