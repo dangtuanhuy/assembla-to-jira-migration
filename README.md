@@ -275,7 +275,7 @@ POST /rest/api/2/project
 }
 ```
 
-where '#{type}' must be either 'scrum' or 'kanban'.
+where `#{type}` must be either `scrum` or `kanban`.
 
 ```
 $ ruby 05-jira_create_project.rb
@@ -345,11 +345,23 @@ Read in the Assembla user file `data/assembla/:space/users.csv` and create the J
 $ ruby 08-jira_import_users.rb # => data/jira/:space/jira-users.csv
 ```
 
+Make sure that all of the users have been activated by going into the admin dashboard user page. In the hosted version this should be the default, however in the cloud version you will need to change each user manually.
+
+Go to the Admin User Management:
+
+![](images/jira-user-activate-1.png)
+
+and after clicking on the username click on the [Activate]-button:
+
+![](images/jira-user-activate-2.png)
+
 The following user:
 
 * unknown.user@example.org
 
 as defined in the `.env` file as `JIRA_API_UNKNOWN_USER`.
+
+IMPORTANT: Initially the users are created with the `password` equal to their username. This is needed in order for the migration to succeed because of certain user permissions required. Do NOT change until after the migration has been completed.
 
 ### Download attachments
 
@@ -464,7 +476,8 @@ During the conversion, any differences between the original Assembla ticket comm
 ### Import attachments
 
 ```
-curl -D- -u admin:admin -X POST -H "X-Atlassian-Token: no-check" -F "file=@myfile.txt" api/2/issue/{issueIdOrKey}/attachments
+curl -D- -u admin:admin -X POST -H "X-Atlassian-Token: no-check" -F "file=@myfile.txt" \
+    api/2/issue/{issueIdOrKey}/attachments
 ```
 
 Now you are ready to import all of the attachments that were downloaded earlier. Execute the following command:
