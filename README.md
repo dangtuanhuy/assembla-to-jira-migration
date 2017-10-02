@@ -347,6 +347,8 @@ $ ruby 08-jira_import_users.rb # => data/jira/:space/jira-users.csv
 
 Make sure that all of the users have been activated by going into the admin dashboard user page. In the hosted version this should be the default, however in the cloud version you will need to change each user manually.
 
+If this is the case, you will be given a list of those users that need to be activated.
+
 Go to the Admin User Management:
 
 ![](images/jira-user-activate-1.png)
