@@ -355,6 +355,8 @@ and after clicking on the username click on the [Activate]-button:
 
 ![](images/jira-user-activate-2.png)
 
+All new user are assigned by default to the `jira-software-users` group only. So do not forget to restore the orignal Assembla admin users permissions by also assigning them to the `jira-administrators` group.
+
 The following user:
 
 * unknown.user@example.org
