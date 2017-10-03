@@ -2,7 +2,31 @@
 
 load './lib/common.rb'
 
-JIRA_API_STATUSES = ENV['JIRA_API_STATUSES']
+# TODO
+# Move to common.rb -- start
+
+# Assembla users
+assembla_users_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
+@users_assembla = csv_to_array(assembla_users_csv)
+
+@user_id_to_login = {}
+@user_id_to_email = {}
+@user_login_to_email = {}
+@list_of_logins = {}
+@users_assembla.each do |user|
+  id = user['id']
+  login = user['login'].sub(/@.*$/,'')
+  email = user['email']
+  if email.nil? || email.empty?
+    email = "#{login}@example.org"
+  end
+  @user_id_to_login[id] = login
+  @user_id_to_email[id] = email
+  @user_login_to_email[login] = email
+  @list_of_logins[login] = true
+end
+
+# Move to common.rb -- end
 
 @assembla_status_to_jira = {}
 JIRA_API_STATUSES.split(',').each do |status|
@@ -107,11 +131,13 @@ end
 def jira_get_transitions(issue_id)
   result = nil
   user_login = @jira_id_to_login[issue_id]
-  headers = if JIRA_SERVER_TYPE == 'hosted'
-              headers_user_login(user_login)
-            else
-              JIRA_HEADERS
-            end
+  user_email = @user_login_to_email[user_login]
+  headers = headers_user_login(user_login, user_email)
+  # headers = if JIRA_SERVER_TYPE == 'hosted'
+  #             headers_user_login(user_login, user_email)
+  #           else
+  #             JIRA_HEADERS_CLOUD
+  #           end
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/transitions"
   begin
     response = RestClient::Request.execute(method: :get, url: url, headers: headers)

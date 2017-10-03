@@ -26,8 +26,9 @@ def jira_update_summary_and_descr(issue_id, summary, description)
   }.to_json
   changed = summary ? 'summary' : ''
   changed += (summary ? ' and ' : '') + 'description'
+  headers = JIRA_SERVER_TYPE == 'hosted' ? JIRA_HEADERS : JIRA_HEADERS_CLOUD
   begin
-    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: JIRA_HEADERS)
+    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: headers)
     puts "PUT #{url} #{changed} => OK"
     result = true
   rescue RestClient::ExceptionWithResponse => e

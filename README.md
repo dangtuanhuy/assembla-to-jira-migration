@@ -1,42 +1,44 @@
 # Assembla-to-Jira
 
-A collection of advanced tooling which provides a complete data migration from [Assembla](https://www.assembla.com) to [JIRA](https://www.atlassian.com/software/jira).
+A collection of advanced tooling which provides a completely seamless data migration from [Assembla](https://www.assembla.com) to [Jira](https://www.atlassian.com/software/jira).
 
 ![](images/assembla-to-jira.png)
 
 This is by far the best migration tool around, and here are just a few of the many reasons that this version beats all the others hands down:
 
-* Fully automated with minimal manual actions
+* Fully automated with minimal manual actions required
 * Configuration file with various options
-* Import users
+* Import users (names, emails, roles and permissions)
 * Import tickets, comments, attachments and relationships
 * Retain ticket states and rankings
 * Link Jira issues to original Assembla tickets for reference
 * Capture relevant Assembla context in user-defined fields
-* Insert embedded image thumbnails in description and comments
+* Insert embedded image thumbnails in descriptions and comments
 * Convert markdown and urls
 * Retain watchers of tickets
 * Create scrum or kanban board with workflow
 * Map Assembla milestones to Jira sprints
 * Populate the backlog, future and current sprints
 * Resolve cross linking between external projects
-* Takes into account the API differences between hosted and cloud
+* Take into account the API differences between hosted and cloud
 
 ## Introduction
 
-Have you ever wanted to use JIRA instead of Assembla, but were afraid that the switch to Jira was too risky because you already have so much important data in Assembla?
+Have you ever wanted to use Jira instead of Assembla, but were afraid that the switch to Jira was too risky because you already have so much important data in Assembla?
 
-JIRA does offer a number of standard add-ons to make migration easier, but unfortunately it does not offer any tools for migrating from Assembla.
+Jira does offer a number of standard add-ons to make migration easier, but unfortunately it does not offer any tools for migrating from Assembla.
 
 However, you are now in luck! By using these Assembla-to-Jira migration tools, it should be very easy to export all of the relevant Assembla data and import most (if not all) of it into a Jira project.
 
-Usage is made of the [Assembla API](http://api-docs.assembla.cc/content/api_reference.html) and the [JIRA API](https://docs.atlassian.com/jira/REST/cloud/) in order to hook up both environments and make the necessary data transformations.
+Usage is made of the [Assembla API](http://api-docs.assembla.cc/content/api_reference.html) and the [Jira API](https://docs.atlassian.com/jira/REST/cloud/) in order to hook up both environments and make the necessary data transformations.
 
 Most of the actions can be done automatically via a pipeline of scripts, after proper configuration of the required parameters in the `.env` file.
 
 However, there are a few manual actions required since the Jira API does not support all possible actions, but these are minimal. It is important NOT to skip these manual changes, as the successful migration depends on them.
 
 It is best to start with a fresh installation, e.g. one in which the desired project has not yet been created. Otherwise, unexpected problems may occur.
+
+Also realize that although the documentation claims that the Jira API for hosted server is nearly identical to the cloud, there are some subtle differences that can bite you when you least expect. Don't worry, most of these annoying differences will not affect you.
 
 If you need help, please check out the [support](https://github.com/kgish/assembla-to-jira#support) section.
 
@@ -859,24 +861,27 @@ Most of the ticket fields are converted from Assembla to Jira via a one-to-one m
 * 10108 Test sessions
 * 10109 Raised during
 * 10200 Testing status
-* 10300 Capture for JIRA user agent
-* 10301 Capture for JIRA browser
-* 10302 Capture for JIRA operating system
-* 10303 Capture for JIRA URL
-* 10304 Capture for JIRA screen resolution
-* 10305 Capture for JIRA jQuery version
+* 10300 Capture for Jira user agent
+* 10301 Capture for Jira browser
+* 10302 Capture for Jira operating system
+* 10303 Capture for Jira URL
+* 10304 Capture for Jira screen resolution
+* 10305 Capture for Jira jQuery version
 * **10400 Assembla**
 
 ### Authorization
 
+Depending on the server type, the authorization is handled slightly differently. For the hosted server the user_login and password (same as user_login) are used, whereas for the cloud we use the user_email and password.
+
 ```
-{
-  'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}",
-  'Content-Type': 'application/json'
-}
+def headers_user_login(user_login, user_email)
+  cloud = (JIRA_SERVER_TYPE == 'cloud')
+  { 'Authorization': "Basic #{Base64.encode64((cloud ? user_email : user_login) + ':' + user_login)}", 'Content-Type': 'application/json' }
+end
 ```
 
 where `user_login` is either the `JIRA_API_ADMIN_USER` for global configurations (create/update projects, issue types, issue link types and sprints) or the `reporter_name` (issue creator) for updating certain issue specific attributes (status, associations, watchers, issue description and comment body).
+
 ### Associations
 
 The Assembly associations are converted into Jira issue links.
@@ -925,7 +930,7 @@ According to the Assembla API Documentation: `Ticket components API is deprecate
 
 ## Markdown
 
-The [Assembla markdown](http://assemble.io/docs/Cheatsheet-Markdown.html) syntax is different from [JIRA Markdown](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all). Therefore, the certain markdown notations will need to be translated as follows.
+The [Assembla markdown](http://assemble.io/docs/Cheatsheet-Markdown.html) syntax is different from [Jira Markdown](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all). Therefore, the certain markdown notations will need to be translated as follows.
 
 ### Equivalent (no changes required)
 
@@ -1042,7 +1047,7 @@ With such a complicated tool, there will always be some loose ends and/or additi
     * [API Reference](http://api-docs.assembla.cc/content/api_reference.html)
     * [Markdown](http://assemble.io/docs/Cheatsheet-Markdown.html)
 
-* JIRA
+* Jira
     * [Website](https://www.atlassian.com/software/jira)
     * [API Reference](https://docs.atlassian.com/jira/REST/cloud/)
     * [Markdown](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all)

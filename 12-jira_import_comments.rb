@@ -2,18 +2,29 @@
 
 load './lib/common.rb'
 
+# TODO
+# Move to common.rb -- start
+
 # Assembla users
 assembla_users_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
 @users_assembla = csv_to_array(assembla_users_csv)
 
-# TODO: Move to common.rb
 @user_id_to_login = {}
+@user_id_to_email = {}
 @list_of_logins = {}
 @users_assembla.each do |user|
+  id = user['id']
   login = user['login'].sub(/@.*$/,'')
-  @user_id_to_login[user['id']] = login
+  email = user['email']
+  if email.nil? || email.empty?
+    email = "#{login}@example.org"
+  end
+  @user_id_to_login[id] = login
+  @user_id_to_email[id] = email
   @list_of_logins[login] = true
 end
+
+# Move to common.rb -- end
 
 # Assembla comments
 comments_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-comments.csv"
@@ -71,10 +82,11 @@ def jira_create_comment(issue_id, user_id, comment, counter)
   result = nil
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/comment"
   user_login = @user_id_to_login[user_id]
+  user_email = @user_id_to_email[user_id]
   headers = if JIRA_SERVER_TYPE == 'hosted'
-              headers_user_login(user_login)
+              headers_user_login(user_login, user_email)
             else
-              JIRA_HEADERS
+              JIRA_HEADERS_CLOUD
             end
   reformatted_body = reformat_markdown(comment['comment'], logins: @list_of_logins, images: @list_of_images, content_type: 'comments', strikethru: true)
   body = "Created on #{date_time(comment['created_on'])}\n\n#{reformatted_body}"

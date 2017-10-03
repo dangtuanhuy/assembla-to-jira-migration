@@ -2,18 +2,39 @@
 
 load './lib/common.rb'
 
-MAX_RETRY = 3
-
 # --- ASSEMBLA Tickets --- #
 
-tickets_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
+# TODO
+# Move to common.rb -- start
+
 users_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
+@users_assembla = csv_to_array(users_assembla_csv)
+
+@user_id_to_login = {}
+@user_id_to_email = {}
+@list_of_logins = {}
+@users_assembla.each do |user|
+  id = user['id']
+  login = user['login'].sub(/@.*$/,'')
+  email = user['email']
+  if email.nil? || email.empty?
+    email = "#{login}@example.org"
+  end
+  @user_id_to_login[id] = login
+  @user_id_to_email[id] = email
+  @list_of_logins[login] = true
+end
+
+# Move to common.rb -- end
+
+MAX_RETRY = 3
+
+tickets_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
 milestones_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/milestones.csv"
 tags_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-tags.csv"
 associations_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-associations.csv"
 
 @tickets_assembla = csv_to_array(tickets_assembla_csv)
-@users_assembla = csv_to_array(users_assembla_csv)
 @milestones_assembla = csv_to_array(milestones_assembla_csv)
 @tags_assembla = csv_to_array(tags_assembla_csv)
 @associations_assembla = csv_to_array(associations_assembla_csv)
@@ -127,14 +148,18 @@ def create_ticket_jira(ticket, counter, total)
   assigned_to_id = ticket['assigned_to_id']
   priority = ticket['priority']
   reporter_name = @user_id_to_login[reporter_id]
-  # reporter_email = @user_id_to_email[reporter_id]
+  reporter_email = @user_id_to_email[reporter_id]
   assignee_name = @user_id_to_login[assigned_to_id]
   priority_name = @priority_id_to_name[priority]
   status_name = ticket['status']
   story_rank = ticket['importance']
   story_points = ticket['story_importance']
-  # headers = headers_user_login(reporter_name,reporter_email)
-  headers = JIRA_SERVER_TYPE == 'hosted' ? JIRA_HEADERS : JIRA_HEADERS_CLOUD 
+  
+  headers = if JIRA_SERVER_TYPE == 'hosted'
+              headers_user_login(reporter_name, reporter_email)
+            else
+              JIRA_HEADERS_CLOUD 
+            end
 
   # Prepend the description text with a link to the original assembla ticket on the first line.
   description = "Assembla ticket [##{ticket_number}|#{ENV['ASSEMBLA_URL_TICKETS']}/#{ticket_number}] | "
@@ -343,22 +368,6 @@ end
 # --- USERS --- #
 
 puts "\nUsers:"
-
-# TODO: Move to common.rb
-@user_id_to_login = {}
-@user_id_to_email = {}
-@list_of_logins = {}
-@users_assembla.each do |user|
-  id = user['id']
-  login = user['login'].sub(/@.*$/,'')
-  email = user['email']
-  if email.nil? || email.empty?
-    email = "#{login}@example.org"
-  end
-  @user_id_to_login[id] = login
-  @user_id_to_email[id] = email
-  @list_of_logins[login] = true
-end
 
 @user_id_to_login.each do |k, v|
   puts "#{k} #{v}"

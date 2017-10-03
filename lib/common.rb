@@ -123,7 +123,7 @@ end
 # Assuming that the user name is the same as the user password
 # For the cloud we use the email otherwise login
 def headers_user_login(user_login, user_email)
-  cloud = JIRA_SERVER_TYPE == 'cloud'
+  cloud = (JIRA_SERVER_TYPE == 'cloud')
   { 'Authorization': "Basic #{Base64.encode64((cloud ? user_email : user_login) + ':' + user_login)}", 'Content-Type': 'application/json' }
 end
 
