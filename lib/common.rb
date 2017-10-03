@@ -36,6 +36,7 @@ end
 
 JIRA_API_HOST = "#{JIRA_API_BASE}/#{ENV['JIRA_API_HOST']}"
 JIRA_API_ADMIN_USER = ENV['JIRA_API_ADMIN_USER'].freeze
+JIRA_API_ADMIN_EMAIL = ENV['JIRA_API_ADMIN_EMAIL'].freeze
 JIRA_API_UNKNOWN_USER = ENV['JIRA_API_UNKNOWN_USER'].freeze
 
 JIRA_API_IMAGES_THUMBNAIL = (ENV['JIRA_API_IMAGES_THUMBNAIL'] || 'description:false,comments:true').freeze
@@ -45,7 +46,8 @@ JIRA_API_PROJECT_NAME = ENV['JIRA_API_PROJECT_NAME'].freeze
 # Jira project type us 'scrum' by default
 JIRA_API_PROJECT_TYPE = (ENV['JIRA_API_PROJECT_TYPE'] || 'scrum').freeze
 
-JIRA_HEADERS = { 'Authorization': "Basic #{Base64.encode64(JIRA_API_ADMIN_USER + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])}", 'Content-Type': 'application/json', 'Accept': 'application/json' }
+JIRA_HEADERS = { 'Authorization': "Basic #{Base64.encode64(JIRA_API_ADMIN_USER + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])}", 'Content-Type': 'application/json', 'Accept': 'application/json' }.freeze
+JIRA_HEADERS_CLOUD = { 'Authorization': "Basic #{Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])}", 'Content-Type': 'application/json', 'Accept': 'application/json' }.freeze
 
 URL_JIRA_PROJECTS = "#{JIRA_API_HOST}/project"
 URL_JIRA_ISSUE_TYPES = "#{JIRA_API_HOST}/issuetype"
@@ -119,8 +121,10 @@ def item_newer_than?(item, date)
 end
 
 # Assuming that the user name is the same as the user password
-def headers_user_login(user_login)
-  { 'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json' }
+# For the cloud we use the email otherwise login
+def headers_user_login(user_login, user_email)
+  cloud = JIRA_SERVER_TYPE == 'cloud'
+  { 'Authorization': "Basic #{Base64.encode64((cloud ? user_email : user_login) + ':' + user_login)}", 'Content-Type': 'application/json' }
 end
 
 def date_format_yyyy_mm_dd(dt)

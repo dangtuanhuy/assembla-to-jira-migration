@@ -107,7 +107,11 @@ end
 def jira_get_transitions(issue_id)
   result = nil
   user_login = @jira_id_to_login[issue_id]
-  headers = headers_user_login(user_login)
+  headers = if JIRA_SERVER_TYPE == 'hosted'
+              headers_user_login(user_login)
+            else
+              JIRA_HEADERS
+            end
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/transitions"
   begin
     response = RestClient::Request.execute(method: :get, url: url, headers: headers)

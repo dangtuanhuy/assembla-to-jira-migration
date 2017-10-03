@@ -67,8 +67,12 @@ end
 
 def jira_update_issue_description(issue_key, description)
   result = nil
-  # user_login = @ticket_j_key_to_j_reporter[issue_key]
-  # headers = headers_user_login(user_login)
+  user_login = @ticket_j_key_to_j_reporter[issue_key]
+  headers = if JIRA_SERVER_TYPE == 'hosted'
+              headers_user_login(user_login)
+            else
+              JIRA_HEADERS
+            end
   url = "#{URL_JIRA_ISSUES}/#{issue_key}"
   payload = {
     update: {},
@@ -77,8 +81,7 @@ def jira_update_issue_description(issue_key, description)
     }
   }.to_json
   begin
-    # RestClient::Request.execute(method: :put, url: url, payload: payload, headers: headers)
-    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: JIRA_HEADERS)
+    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: headers)
     puts "PUT #{url} description => OK"
     result = true
   rescue RestClient::ExceptionWithResponse => e
@@ -91,15 +94,18 @@ end
 
 def jira_update_comment_body(issue_key, comment_id, body)
   result = nil
-  # user_login = @comment_j_key_to_j_login[issue_key]
-  # headers = headers_user_login(user_login)
+  user_login = @comment_j_key_to_j_login[issue_key]
+  headers = if JIRA_SERVER_TYPE == 'hosted'
+              headers_user_login(user_login)
+            else
+              JIRA_HEADERS
+            end
   url = "#{URL_JIRA_ISSUES}/#{issue_key}/comment/#{comment_id}"
   payload = {
     body: body
   }.to_json
   begin
-    # RestClient::Request.execute(method: :put, url: url, payload: payload, headers: headers)
-    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: JIRA_HEADERS)
+    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: headers)
     puts "PUT #{url} description => OK"
     result = true
   rescue RestClient::ExceptionWithResponse => e

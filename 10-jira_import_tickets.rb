@@ -7,7 +7,7 @@ MAX_RETRY = 3
 # --- ASSEMBLA Tickets --- #
 
 tickets_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
-users_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/users.csv"
+users_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
 milestones_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/milestones.csv"
 tags_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-tags.csv"
 associations_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-associations.csv"
@@ -123,13 +123,18 @@ def create_ticket_jira(ticket, counter, total)
   summary = reformat_markdown(ticket['summary'], logins: @list_of_logins, images: @list_of_images, content_type: 'summary', tickets: @assembla_number_to_jira_key)
   created_on = ticket['created_on']
   completed_date = date_format_yyyy_mm_dd(ticket['completed_date'])
-  reporter_name = @user_id_to_login[ticket['reporter_id']]
-  assignee_name = @user_id_to_login[ticket['assigned_to_id']]
-  priority_name = @priority_id_to_name[ticket['priority']]
+  reporter_id = ticket['reporter_id']
+  assigned_to_id = ticket['assigned_to_id']
+  priority = ticket['priority']
+  reporter_name = @user_id_to_login[reporter_id]
+  # reporter_email = @user_id_to_email[reporter_id]
+  assignee_name = @user_id_to_login[assigned_to_id]
+  priority_name = @priority_id_to_name[priority]
   status_name = ticket['status']
   story_rank = ticket['importance']
   story_points = ticket['story_importance']
-  #headers = headers_user_login(reporter_name)
+  # headers = headers_user_login(reporter_name,reporter_email)
+  headers = JIRA_SERVER_TYPE == 'hosted' ? JIRA_HEADERS : JIRA_HEADERS_CLOUD 
 
   # Prepend the description text with a link to the original assembla ticket on the first line.
   description = "Assembla ticket [##{ticket_number}|#{ENV['ASSEMBLA_URL_TICKETS']}/#{ticket_number}] | "
@@ -176,7 +181,7 @@ def create_ticket_jira(ticket, counter, total)
     }
   }
 
-  if JIRA_SERVER_TYPE == 'cloud'
+  if JIRA_SERVER_TYPE == 'hosted'
     payload[:fields]["#{@customfield_name_to_id['Rank']}".to_sym] = story_rank
   end
 
@@ -210,9 +215,8 @@ def create_ticket_jira(ticket, counter, total)
   ok = false
   retries = 0
   begin
-    response = RestClient::Request.execute(method: :post, url: URL_JIRA_ISSUES, payload: payload.to_json, headers: JIRA_HEADERS)
     # TODO: Investigate why the following does not work, e.g. reporter can create own issues.
-    #response = RestClient::Request.execute(method: :post, url: URL_JIRA_ISSUES, payload: payload.to_json, headers: headers)
+    response = RestClient::Request.execute(method: :post, url: URL_JIRA_ISSUES, payload: payload.to_json, headers: headers)
     body = JSON.parse(response.body)
     jira_ticket_id = body['id']
     jira_ticket_key = body['key']
@@ -342,10 +346,17 @@ puts "\nUsers:"
 
 # TODO: Move to common.rb
 @user_id_to_login = {}
+@user_id_to_email = {}
 @list_of_logins = {}
 @users_assembla.each do |user|
+  id = user['id']
   login = user['login'].sub(/@.*$/,'')
-  @user_id_to_login[user['id']] = login
+  email = user['email']
+  if email.nil? || email.empty?
+    email = "#{login}@example.org"
+  end
+  @user_id_to_login[id] = login
+  @user_id_to_email[id] = email
   @list_of_logins[login] = true
 end
 
@@ -498,6 +509,33 @@ end
 
 @tickets_diffs = []
 
+# Some sanity checks just in case
+@invalid_reporters = []
+@tickets_assembla.each do |ticket|
+  ticket_id = ticket['id']
+  reporter_id = ticket['reporter_id']
+  reporter_name = @user_id_to_login[reporter_id]
+  reporter_email = @user_id_to_email[reporter_id]
+  unless reporter_name && reporter_name.length.positive? && reporter_email && reporter_email.length.positive?
+    @invalid_reporters << {
+        ticket_id: ticket_id,
+        reporter_id: reporter_id,
+        reporter_name: reporter_name,
+        reporter_email: reporter_email
+    }
+  end
+end
+
+if @invalid_reporters.length.positive?
+  puts "\nInvalid reporters: #{@invalid_reporters.length}"
+  @invalid_reporters.each do |reporter|
+    puts "ticket_id='#{reporter[:ticket_id]}' reporter: id='#{reporter[:reporter_id]}', name='#{reporter[:reporter_name]}', email='#{reporter[:reporter_email]}'"
+  end
+  goodbye('Please fix before continuing')
+end
+
+puts "\nReporters => OK"
+
 @tickets_assembla.each_with_index do |ticket, index|
   @jira_issues << create_ticket_jira(ticket, index + 1, @total_tickets)
 end
@@ -515,5 +553,5 @@ tickets_diffs_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets-diffs.csv"
 write_csv_file(tickets_diffs_jira_csv, @tickets_diffs)
 
 if JIRA_SERVER_TYPE == 'cloud'
-  puts "IMPORTANT: Ranking ignored during issue creation (not allowed in the Jira cloud version)"
+  puts 'IMPORTANT: Ranking was ignored (not supported in cloud) => fix later'
 end

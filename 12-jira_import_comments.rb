@@ -71,7 +71,6 @@ def jira_create_comment(issue_id, user_id, comment, counter)
   result = nil
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/comment"
   user_login = @user_id_to_login[user_id]
-
   headers = if JIRA_SERVER_TYPE == 'hosted'
               headers_user_login(user_login)
             else

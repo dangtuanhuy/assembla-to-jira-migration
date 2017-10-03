@@ -12,7 +12,7 @@ This is by far the best migration tool around, and here are just a few of the ma
 * Import tickets, comments, attachments and relationships
 * Retain ticket states and rankings
 * Link Jira issues to original Assembla tickets for reference
-* Capture Assembla context in user-defined fields
+* Capture relevant Assembla context in user-defined fields
 * Insert embedded image thumbnails in description and comments
 * Convert markdown and urls
 * Retain watchers of tickets
@@ -20,6 +20,7 @@ This is by far the best migration tool around, and here are just a few of the ma
 * Map Assembla milestones to Jira sprints
 * Populate the backlog, future and current sprints
 * Resolve cross linking between external projects
+* Takes into account the API differences between hosted and cloud
 
 ## Introduction
 
@@ -92,11 +93,17 @@ While the script is being executed, information will be logged to the console. B
 15. Update ticket associations
 16. Update ticket watchers
 17. Resolve/update ticket and comment external links
+18. Rank tickets (cloud only)
 
 ### Scrum/Kanban board
 
 18. Create sprints
 19. Update board
+
+### Manual cleanup
+
+20. Deactivate users not needed
+21. Give admin rights to relevant users
 
 ## Preparations
 
@@ -195,6 +202,7 @@ JIRA_API_PROJECT_NAME=Project Name
 JIRA_API_PROJECT_TYPE=scrum
 JIRA_API_ADMIN_USERNAME=john.doe
 JIRA_API_ADMIN_PASSWORD=secret
+JIRA_API_ADMIN_EMAIL=john.doe@example.com
 JIRA_API_UNKNOWN_USER=unknown.user
 JIRA_API_IMAGES_THUMBNAIL=description:false,comments:true
 
@@ -234,6 +242,8 @@ There are a couple of minor differences that must be taken into account:
 * Comments - The hosted version will allow original comment authors to import comments while cloud version will NOT. 
 
 In the `.evv` file this is indicated by setting the `JIRA_SERVER_TYPE` configuration parameter to either `hosted` or `cloud`.
+
+Make sure you're using your Atlassian account email address and password for basic authentication, not your Jira username.
 
 ## Export data from Assembla
 
@@ -658,6 +668,14 @@ jira-links-external-all.csv     => all detected external links are listed
 jira-links-external-updated.csv => only those external links actually updated
 ```
 
+### External ticket/comment links
+
+Only needed for the Jira cloud version, e.g. when `JIRA_SERVER_TYPE=cloud` in the `.env` file. Since this was not possible during the ticket creation, now is the time to rank the imported issues using the original Assembla values.
+
+```
+$ ruby 18-jira_rank_tikets.rb
+```
+
 ## Scrum Board
 
 You are now ready to setup the scrum board, create sprints, and assign issues to the correct sprints as well as the backlog. In the `.env` file, take notice of the following values:
@@ -677,7 +695,7 @@ When the scrum board was created with the project, all issues are assigned to th
 Now you are ready to setup the sprints by executing the following command:
 
 ```
-$ ruby 18-jira_create_sprints.rb # => data/jira/:space/jira-create-sprints.csv
+$ ruby 19-jira_create_sprints.rb # => data/jira/:space/jira-create-sprints.csv
 ```
 
 The issues are redistibuted to the sprints they belong to and the most recent sprint is set as the `active` sprint.
@@ -689,7 +707,7 @@ The final step after the board and sprints have been created is to copy the Asse
 In order to achieve this, execute the following command:
 
 ```
-$ ruby 19-jira_update_board.rb
+$ ruby 20-jira_update_board.rb
 ```
 
 ```
