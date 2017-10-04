@@ -209,8 +209,8 @@ Although the official Jira documentation claims that the hosted and cloud APIs a
 
 There are a couple of minor differences that must be taken into account:
 
-* Users - The hosted version will automatically set activated to true, the cloud version will NOT.
-* Ranking - The hosted version will allow you to set the issue rank while the cloud version will NOT.
+* Users - When creating users the hosted version will automatically set activated to true, whereas the cloud version will NOT.
+* Ranking - The hosted version will allow you to set the issue rank when creating issues while the cloud version will NOT.
 * Comments - The hosted version will allow original comment authors to import comments while cloud version will NOT. 
 * Attachments - The cloud version is [problematic](https://community.developer.atlassian.com/t/401-unauthorized/9540), and certain extra actions must be taken.
 
