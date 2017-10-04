@@ -117,7 +117,8 @@ Finally, cleanup actions need to be taken to finish things off.
 20. Deactivate users not needed
 21. Give admin rights to relevant users
 22. Ask users to change password, check email and create avatar
-23. Make backup of `data` directory for future reference
+23. Distribute issues into epics
+24. Make backup of `data` directory for future reference
 
 ## Preparations
 
@@ -1053,7 +1054,7 @@ gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, c
 
 ## Trouble-shooting
 
-* A `403 Forbidden` or `401 Unauthorized` error is returned. Ensure that the Authorization header is correct. if that doesn't work, log into your Atlassian account id.atlassian.com and try changing your password. There are some known problems with a recent cloud upgrade, see [Atlassian Community Ticket](https://community.developer.atlassian.com/t/401-unauthorized/9540), and certain extra actions must be taken.
+* A `403 Forbidden` or `401 Unauthorized` error is returned. Ensure that the Authorization header is correct. if that doesn't work, log into your Atlassian account id.atlassian.com and try changing your password. There are some known problems with a recent cloud upgrade, see [Atlassian Community Ticket](https://community.developer.atlassian.com/t/401-unauthorized/9540), and certain extra actions must be taken. If cloud, make sure that you are physically logged in to the `id.atlassian.net` cloud instance.
 * Error "User cannot be assigned issues." Activate, login as user and then deactivate.
 * If issue is an epic then the epic name custom field is required.
 * XSRF check failed => This is a known [bug](https://confluence.atlassian.com/jirakb/rest-api-calls-with-a-browser-user-agent-header-may-fail-csrf-checks-802591455.html).
