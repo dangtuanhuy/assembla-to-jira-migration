@@ -76,7 +76,7 @@ While the script is being executed, information will be logged to the console. B
 ### Assembla export
 
 1. Space (spaces, space_tools, users, user roles, tags, milestones, ticket statuses, ticket custom fields, documents, wiki pages and tickets)
-2. Tickets (comments, attachments, tags, associatations)
+2. Tickets (comments, attachments, tags, associations)
 3. Report users
 4. Report tickets
 
@@ -175,7 +175,7 @@ The same applies to the `Configure Screen Page` for the following additional (de
 
 ### Environment
 
-An example configuration file `.env.example` is provided for you to define a number evironment parameters which affect the behavior.
+An example configuration file `.env.example` is provided for you to define a number environment parameters which affect the behavior.
 
 ```
 # --- General settings --- #
@@ -235,14 +235,14 @@ $ cp .env.example .env
 
 ### Jira hosted versus cloud
 
-Although the official Jira documentation claims that the hosted and cloud APIs are identicial, I've found out that this isn't entirely true.
+Although the official Jira documentation claims that the hosted and cloud APIs are identical, I've found out that this isn't entirely true.
 
 There are a couple of minor differences that must be taken into account:
 
 * Users - The hosted version will automatically set activated to true, the cloud version will NOT.
 * Ranking - The hosted version will allow you to set the issue rank while the cloud version will NOT.
 * Comments - The hosted version will allow original comment authors to import comments while cloud version will NOT. 
-* Attachments - The cloud version is problematic, meaning that you might have to do this manually when migration done.
+* Attachments - The cloud version is [problematic](https://community.developer.atlassian.com/t/401-unauthorized/9540), and certain extra actions must be taken.
 
 In the `.evv` file this is indicated by setting the `JIRA_SERVER_TYPE` configuration parameter to either `hosted` or `cloud`.
 
@@ -510,6 +510,16 @@ $ ruby 13-jira_import_attachments.rb [restart_offset] # => data/jira/:space/jira
 
 Note: The Jira server sometimes has problems processing attachments too quickly and might return an error. In that case, just restart the command and pass it the offset where you want to restart from.
 
+IMORTANT: For the cloud version, the import might fail initially with a `401 Unauthorized` error. Try changing the admin login, logging out and then logging back in again. Hopefully it will now work.
+
+I was able to get things working by defining the following headers:
+```
+auth = Base64.encode64(admin_email + ':' + admin_password)
+headers = { 'Authorization': "Basic #{auth}", 'X-Atlassian-Token': 'no-check' }
+```
+
+See: [Atlassian Community Ticket](https://community.developer.atlassian.com/t/401-unauthorized/9540).
+
 ### Update ticket status
 
 Now you are ready to update the Jira tickets in line with the original Assembla state. Execute the following command:
@@ -703,7 +713,7 @@ Now you are ready to setup the sprints by executing the following command:
 $ ruby 19-jira_create_sprints.rb # => data/jira/:space/jira-create-sprints.csv
 ```
 
-The issues are redistibuted to the sprints they belong to and the most recent sprint is set as the `active` sprint.
+The issues are redistributed to the sprints they belong to and the most recent sprint is set as the `active` sprint.
 
 ### Update board
 
@@ -1022,7 +1032,7 @@ gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, c
 
 ## Trouble-shooting
 
-* A `403 Forbidden` or `401 Unauthorized` error is returned. Ensure that the Authorization header is correct. if that doesn't work, log into your Atlassian account id.atlassian.com and try changing your password. There are some known problems with a recent cloud upgrade, see [Upgrade to Atlassian Account](https://confluence.atlassian.com/cloud/the-upgrade-to-atlassian-account-873871204.html).
+* A `403 Forbidden` or `401 Unauthorized` error is returned. Ensure that the Authorization header is correct. if that doesn't work, log into your Atlassian account id.atlassian.com and try changing your password. There are some known problems with a recent cloud upgrade, see [Atlassian Community Ticket](https://community.developer.atlassian.com/t/401-unauthorized/9540), and certain extra actions must be taken.
 * Error "User cannot be assigned issues." Activate, login as user and then deactivate.
 * If issue is an epic then the epic name custom field is required.
 * XSRF check failed => This is a known [bug](https://confluence.atlassian.com/jirakb/rest-api-calls-with-a-browser-user-agent-header-may-fail-csrf-checks-802591455.html).
@@ -1046,13 +1056,14 @@ With such a complicated tool, there will always be some loose ends and/or additi
 ## References
 
 * Assembla
-    * [Website](https://www.assembla.com)
+    * [Homepage](https://www.assembla.com)
     * [API Reference](http://api-docs.assembla.cc/content/api_reference.html)
     * [Markdown](http://assemble.io/docs/Cheatsheet-Markdown.html)
 
 * Jira
-    * [Website](https://www.atlassian.com/software/jira)
-    * [API Reference](https://docs.atlassian.com/jira/REST/cloud/)
+    * [Homepage](https://www.atlassian.com/software/jira)
+    * [JIRA Server platform REST API reference](https://docs.atlassian.com/jira/REST/server/)
+    * [JIRA Cloud REST API Reference](https://docs.atlassian.com/jira/REST/cloud/)
     * [Markdown](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all)
     * [Upgrade to Atlassian Account](https://confluence.atlassian.com/cloud/the-upgrade-to-atlassian-account-873871204.html)
 

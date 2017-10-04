@@ -78,6 +78,7 @@ puts "Total attachments: #{@attachments_total}"
   else
     created_by = JIRA_API_ADMIN_USER
     email = JIRA_API_ADMIN_EMAIL
+    password = ENV['JIRA_API_ADMIN_PASSWORD']
   end
   url = "#{URL_JIRA_ISSUES}/#{jira_ticket_id}/attachments"
   counter = index + 1
@@ -87,7 +88,7 @@ puts "Total attachments: #{@attachments_total}"
   base64_encoded = if JIRA_SERVER_TYPE == 'hosted'
                      Base64.encode64(created_by + ':' + created_by)
                    else
-                     Base64.encode64(email + ':' + created_by)
+                     Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
                    end
   headers = { 'Authorization': "Basic #{base64_encoded}", 'X-Atlassian-Token': 'no-check' }
   begin
