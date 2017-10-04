@@ -106,10 +106,12 @@ While the script is being executed, information will be logged to the console. B
 
 20. Deactivate users not needed
 21. Give admin rights to relevant users
+22. Ask users to change password, check email and create avatar
+23. Make backup of `data` directory for future reference
 
 ## Preparations
 
-You will need to go to to the Jira website and login as admin.
+You will need to go to to the Jira hosted or cloud (`id.atlassian.net`) instance and login as admin.
 
 Define the project `.env` file as `ASSEMBLA_SPACE=space-name`.
 
