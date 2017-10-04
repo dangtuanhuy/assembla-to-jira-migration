@@ -1,18 +1,18 @@
 # Assembla-to-Jira
 
-A collection of advanced tooling which provides a completely seamless data migration from [Assembla](https://www.assembla.com) to [Jira](https://www.atlassian.com/software/jira).
+A collection of advanced tooling which provides seamless data migration from [Assembla](https://www.assembla.com) to [Jira](https://www.atlassian.com/software/jira).
 
 ![](images/assembla-to-jira.png)
 
-This is by far the best migration tool around, and here are just a few of the many reasons that this version beats all the others hands down:
+This is by far the best migration toolset around. Here are just a few of the many reasons why this version beats out all the others hands down:
 
-* Fully automated with minimal manual actions required
+* Fully automated with minimal manual actions
 * Configuration file with various options
 * Import users (names, emails, roles and permissions)
 * Import tickets, comments, attachments and relationships
-* Retain ticket states and rankings
-* Link Jira issues to original Assembla tickets for reference
-* Capture relevant Assembla context in user-defined fields
+* Retain ticket status, labels and ranking
+* Link back to original Assembla tickets for reference
+* Save relevant Assembla context in user-defined fields
 * Insert embedded image thumbnails in descriptions and comments
 * Convert markdown and urls
 * Retain watchers of tickets
@@ -1044,7 +1044,7 @@ gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, c
 * Error "User cannot be assigned issues." Activate, login as user and then deactivate.
 * If issue is an epic then the epic name custom field is required.
 * XSRF check failed => This is a known [bug](https://confluence.atlassian.com/jirakb/rest-api-calls-with-a-browser-user-agent-header-may-fail-csrf-checks-802591455.html).
-* Ticket or other import fails with the error message `Field 'field-name' cannot be set. It is not on the appropriate screen, or unknown`. Ensure that the custom field 'field-name' has been created and assigned to the required screens (see above).
+* Ticket or other import fails with the error message `Field 'field-name' cannot be set. It is not on the appropriate screen, or unknown`. Ensure that the custom field 'field-name' has been created and assigned to the required screens (see above). If this doesn't work, make sure that the user named in the authorization header has enough rights to make these changes.
 * Error `key='customfield_10100 (Assembla-Completed)', reason='Operation value must be a number'`, ensure that the custom field is the correct type: text field read-only.
 
 ## To do
