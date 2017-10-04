@@ -28,7 +28,7 @@ Have you ever wanted to use Jira instead of Assembla, but were afraid that the s
 
 Jira does offer a number of standard add-ons to make certain migrations easier, but unfortunately it does not offer a tool for migrating Assembla.
 
-However, **you are now in luck!** By using my Assembla-to-Jira migration tools, it should be very easy to export all of the relevant Assembla data and import most (if not all) of it into a Jira project without loss and/or corruption of data.
+However, **you are now in luck!** By using the Assembla-to-Jira migration tools, it should be very easy to export all of the relevant Assembla data and import most (if not all) of it into a Jira project without loss and/or corruption of data.
 
 By making use of the [Assembla API](http://api-docs.assembla.cc/content/api_reference.html) and the [Jira API](https://docs.atlassian.com/jira/REST/cloud/), both environments are hooked up in order to make all necessary data transformations.
 
@@ -42,7 +42,9 @@ Although the documentation states that the Jira API for hosted server is nearly 
 
 Don't worry, if you read all of the instructions below and do not skip anything, these annoying differences should not affect you.
 
-If you need help, please check out the [support](https://github.com/kgish/assembla-to-jira#support) section.
+## Help
+
+If you need any help, have a look at the [support](https://github.com/kgish/assembla-to-jira#support) section below.
 
 ## Installation
 
@@ -1097,7 +1099,7 @@ For full details, see [LICENSE.md](LICENSE.md).
 
 ## Support
 
-If you require assistance with the migration or need some functionality that is not yet present in the latest version, then I can certainly help you. Feel free to contact me!
+Do you require assistance with the migration or need some functionality that is not yet present in this version? I can certainly help you out. Feel free to contact me!
 
 ## Author
 
