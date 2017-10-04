@@ -1,32 +1,7 @@
 # frozen_string_literal: true
 
 load './lib/common.rb'
-
-# TODO
-# Move to common.rb -- start
-
-# Assembla users
-assembla_users_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
-@users_assembla = csv_to_array(assembla_users_csv)
-
-@user_id_to_login = {}
-@user_id_to_email = {}
-@user_login_to_email = {}
-@list_of_logins = {}
-@users_assembla.each do |user|
-  id = user['id']
-  login = user['login'].sub(/@.*$/,'')
-  email = user['email']
-  if email.nil? || email.empty?
-    email = "#{login}@example.org"
-  end
-  @user_id_to_login[id] = login
-  @user_id_to_email[id] = email
-  @user_login_to_email[login] = email
-  @list_of_logins[login] = true
-end
-
-# Move to common.rb -- end
+load './lib/users-assembla.rb'
 
 # Assembla tickets
 tickets_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"

@@ -460,6 +460,8 @@ During the conversion, any differences between the original Assembla ticket desc
 
 An additional output file `data/jira/:space/jira-ticket-links.csv` is created which contains those embedded ticket links that could not be resolved. This is used in the following step.
 
+Note: it is not possible for the original reporter (creator) of the Assembla ticket to be able to create a new issue, this is only allowed for the admin user, e.g. `headers = JIRA_HEADERS`.
+
 ### Update ticket links
 
 In the ticket summary and description, ticket links `#123` need to be converted to the relevant Jira issue links `PRJ-456`, which can only be done AFTER all the tickets have been imported.
@@ -497,6 +499,8 @@ jira_comment_id|jira_ticket_id|assembla_comment_id|assembla_ticket_id|user_login
 
 During the conversion, any differences between the original Assembla ticket comments and the newly created Jira issue comments is recorded in the `data/jira/:space/jira-comments-diffs.csv` file. This is a good place to look so you can verify that indeed the markdown conversion produced the expected results.
 
+Note: we allow the original creators of the Assembla comments to be able to create the new Jira comments, therefore retaining ownership.
+
 ### Import attachments
 
 ```
@@ -521,6 +525,8 @@ headers = { 'Authorization': "Basic #{auth}", 'X-Atlassian-Token': 'no-check' }
 ```
 
 See: [Atlassian Community Ticket](https://community.developer.atlassian.com/t/401-unauthorized/9540).
+
+Another note: we allow the original creators of the Assembla attachments to be able to create the new Jira attachments, therefore retaining ownership.
 
 ### Update ticket status
 

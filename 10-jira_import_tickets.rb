@@ -1,33 +1,9 @@
 # frozen_string_literal: true
 
 load './lib/common.rb'
+load './lib/users-assembla.rb'
 
 # --- ASSEMBLA Tickets --- #
-
-# TODO
-# Move to common.rb -- start
-
-users_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
-@users_assembla = csv_to_array(users_assembla_csv)
-
-@user_id_to_login = {}
-@user_id_to_email = {}
-@list_of_logins = {}
-@users_assembla.each do |user|
-  id = user['id']
-  login = user['login'].sub(/@.*$/,'')
-  email = user['email']
-  if email.nil? || email.empty?
-    email = "#{login}@example.org"
-  end
-  @user_id_to_login[id] = login
-  @user_id_to_email[id] = email
-  @list_of_logins[login] = true
-end
-
-# Move to common.rb -- end
-
-MAX_RETRY = 3
 
 tickets_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
 milestones_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/milestones.csv"
@@ -157,7 +133,9 @@ def create_ticket_jira(ticket, counter, total)
   story_points = ticket['story_importance']
   
   headers = if JIRA_SERVER_TYPE == 'hosted'
-              headers_user_login(reporter_name, reporter_email)
+              # It is not possible for reporter to create own issues, must be admin
+              # headers_user_login(reporter_name, reporter_email)
+              JIRA_HEADERS
             else
               JIRA_HEADERS_CLOUD 
             end
@@ -241,7 +219,6 @@ def create_ticket_jira(ticket, counter, total)
   ok = false
   retries = 0
   begin
-    # TODO: Investigate why the following does not work, e.g. reporter can create own issues.
     response = RestClient::Request.execute(method: :post, url: URL_JIRA_ISSUES, payload: payload.to_json, headers: headers)
     body = JSON.parse(response.body)
     jira_ticket_id = body['id']

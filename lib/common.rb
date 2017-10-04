@@ -69,6 +69,8 @@ JIRA_API_BROWSE_COMMENT = ENV['JIRA_API_BROWSE_COMMENT'] || 'browse/[:jira-ticke
 
 JIRA_API_STATUSES = ENV['JIRA_API_STATUSES']
 
+MAX_RETRY = 3
+
 def normalize_name(name)
   name.downcase.tr(' /_', '-')
 end
