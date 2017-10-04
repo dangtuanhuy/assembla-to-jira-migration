@@ -24,27 +24,29 @@ This is by far the best migration toolset around. Here are just a few of the man
 
 ## Introduction
 
-Have you ever wanted to use Jira instead of Assembla, but were afraid that the switch to Jira was too risky because you already have so much important data in Assembla?
+Have you ever wanted to use Jira instead of Assembla, but were afraid that the switch to Jira was too risky? Are you worried that business-critical data in Assembla will get corrupted during the transition?
 
-Jira does offer a number of standard add-ons to make migration easier, but unfortunately it does not offer any tools for migrating from Assembla.
+Jira does offer a number of standard add-ons to make certain migrations easier, but unfortunately it does not offer a tool for migrating Assembla.
 
-However, you are now in luck! By using these Assembla-to-Jira migration tools, it should be very easy to export all of the relevant Assembla data and import most (if not all) of it into a Jira project.
+However, **you are now in luck!** By using my Assembla-to-Jira migration tools, it should be very easy to export all of the relevant Assembla data and import most (if not all) of it into a Jira project without loss and/or corruption of data.
 
-Usage is made of the [Assembla API](http://api-docs.assembla.cc/content/api_reference.html) and the [Jira API](https://docs.atlassian.com/jira/REST/cloud/) in order to hook up both environments and make the necessary data transformations.
+By making use of the [Assembla API](http://api-docs.assembla.cc/content/api_reference.html) and the [Jira API](https://docs.atlassian.com/jira/REST/cloud/), both environments are hooked up in order to make all necessary data transformations.
 
-Most of the actions can be done automatically via a pipeline of scripts, after proper configuration of the required parameters in the `.env` file.
+Most of the actions can be done automatically via a pipeline of scripts. Just define the required parameters in the `.env` configuration file, and you are ready to go.
 
-However, there are a few manual actions required since the Jira API does not support all possible actions, but these are minimal. It is important NOT to skip these manual changes, as the successful migration depends on them.
+Some manual actions are required since the Jira API does not support all the required data transformations, but these actions are minimal. It is very important NOT to skip these manual changes, as the successful migration depends on them.
 
-It is best to start with a fresh installation, e.g. one in which the desired project has not yet been created. Otherwise, unexpected problems may occur.
+It is best to start with a fresh installation, e.g. one in which the desired project has not yet been created. Otherwise, unexpected problems may occur. Also note that in addition to a new project, all the Assembla users are also created.
 
-Also realize that although the documentation claims that the Jira API for hosted server is nearly identical to the cloud, there are some subtle differences that can bite you when you least expect. Don't worry, most of these annoying differences will not affect you.
+Although the documentation states that the Jira API for hosted server is nearly identical to the cloud, there are some subtle, tricky differences that can bite you when you least expect.
+
+Don't worry, if you read all of the instructions below and do not skip anything, these annoying differences should not affect you.
 
 If you need help, please check out the [support](https://github.com/kgish/assembla-to-jira#support) section.
 
 ## Installation
 
-The toolset has been written with the [Ruby programming language](https://www.ruby-lang.org). In order to be able to use it, you will have to have downloaded and installed the following on your computer:
+The toolset has been written with the [Ruby programming language](https://www.ruby-lang.org). In order to be able to use it, you will have to have downloaded and installed the following items on your computer:
 
 * [Ruby](https://www.ruby-lang.org/en/downloads)
 * [Bundler](http://bundler.io)
@@ -65,15 +67,17 @@ At this point everything should be ready to use as explained in the following se
 
 The complete migration from start to finish consists of a series of scripts which are to be executed in order.
 
-Like a pipeline, each script processes data and generates a dump file to store the intermediate results which in turn are used as input for the following script.
+Like a pipeline, each script processes data and generates a dump file to store the intermediate results. This output is used in turn as input for the following script.
 
 The reason for doing this that if something goes wrong you do not lose everything and can restart from the previous step.
 
-Each step will generate a log of the results in the form of a csv file for reference purposes, e.g. detecting which requests failed and why. For example, importing tickets will create the `data/jira/:space/jira-tickets.csv` file.
+Each step will generate a log of the results in the form of a csv file for reference purposes, e.g. detecting which requests failed and why. For example, importing tickets will create the `data/jira/:space/jira-tickets.csv` file where `:space` is the Assembla space name `ASSEMBLA_SPACE` in the `.env` file.
 
-While the script is being executed, information will be logged to the console. Be sure to inspect the information as certain instruction might be given to follow before continuing to the next step.
+While the script is being executed, information will be logged to the console. Be sure to inspect the information, as certain instruction might be given that you must follow before continuing to the next step.
 
 ### Assembla export
+
+First we export all the data from Assembla.
 
 1. Space (spaces, space_tools, users, user roles, tags, milestones, ticket statuses, ticket custom fields, documents, wiki pages and tickets)
 2. Tickets (comments, attachments, tags, associations)
@@ -81,6 +85,8 @@ While the script is being executed, information will be logged to the console. B
 4. Report tickets
 
 ### Jira import
+
+Now that all of the Assembla data is available, we can now take this and import it into Jira.
 
 5. Create project (and board)
 6. Create issue link types
@@ -99,10 +105,14 @@ While the script is being executed, information will be logged to the console. B
 
 ### Scrum/Kanban board
 
+Using the Agile extension, create the sprints and populate the scrum/kanban board.
+
 18. Create sprints
 19. Update board
 
 ### Manual cleanup
+
+Finally, cleanup actions need to be taken to finish things off.
 
 20. Deactivate users not needed
 21. Give admin rights to relevant users
@@ -111,69 +121,24 @@ While the script is being executed, information will be logged to the console. B
 
 ## Preparations
 
-You will need to go to to the Jira hosted or cloud (`id.atlassian.net`) instance and login as admin.
+You will need to go to to the Jira hosted (`jira.example.org`) or cloud (`id.atlassian.net`) instance and login as admin.
 
-Define the project `.env` file as `ASSEMBLA_SPACE=space-name`.
+Define the project in the `.env` file as `ASSEMBLA_SPACE=space-name`.
 
-Create the following new issue type:
+Create the following new issue types:
+
 * Spike
-* Bug
+* Bug (if not already present)
 
 The issue type `spike` or `bug` will be defined for any tickets whose summary starts with `Spike: ` or `Bug: `.
 
- Additionally, any tickets whose summary starts with `Epic :` will be defined as issue type `epic` (already part of the default Jira ticket types on project creation).
+Additionally, any tickets whose summary starts with `Epic :` will be defined as issue type `epic` (which is already part of the default Jira ticket types on project creation).
 
 ![](images/jira-issue-types.png)
 
 You will also need to configure the `issue type scheme` for the project like this:
 
 ![](images/jira-issue-type-schemes.png)
-
-### Custom fields
-
-After the project is created (see below), you will need to define manually the following custom fields (text field read-only):
-
-* Assembla-Id
-* Assembla-Theme
-* Assembla-Status
-* Assembla-Milestone
-* Assembla-Reporter
-* Assembla-Assignee
-* Assembla-Completed
-
-![](images/jira-select-field-type.png)
-
-and assign them to the following screens:
-
-* Simple Issue Tracking Create Issue
-* Simple Issue Tracking Edit/View Issue
-
-Otherwise the ticket import will fail with the error message `Field 'field-name' cannot be set. It is not on the appropriate screen, or unknown`.
-
-Additionally the following already existing custom fields need to be assigned the the same screens:
-
-* Epic Link
-* Epic Name
-* Rank
-* Sprint
-* Story Points
-
-![](images/jira-custom-fields.png)
-
-On the `View Field Configuration Page` ensure the same for:
-
-* Resolution
-
-![](images/jira-view-field-configuration.png)
-
-The same applies to the `Configure Screen Page` for the following additional (default) fields:
-
-* Epic Name
-* Rank
-* Assignee
-* Labels
-
-![](images/jira-configure-screen.png)
 
 ### Environment
 
@@ -307,6 +272,52 @@ The `projectKey` is usually just the abbreviation of the project name in all cap
 
 ![](images/jira-all-boards.png)
 
+### Custom fields
+
+This step is very important, so do not skip it. After the project is created, you will need to define manually the following custom fields (text field read-only):
+
+* Assembla-Id
+* Assembla-Theme
+* Assembla-Status
+* Assembla-Milestone
+* Assembla-Reporter
+* Assembla-Assignee
+* Assembla-Completed
+
+![](images/jira-select-field-type.png)
+
+and assign them to the following screens:
+
+* Simple Issue Tracking Create Issue
+* Simple Issue Tracking Edit/View Issue
+
+Otherwise the ticket import will fail with the error message `Field 'field-name' cannot be set. It is not on the appropriate screen, or unknown`.
+
+Additionally the following already existing custom fields need to be assigned the the same screens:
+
+* Epic Link
+* Epic Name
+* Rank
+* Sprint
+* Story Points
+
+![](images/jira-custom-fields.png)
+
+On the `View Field Configuration Page` ensure the same for:
+
+* Resolution
+
+![](images/jira-view-field-configuration.png)
+
+The same applies to the `Configure Screen Page` for the following additional (default) fields:
+
+* Epic Name
+* Rank
+* Assignee
+* Labels
+
+![](images/jira-configure-screen.png)
+
 ### Create issue link types
 
 ```
@@ -410,6 +421,8 @@ Note that in Jira images are treated as attachments and can be accessed that way
 Important: this step needs to be done before importing tickets (next section) in order that the markdown for embedded attachment (images) will work correctly.
 
 ### Import tickets
+
+IMPORTANT: Make sure that the custom fields have been created (see above).
 
 Alright, this is the moment we've all been waiting for. It's time to import the Assembla tickets and create the matching Jira issues.
 
