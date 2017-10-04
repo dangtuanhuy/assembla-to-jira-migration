@@ -242,6 +242,7 @@ There are a couple of minor differences that must be taken into account:
 * Users - The hosted version will automatically set activated to true, the cloud version will NOT.
 * Ranking - The hosted version will allow you to set the issue rank while the cloud version will NOT.
 * Comments - The hosted version will allow original comment authors to import comments while cloud version will NOT. 
+* Attachments - The cloud version is problematic, meaning that you might have to do this manually when migration done.
 
 In the `.evv` file this is indicated by setting the `JIRA_SERVER_TYPE` configuration parameter to either `hosted` or `cloud`.
 
@@ -428,7 +429,7 @@ POST /rest/api/2/issue
     customfield_assembla_theme: theme_name,
     customfield_assembla_status: status_name,
     customfield_assembla_milestone: milestone[:name],
-    customfield_rank: story_rank,
+    customfield_rank: story_rank, # hosted only
 
     customfield_assembla_reporter: UNKNOWN_USER, # if reporter is missing
     customfield_assembla_assignee: '',           # if assignee cannot be assigned issues
@@ -677,6 +678,8 @@ Only needed for the Jira cloud version, e.g. when `JIRA_SERVER_TYPE=cloud` in th
 ```
 $ ruby 18-jira_rank_tikets.rb
 ```
+
+Still not yet implemented, sorry.
 
 ## Scrum Board
 
@@ -1019,7 +1022,7 @@ gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, c
 
 ## Trouble-shooting
 
-* A `403 Forbidden` error will be returned. Ensure the the Authorization headers is correct.
+* A `403 Forbidden` or `401 Unauthorized` error is returned. Ensure that the Authorization header is correct. if that doesn't work, log into your Atlassian account id.atlassian.com and try changing your password. There are some known problems with a recent cloud upgrade, see [Upgrade to Atlassian Account](https://confluence.atlassian.com/cloud/the-upgrade-to-atlassian-account-873871204.html).
 * Error "User cannot be assigned issues." Activate, login as user and then deactivate.
 * If issue is an epic then the epic name custom field is required.
 * XSRF check failed => This is a known [bug](https://confluence.atlassian.com/jirakb/rest-api-calls-with-a-browser-user-agent-header-may-fail-csrf-checks-802591455.html).
@@ -1051,6 +1054,7 @@ With such a complicated tool, there will always be some loose ends and/or additi
     * [Website](https://www.atlassian.com/software/jira)
     * [API Reference](https://docs.atlassian.com/jira/REST/cloud/)
     * [Markdown](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all)
+    * [Upgrade to Atlassian Account](https://confluence.atlassian.com/cloud/the-upgrade-to-atlassian-account-873871204.html)
 
 ## License
 

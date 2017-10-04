@@ -118,7 +118,8 @@ puts "\nTotal tickets: #{@relationship_tickets.keys.length}"
 def jira_update_association(name, ticket1_id, ticket2_id, ticket_id, counter)
   result = nil
   user_login = @jira_id_to_login[ticket_id]
-  headers = headers_user_login(user_login)
+  # headers = headers_user_login(user_login)
+  headers = JIRA_HEADERS_CLOUD
   name.capitalize!
   name = 'Relates' if name == 'Related'
   name = 'Blocks' if name == 'Block'

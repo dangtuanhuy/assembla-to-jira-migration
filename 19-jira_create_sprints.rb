@@ -102,8 +102,13 @@ def jira_move_issues_to_sprint(sprint, tickets)
   payload = {
     issues: issues
   }.to_json
+  headers = if JIRA_SERVER_TYPE == 'hosted'
+              JIRA_HEADERS
+            else
+              JIRA_HEADERS_CLOUD
+            end
   begin
-    RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS)
+    RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
     puts "POST #{url} name='#{sprint['name']}' #{issues.length} issues [#{issues.join(',')}] => OK"
     result = true
   rescue RestClient::ExceptionWithResponse => e
@@ -127,8 +132,13 @@ def jira_update_sprint_state(sprint, state)
     startDate: start_date,
     endDate: end_date
   }.to_json
+  headers = if JIRA_SERVER_TYPE == 'hosted'
+              JIRA_HEADERS
+            else
+              JIRA_HEADERS_CLOUD
+            end
   begin
-    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: JIRA_HEADERS)
+    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: headers)
     puts "PUT #{url} name='#{name}', state='#{state}' => OK"
     result = true
   rescue RestClient::ExceptionWithResponse => e

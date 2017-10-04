@@ -2,13 +2,31 @@
 
 load './lib/common.rb'
 
+# TODO
+# Move to common.rb -- start
+
 # Assembla users
-users_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
-users = csv_to_array(users_csv)
+assembla_users_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
+@users_assembla = csv_to_array(assembla_users_csv)
+
 @user_id_to_login = {}
-users.each do |user|
-  @user_id_to_login[user['id']] = user['login'].sub(/@.*$/, '')
+@user_id_to_email = {}
+@user_login_to_email = {}
+@list_of_logins = {}
+@users_assembla.each do |user|
+  id = user['id']
+  login = user['login'].sub(/@.*$/,'')
+  email = user['email']
+  if email.nil? || email.empty?
+    email = "#{login}@example.org"
+  end
+  @user_id_to_login[id] = login
+  @user_id_to_email[id] = email
+  @user_login_to_email[login] = email
+  @list_of_logins[login] = true
 end
+
+# Move to common.rb -- end
 
 # Assembla tickets
 tickets_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
@@ -29,8 +47,9 @@ puts "\nTotal Assembla tickets: #{@total_assembla_tickets}"
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @tickets_jira = csv_to_array(tickets_jira_csv)
 
-# TODO: move this to common.rb
-# Convert assembla_ticket_id to jira_ticket
+# TODO
+# Move to common.rb -- start
+
 @a_id_to_j_id = {}
 @a_nr_to_j_key = {}
 @j_id_to_j_login = {}
@@ -43,11 +62,19 @@ tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
   @j_id_to_j_login[jira_id] = ticket['reporter_name']
 end
 
+# Move to common.rb -- end
+
 # POST /rest/api/2/issue/{issueIdOrKey}/watchers
 def jira_update_watcher(issue_id, watcher, counter)
   result = nil
   user_login = watcher
-  headers = headers_user_login(user_login)
+  user_login.sub!(/@.*$/,'')
+  user_email = @user_login_to_email[user_login]
+  headers = if JIRA_SERVER_TYPE == 'hosted'
+              headers_user_login(user_login, user_email)
+            else
+              JIRA_HEADERS_CLOUD
+            end
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/watchers"
   payload = "\"#{watcher}\""
   begin

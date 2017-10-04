@@ -4,6 +4,33 @@
 
 load './lib/common.rb'
 
+# TODO
+# Move to common.rb -- start
+
+# Assembla users
+assembla_users_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
+@users_assembla = csv_to_array(assembla_users_csv)
+
+@user_id_to_login = {}
+@user_id_to_email = {}
+@user_login_to_email = {}
+@list_of_logins = {}
+@users_assembla.each do |user|
+  id = user['id']
+  login = user['login'].sub(/@.*$/,'')
+  email = user['email']
+  if email.nil? || email.empty?
+    email = "#{login}@example.org"
+  end
+  @user_id_to_login[id] = login
+  @user_id_to_email[id] = email
+  @user_login_to_email[login] = email
+  @list_of_logins[login] = true
+end
+
+# Move to common.rb -- end
+
+
 @projects = []
 
 @projects_csv = csv_to_array("#{output_dir_jira(JIRA_API_PROJECT_NAME)}/jira-projects.csv")
@@ -68,10 +95,12 @@ end
 def jira_update_issue_description(issue_key, description)
   result = nil
   user_login = @ticket_j_key_to_j_reporter[issue_key]
+  user_login.sub!(/@.*$/,'')
+  user_email = @user_login_to_email[user_login]
   headers = if JIRA_SERVER_TYPE == 'hosted'
-              headers_user_login(user_login)
+              headers_user_login(user_login, user_email)
             else
-              JIRA_HEADERS
+              JIRA_HEADERS_CLOUD
             end
   url = "#{URL_JIRA_ISSUES}/#{issue_key}"
   payload = {
@@ -95,10 +124,12 @@ end
 def jira_update_comment_body(issue_key, comment_id, body)
   result = nil
   user_login = @comment_j_key_to_j_login[issue_key]
+  user_login.sub!(/@.*$/,'')
+  user_email = @user_login_to_email[user_login]
   headers = if JIRA_SERVER_TYPE == 'hosted'
-              headers_user_login(user_login)
+              headers_user_login(user_login, user_email)
             else
-              JIRA_HEADERS
+              JIRA_HEADERS_CLOUD
             end
   url = "#{URL_JIRA_ISSUES}/#{issue_key}/comment/#{comment_id}"
   payload = {

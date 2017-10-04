@@ -148,6 +148,7 @@ def create_ticket_jira(ticket, counter, total)
   assigned_to_id = ticket['assigned_to_id']
   priority = ticket['priority']
   reporter_name = @user_id_to_login[reporter_id]
+  reporter_name.sub!(/@.*$/,'')
   reporter_email = @user_id_to_email[reporter_id]
   assignee_name = @user_id_to_login[assigned_to_id]
   priority_name = @priority_id_to_name[priority]

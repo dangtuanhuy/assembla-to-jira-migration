@@ -83,7 +83,6 @@ puts "Total attachments: #{@attachments_total}"
   counter = index + 1
   next if counter < restart_offset
   percentage = ((counter * 100) / @attachments_total).round.to_s.rjust(3)
-  puts "#{percentage}% [#{counter}|#{@attachments_total}] POST #{url} '#{filename}' (#{content_type}) => OK"
   payload = { mulitpart: true, file: File.new(filepath, 'rb') }
   base64_encoded = if JIRA_SERVER_TYPE == 'hosted'
                      Base64.encode64(created_by + ':' + created_by)
@@ -93,6 +92,7 @@ puts "Total attachments: #{@attachments_total}"
   headers = { 'Authorization': "Basic #{base64_encoded}", 'X-Atlassian-Token': 'no-check' }
   begin
     response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
+    puts "#{percentage}% [#{counter}|#{@attachments_total}] POST #{url} '#{filename}' (#{content_type}) => OK"
     result = JSON.parse(response.body)
     jira_attachment_id = result[0]['id']
     @jira_attachments << {
