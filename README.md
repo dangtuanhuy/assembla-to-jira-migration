@@ -797,6 +797,59 @@ JIRA_API_STATUSES=New:To Do,In Progress,Blocked,Testable,Ready for Acceptance, \
 
 ![](images/jira-create-workflow.png)
 
+
+## Output files
+
+As mentioned previously, during each step of the migration pipeline, the script will generate output in the form of CSV files to capture the data at that given moment.
+
+### Assembla
+
+In the `data/assembla/:space` directory:
+
+* documents.csv
+* milestones.csv
+* report-tickets.csv
+* report-users.csv
+* spaces.csv
+* space-tools.csv
+* tags.csv
+* ticket-associations.csv
+* ticket-attachments.csv
+* ticket-comments.csv
+* tickets.csv
+* tickets-custom-fields.csv
+* tickets-statuses.csv
+* ticket-tags.csv
+* user-roles.csv
+* users.csv
+* wiki-pages.csv
+
+### Jira
+
+In the `data/jira/:space` directory:
+
+* jira-attachments-download.csv
+* jira-attachments-import.csv
+* jira-comments.csv
+* jira-comments-diffs.csv
+* jira-issuelink-types.csv
+* jira-issue-types.csv
+* jira-links-external-all.csv
+* jira-links-external-updated.csv
+* jira-priorities.csv
+* jira-projects.csv
+* jira-resolutions.csv
+* jira-roles.csv
+* jira-sprints.csv
+* jira-statuses.csv
+* jira-ticket-links.csv
+* jira-tickets-associations.csv
+* jira-tickets.csv
+* jira-tickets-diffs.csv
+* jira-tickets-status-updates.csv
+* jira-tickets-watchers.csv
+* jira-users.csv
+
 ## Ticket field conversions
 
 Most of the ticket fields are converted from Assembla to Jira via a one-to-one mapping and are indicated as **bold** below.
