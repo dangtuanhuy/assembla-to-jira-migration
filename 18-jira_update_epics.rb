@@ -6,6 +6,31 @@ load './lib/common.rb'
 
 puts 'This is still in the EXPERIMENTAL phase.'
 
+# Assembla tickets
+
+# tickets.csv: id,number,summary,description,priority,completed_date,component_id,created_on,permission_type,importance,is_story,milestone_id,notification_list,space_id,state,status,story_importance,updated_at,working_hours,estimate,total_estimate,total_invested_hours,total_working_hours,assigned_to_id,reporter_id,custom_fields,hierarchy_type,due_date,assigned_to_name,picture_url
+tickets_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
+@tickets_assembla = csv_to_array(tickets_assembla_csv)
+
+# --- Filter by date if TICKET_CREATED_ON is defined --- #
+tickets_created_on = get_tickets_created_on
+
+if tickets_created_on
+  puts "Filter newer than: #{tickets_created_on}"
+  tickets_initial = @tickets_assembla.length
+  @tickets_assembla.select! { |item| item_newer_than?(item, tickets_created_on) }
+  puts "Tickets: #{tickets_initial} => #{@tickets_assembla.length} ∆#{tickets_initial - @tickets_assembla.length}"
+else
+  puts "\nTotal Assembla tickets: #{@tickets_assembla.length}"
+end
+
+# hierarchy_type = 3 => epic
+@tickets_assembla_epic_h = @tickets_assembla.select { |item| item['hierarchy_type'].to_i == 3 }
+@tickets_assembla_epic_s = @tickets_assembla.select { |item| item['summary'] =~ /^epic/i && item['hierarchy_type'].to_i != 3 }
+
+puts "\nTotal Assembla ticket epics: #{@tickets_assembla_epic_h.length + @tickets_assembla_epic_s.length}"
+puts "* hierarchy (#{@tickets_assembla_epic_h.length})"
+puts "* summary (#{@tickets_assembla_epic_s.length})"
 # Jira tickets
 
 # jira-tickets.csv: result,retries,message,jira_ticket_id,jira_ticket_key,project_id,summary,issue_type_id,
@@ -14,6 +39,8 @@ puts 'This is still in the EXPERIMENTAL phase.'
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @tickets_jira = csv_to_array(tickets_jira_csv)
 @total_jira_tickets = @tickets_jira.length
+
+puts "\nTotal Jira tickets: #{@total_jira_tickets}"
 
 @epic_names = {}
 @tickets_with_epics = []
@@ -34,7 +61,7 @@ unless @total_epic_names.positive?
   exit
 end
 
-puts "\nTotal tickets with epics: #{@total_tickets_with_epics}"
+puts "\nTotal Jira tickets with epic: #{@total_tickets_with_epics}"
 
 puts "\nTotal epics (local): #{@total_epic_names}"
 @epic_names.keys.sort.each do |k|
@@ -156,7 +183,7 @@ def jira_get_issues_without_epic(board)
 end
 
 board = jira_get_board_by_project_name(JIRA_API_PROJECT_NAME)
-
+puts
 goodbye('Cannot find board name') unless board
 
 epics = jira_get_epics(board)
@@ -180,4 +207,4 @@ puts
 
 issues_without_epic = jira_get_issues_without_epic(board)
 
-puts "\nTotal issue without an epic: #{issues_without_epic.length}"
+puts "\nTotal Jira issues without epic: #{issues_without_epic.length}"
