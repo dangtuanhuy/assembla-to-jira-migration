@@ -1121,11 +1121,10 @@ gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, c
 
 With such a complicated tool, there will always be some loose ends and/or additional work to be done at a later time. Hopefully in the not so distant future, I'll have some time to tackle one or more of the following items:
 
-* Allow themes to be converted into Epics. Currently epics are only created for tickets with summaries that start with 'EPIC:' which in hindsight is probably not the best way of doing this.
-* Implement Assembla cardwall columns (statuses = blocked, testable, ready for acceptance, in acceptance testing, ready for deploy) in line with the original Assembla workflow.
+* Allow themes to be converted into Epics (additional .env file option). Currently epics are only created for tickets with summaries that start with 'EPIC:' which in hindsight is probably not the best way of doing this.
+* Create JIra board columns in line with the original Assembla cardwall columns (statuses = blocked, testable, ready for acceptance, in acceptance testing, ready for deploy) and populate with the relevant issues.
 * Allow data dumps to restart with all newer items since last dump, rather than having to start all over again. This is already the case for attachments, but should be possible with tickets, comments, etc.
 * Update readme screenshots and relevant screen associations, e.g. only `Scrum Default Issue Screen` is required.
-* For ticket links which link to an external Assembla space, retain the original external link.
 * Assembla tickets with tag `bug` should be converted into Jira issue of type `bug`.
 * Automatically create custom fields instead of requiring the user to do this manually (see above).
 * Use a user-defined Jira project template instead of requiring the user to define stuff manually.
