@@ -45,30 +45,114 @@ puts
 # GET /rest/agile/1.0/board/{boardId}/epic
 def jira_get_epics(board)
   board_id = board['id']
-  results = []
+  start_at = 0
+  max_results = 50
+  is_last = false
+  epics = []
   headers = if JIRA_SERVER_TYPE == 'hosted'
               JIRA_HEADERS
             else
               JIRA_HEADERS_CLOUD
             end
-  url = "#{URL_JIRA_BOARDS}/#{board_id}/epic"
-  begin
-    response = RestClient::Request.execute(method: :get, url: url, headers: headers)
-    json = JSON.parse(response)
-    values = json['values']
-    count = values.length
-    if count.positive?
-      values.each do |result|
-        results << result
+  until is_last
+    url = "#{URL_JIRA_BOARDS}/#{board_id}/epic?startAt=#{start_at}&maxResults=#{max_results}"
+    begin
+      response = RestClient::Request.execute(method: :get, url: url, headers: headers)
+      json = JSON.parse(response)
+      is_last = json['isLast']
+      values = json['values']
+      count = values.length
+      if count.positive?
+        values.each do |epic|
+          epics << epic
+        end
       end
+      start_at += max_results
+      puts "GET #{url} => ok (#{count})"
+    rescue RestClient::ExceptionWithResponse => e
+      rest_client_exception(e, 'GET', url)
+    rescue => e
+      puts "GET #{url} => nok (#{e.message})"
     end
-    puts "GET #{url} => ok (#{count})"
-  rescue RestClient::ExceptionWithResponse => e
-    rest_client_exception(e, 'GET', url)
-  rescue => e
-    puts "GET #{url} => nok (#{e.message})"
   end
-  results
+  epics
+end
+
+# Issues for epic
+# GET /rest/agile/1.0/board/{boardId}/epic/{epicId}/issue
+def jira_get_issues_for_epic(board, epic)
+  board_id = board['id']
+  epic_id = epic['id']
+  start_at = 0
+  max_results = 50
+  is_last = false
+  issues = []
+  headers = if JIRA_SERVER_TYPE == 'hosted'
+              JIRA_HEADERS
+            else
+              JIRA_HEADERS_CLOUD
+            end
+  until is_last
+    url = "#{URL_JIRA_BOARDS}/#{board_id}/epic/#{epic_id}/issue?startAt=#{start_at}&maxResults=#{max_results}"
+    begin
+      response = RestClient::Request.execute(method: :get, url: url, headers: headers)
+      json = JSON.parse(response)
+      values = json['issues']
+      count = values.length
+      if count.positive?
+        values.each do |issue|
+          issues << issue
+        end
+      else
+        is_last = true
+      end
+      start_at += max_results
+      # puts "GET #{url} => ok (#{count})"
+    rescue RestClient::ExceptionWithResponse => e
+      rest_client_exception(e, 'GET', url)
+    rescue => e
+      puts "GET #{url} => nok (#{e.message})"
+    end
+  end
+  issues
+end
+
+# Issues without an epic
+# GET /rest/agile/1.0/board/{boardId}/epic/none/issue
+def jira_get_issues_without_epic(board)
+  board_id = board['id']
+  start_at = 0
+  max_results = 50
+  is_last = false
+  issues = []
+  headers = if JIRA_SERVER_TYPE == 'hosted'
+              JIRA_HEADERS
+            else
+              JIRA_HEADERS_CLOUD
+            end
+  until is_last
+    url = "#{URL_JIRA_BOARDS}/#{board_id}/epic/none/issue?startAt=#{start_at}&maxResults=#{max_results}"
+    begin
+      response = RestClient::Request.execute(method: :get, url: url, headers: headers)
+      json = JSON.parse(response)
+      values = json['issues']
+      count = values.length
+      if count.positive?
+        values.each do |issue|
+          issues << issue
+        end
+      else
+        is_last = true
+      end
+      start_at += max_results
+      puts "GET #{url} => ok (#{count})"
+    rescue RestClient::ExceptionWithResponse => e
+      rest_client_exception(e, 'GET', url)
+    rescue => e
+      puts "GET #{url} => nok (#{e.message})"
+    end
+  end
+  issues
 end
 
 board = jira_get_board_by_project_name(JIRA_API_PROJECT_NAME)
@@ -88,6 +172,12 @@ epics.sort! { |x, y| x['name'] <=> y['name'] }
 puts "\nTotal epics (remote): #{total_epics}"
 epics.each do |epic|
   name = epic['name']
-  puts "* #{name}"
+  issues = jira_get_issues_for_epic(board, epic)
+  id = epic['id']
+  puts "* #{id} #{name} => #{issues.length} issues"
 end
+puts
 
+issues_without_epic = jira_get_issues_without_epic(board)
+
+puts "\nTotal issue without an epic: #{issues_without_epic.length}"
