@@ -4,7 +4,7 @@ A collection of advanced tooling which provides seamless data migration from [As
 
 ![](images/assembla-to-jira.png)
 
-This is by far the best migration toolset around. Here are just a few of the many reasons why this version beats out all the others hands down:
+This is by far the best migration toolset around. Here are the reasons why this version beats out all others hands down:
 
 * Fully automated with minimal manual actions
 * Configuration file with various options
@@ -19,6 +19,7 @@ This is by far the best migration toolset around. Here are just a few of the man
 * Create scrum or kanban board with workflow
 * Map Assembla milestones to Jira sprints
 * Populate the backlog, future and current sprints
+* Assign issues to epics
 * Resolve cross linking between external projects
 * Take into account the API differences between hosted and cloud
 
@@ -109,18 +110,18 @@ Now that all of the Assembla data is available, we can now take this and import 
 
 Using the Agile extension, create the sprints and populate the scrum/kanban board.
 
-18. Create sprints
-19. Update board
+19. Create sprints
+20. Update board
 
 ### Manual cleanup
 
 Finally, cleanup actions need to be taken to finish things off.
 
-20. Deactivate users not needed
-21. Give admin rights to relevant users
-22. Ask users to change password, check email and create avatar
-23. Distribute issues into epics
-24. Make backup of `data` directory for future reference
+21. Deactivate users not needed
+22. Give admin rights to relevant users
+23. Ask users to change password, check email and create avatar
+24. Distribute issues into epics
+25. Make backup of `data` directory for future reference
 
 ## Preparations
 
@@ -1120,8 +1121,9 @@ gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, c
 
 With such a complicated tool, there will always be some loose ends and/or additional work to be done at a later time. Hopefully in the not so distant future, I'll have some time to tackle one or more of the following items:
 
+* Allow themes to be converted into Epics. Currently epics are only created for tickets with summaries that start with 'EPIC:' which in hindsight is probably not the best way of doing this.
 * Implement Assembla cardwall columns (statuses = blocked, testable, ready for acceptance, in acceptance testing, ready for deploy) in line with the original Assembla workflow.
-* Allow data dumps to restart with all newer items since last dump, rather than having to start all over again.
+* Allow data dumps to restart with all newer items since last dump, rather than having to start all over again. This is already the case for attachments, but should be possible with tickets, comments, etc.
 * Update readme screenshots and relevant screen associations, e.g. only `Scrum Default Issue Screen` is required.
 * For ticket links which link to an external Assembla space, retain the original external link.
 * Assembla tickets with tag `bug` should be converted into Jira issue of type `bug`.
