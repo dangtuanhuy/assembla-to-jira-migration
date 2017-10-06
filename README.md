@@ -23,6 +23,8 @@ This is by far the best migration toolset around. Here are the reasons why this 
 * Resolve cross linking between external projects
 * Take into account the API differences between hosted and cloud
 
+Note: Assembla custom fields are not yet supported.
+
 ## Introduction
 
 Have you ever wanted to use Jira instead of Assembla, but were afraid that the switch to Jira was too risky? Are you worried that business-critical data in Assembla will get corrupted during the transition?
@@ -1121,6 +1123,7 @@ gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, c
 
 With such a complicated tool, there will always be some loose ends and/or additional work to be done at a later time. Hopefully in the not so distant future, I'll have some time to tackle one or more of the following items:
 
+* Support Assembla [custom fields](http://api-docs.assembla.cc/content/ref/ticket_custom_fields_fields.html)
 * Allow themes to be converted into Epics (additional .env file option). Currently epics are only created for tickets with summaries that start with 'EPIC:' which in hindsight is probably not the best way of doing this.
 * Create JIra board columns in line with the original Assembla cardwall columns (statuses = blocked, testable, ready for acceptance, in acceptance testing, ready for deploy) and populate with the relevant issues.
 * Allow data dumps to restart with all newer items since last dump, rather than having to start all over again. This is already the case for attachments, but should be possible with tickets, comments, etc.
