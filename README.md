@@ -47,7 +47,7 @@ Don't worry, if you read all of the instructions below and do not skip anything,
 
 ## Help
 
-If you need any help, have a look at the [support](https://github.com/kgish/assembla-to-jira#support) section below.
+If you need any help, have a look at the [support](https://github.com/kgish/assembla-to-jira-migration#support) section below.
 
 ## Installation
 
@@ -60,7 +60,7 @@ The toolset has been written with the [Ruby programming language](https://www.ru
 Once this has been done, you can checkout and install the toolset from the github repository.
 
 ```
-$ git clone https://github.com/kgish/assembla-to-jira.git
+$ git clone https://github.com/kgish/assembla-to-jira-migration.git assembla-to-jira
 $ cd assembla-to-jira
 $ gem install bundler
 $ bundle install
