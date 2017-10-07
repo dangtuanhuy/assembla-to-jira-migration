@@ -1148,12 +1148,6 @@ With such a complicated tool, there will always be some loose ends and/or additi
     * [Markdown](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all)
     * [Upgrade to Atlassian Account](https://confluence.atlassian.com/cloud/the-upgrade-to-atlassian-account-873871204.html)
 
-## License
-
-Licensed under the EUPL V.1.1.
-
-For full details, see [LICENSE.md](LICENSE.md).
-
 ## Support
 
 Do you require assistance with the migration or need some functionality that is not yet present in this version? I can certainly help you out. Feel free to contact me!
