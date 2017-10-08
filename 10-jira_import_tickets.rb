@@ -32,6 +32,28 @@ else
   puts "Tickets: #{@tickets_assembla.length}"
 end
 
+# Custom fields
+@custom_fields = {}
+@tickets_assembla.each do |ticket|
+  c_fields = ticket['custom_fields']
+  unless c_fields&.empty?
+    fields = JSON.parse(c_fields.gsub(/=>/,': '))
+    fields.each do |k, v|
+      @custom_fields[k] = [] unless @custom_fields[k]
+      @custom_fields[k] << v unless v&.empty? || @custom_fields[k].include?(v)
+    end
+  end
+end
+
+puts "\nTotal custom fields: #{@custom_fields.keys.length}"
+
+@custom_fields.keys.each do |k|
+  puts "\n#{k}:"
+  @custom_fields[k].sort.each do |name|
+    puts "* #{name}"
+  end
+end
+
 # --- JIRA Tickets --- #
 
 issue_types_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-issue-types.csv"

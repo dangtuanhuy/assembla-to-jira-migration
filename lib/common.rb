@@ -17,12 +17,12 @@ ASSEMBLA_API_SECRET = ENV['ASSEMBLA_API_SECRET'].freeze
 ASSEMBLA_HEADERS = { 'X-Api-Key': ASSEMBLA_API_KEY, 'X-Api-Secret': ASSEMBLA_API_SECRET }.freeze
 
 ASSEMBLA_SKIP_ASSOCIATIONS = (ENV['ASSEMBLA_SKIP_ASSOCIATIONS'] || '').split(',').push('unknown')
+
 ASSEMBLA_TYPES_IN_SUMMARY = (ENV['ASSEMBLA_TYPES_IN_SUMMARY'] || '').split(',')
-ASSEMBLA_CUSTOM_FIELDS = (ENV['ASSEMBLA_CUSTOM_FIELDS'] || '').split(',')
 
 JIRA_SERVER_TYPE = ENV['JIRA_SERVER_TYPE'] || 'hosted'
 
-unless %r{cloud|hosted}.match(JIRA_SERVER_TYPE)
+unless /cloud|hosted/.match(JIRA_SERVER_TYPE)
   puts "Invalid value JIRA_SERVER_TYPE='#{JIRA_SERVER_TYPE}', must be 'cloud' or 'hosted' (see .env file)"
   exit
 end
