@@ -14,7 +14,7 @@ end
 
 # jira-tickets.csv: result,retries,message,jira_ticket_id,jira_ticket_key,project_id,summary,issue_type_id,
 # issue_type_name, assignee_name,reporter_name,priority_name,status_name,labels,description,assembla_ticket_id,
-# assembla_ticket_number,theme_name,milestone_name,story_rank
+# assembla_ticket_number,custom_field,milestone_name,story_rank
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @tickets_jira = csv_to_array(tickets_jira_csv)
 @total_jira_tickets = @tickets_jira.length

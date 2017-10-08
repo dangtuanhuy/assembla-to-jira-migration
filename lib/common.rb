@@ -20,6 +20,8 @@ ASSEMBLA_SKIP_ASSOCIATIONS = (ENV['ASSEMBLA_SKIP_ASSOCIATIONS'] || '').split(','
 
 ASSEMBLA_TYPES_IN_SUMMARY = (ENV['ASSEMBLA_TYPES_IN_SUMMARY'] || '').split(',')
 
+ASSEMBLA_CUSTOM_FIELD = ENV['ASSEMBLA_CUSTOM_FIELD']
+
 JIRA_SERVER_TYPE = ENV['JIRA_SERVER_TYPE'] || 'hosted'
 
 unless /cloud|hosted/.match(JIRA_SERVER_TYPE)
@@ -99,7 +101,7 @@ OUTPUT_DIR_JIRA_ATTACHMENTS = "#{OUTPUT_DIR_JIRA}/attachments"
 end
 
 # The following custom fields MUST be defined AND associated with the proper screens
-CUSTOM_FIELD_NAMES = %w(Assembla-Id Assembla-Milestone Assembla-Theme Assembla-Status Assembla-Reporter Assembla-Assignee Assembla-Completed Epic\ Name Rank Story\ Points)
+CUSTOM_FIELD_NAMES = %w(Assembla-Id Assembla-Milestone Assembla-Status Assembla-Reporter Assembla-Assignee Assembla-Completed Epic\ Name Rank Story\ Points)
 
 JIRA_AGILE_HOST = "#{JIRA_API_BASE}/#{ENV['JIRA_AGILE_HOST']}"
 URL_JIRA_BOARDS = "#{JIRA_AGILE_HOST}/board"

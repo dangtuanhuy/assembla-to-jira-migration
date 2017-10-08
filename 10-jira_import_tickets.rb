@@ -177,7 +177,7 @@ def create_ticket_jira(ticket, counter, total)
   labels = get_labels(ticket)
 
   custom_fields = JSON.parse(ticket['custom_fields'].gsub('=>',':'))
-  theme_name = custom_fields['Theme']
+  custom_field = custom_fields[ASSEMBLA_CUSTOM_FIELD]
 
   milestone = get_milestone(ticket)
 
@@ -200,13 +200,17 @@ def create_ticket_jira(ticket, counter, total)
       # Assembla
 
       "#{@customfield_name_to_id['Assembla-Id']}": ticket_number,
-      "#{@customfield_name_to_id['Assembla-Theme']}": theme_name,
       "#{@customfield_name_to_id['Assembla-Status']}": status_name,
       "#{@customfield_name_to_id['Assembla-Milestone']}": milestone[:name],
       "#{@customfield_name_to_id['Assembla-Completed']}": completed_date
     }
   }
 
+  if custom_field
+    assembla_custom_field = "Assembla-#{ASSEMBLA_CUSTOM_FIELD}"
+    payload[:fields]["#{@customfield_name_to_id[assembla_custom_field]}".to_sym] = custom_field
+  end
+  
   if JIRA_SERVER_TYPE == 'hosted'
     payload[:fields]["#{@customfield_name_to_id['Rank']}".to_sym] = story_rank
   end
@@ -346,7 +350,7 @@ def create_ticket_jira(ticket, counter, total)
       description: description,
       assembla_ticket_id: ticket_id,
       assembla_ticket_number: ticket_number,
-      theme_name: theme_name,
+      custom_field: custom_field,
       milestone_name: milestone[:name],
       story_rank: story_rank
   }
@@ -479,8 +483,12 @@ end
 @customfield_name_to_id = {}
 @customfield_id_to_name = {}
 
+@all_custom_field_names = CUSTOM_FIELD_NAMES
+
+@all_custom_field_names << "Assembla-#{ASSEMBLA_CUSTOM_FIELD}" unless ASSEMBLA_CUSTOM_FIELD&.empty?
+  
 missing_fields = []
-CUSTOM_FIELD_NAMES.each do |name|
+@all_custom_field_names.each do |name|
   field = jira_get_field_by_name(name)
   if field
     id = field['id']

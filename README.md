@@ -10,7 +10,7 @@ This is by far the best migration toolset around. Here are the reasons why this 
 * Configuration file with various options
 * Import users (names, emails, roles and permissions)
 * Import tickets, comments, attachments and relationships
-* Retain ticket status, labels and ranking
+* Retain ticket status, labels, ranking and custom fields
 * Link back to original Assembla tickets for reference
 * Save relevant Assembla context in user-defined fields
 * Insert embedded image thumbnails in descriptions and comments
@@ -23,7 +23,7 @@ This is by far the best migration toolset around. Here are the reasons why this 
 * Resolve cross linking between external projects
 * Take into account the API differences between hosted and cloud
 
-Note: Assembla custom fields are not yet supported.
+Note: at present only a single Assembla custom field can be migrated.
 
 ## Introduction
 
@@ -165,6 +165,7 @@ ASSEMBLA_SPACE=space
 ASSEMBLA_SKIP_ASSOCIATIONS=parent,child,story,subtask
 # Ticket types extracted from ticket summary, e.g. starting with 'Spike: '
 ASSEMBLA_TYPES_IN_SUMMARY=epic,spike,bug
+ASSEMBLA_CUSTOM_FIELD=field-name
 
 # --- Jira API settings --- #/
 # Server type must be 'hosted' or 'cloud'
@@ -283,12 +284,12 @@ The `projectKey` is usually just the abbreviation of the project name in all cap
 This step is very important, so do not skip it. After the project is created, you will need to define manually the following custom fields (text field read-only):
 
 * Assembla-Id
-* Assembla-Theme
 * Assembla-Status
 * Assembla-Milestone
 * Assembla-Reporter
 * Assembla-Assignee
 * Assembla-Completed
+* Assembla-(custom-field)
 
 ![](images/jira-select-field-type.png)
 
@@ -298,6 +299,8 @@ and assign them to the following screens:
 * Simple Issue Tracking Edit/View Issue
 
 Otherwise the ticket import will fail with the error message `Field 'field-name' cannot be set. It is not on the appropriate screen, or unknown`.
+
+Here, `Assembla-(custom-field)` is defined by `ASSEMBLA_CUSTOM_FIELD=custom-field` in the `.env` configuration file.
 
 Additionally the following already existing custom fields need to be assigned the the same screens:
 
@@ -447,7 +450,7 @@ POST /rest/api/2/issue
     description: description,
     ...
     customfield_assembla_id: ticket_number,
-    customfield_assembla_theme: theme_name,
+    customfield_assembla_custom: custom_field,
     customfield_assembla_status: status_name,
     customfield_assembla_milestone: milestone[:name],
     customfield_rank: story_rank, # hosted only
@@ -472,7 +475,7 @@ Results are saved in the output file `data/jira/:space/jira-tickets.csv` with th
 ```
 jira_ticket_id|jira_ticket_key|project_id|summary|issue_type_id|issue_type_name|assignee_name| \
 reporter_name|priority_name|status_name|labels|description|assembla_ticket_id|assembla_ticket_number| \
-theme_name|milestone_name|story_rank
+custom_field|milestone_name|story_rank
 ```
 
 During the conversion, any differences between the original Assembla ticket description and the newly created Jira issue description is recorded in the `data/jira/:space/jira-tickets-diffs.csv` file. This is a good place to look so you can verify that indeed the markdown conversion produced the expected results.
@@ -886,7 +889,7 @@ Most of the ticket fields are converted from Assembla to Jira via a one-to-one m
 * total_working_hours
 * **assigned_to_id**
 * **reporter_id**
-* **custom_fields** (=> theme)
+* **custom_fields**
 * **hierarchy_type** (0 - No plan level, 1 - Subtask, 2 - Story, 3 - Epic)
 * is_support
 * due_date
@@ -1123,7 +1126,7 @@ gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, c
 
 With such a complicated tool, there will always be some loose ends and/or additional work to be done at a later time. Hopefully in the not so distant future, I'll have some time to tackle one or more of the following items:
 
-* Support Assembla [custom fields](http://api-docs.assembla.cc/content/ref/ticket_custom_fields_fields.html)
+* Support multiple Assembla [custom fields](http://api-docs.assembla.cc/content/ref/ticket_custom_fields_fields.html) instead of just one.
 * Allow themes to be converted into Epics (additional .env file option). Currently epics are only created for tickets with summaries that start with 'EPIC:' which in hindsight is probably not the best way of doing this.
 * Create JIra board columns in line with the original Assembla cardwall columns (statuses = blocked, testable, ready for acceptance, in acceptance testing, ready for deploy) and populate with the relevant issues.
 * Allow data dumps to restart with all newer items since last dump, rather than having to start all over again. This is already the case for attachments, but should be possible with tickets, comments, etc.
