@@ -12,6 +12,19 @@ puts 'This is still in the EXPERIMENTAL phase.'
 tickets_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
 @tickets_assembla = csv_to_array(tickets_assembla_csv)
 
+@a_id_to_a_nr = {}
+@a_id_to_a_is = {}
+@a_id_to_a_ht = {}
+@tickets_assembla.each do |ticket|
+  @a_id_to_a_nr[ticket['id'].to_i] = ticket['number']
+  @a_id_to_a_is[ticket['id'].to_i] = ticket['is_story']
+  @a_id_to_a_ht[ticket['id'].to_i] = ticket['hierarchy_type']
+end
+
+# ticket-associations.csv: id,ticket1_id,ticket2_id,relationship,created_at,ticket_id,ticket_number,relationship_name
+associations_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-associations.csv"
+@asociations_assembla = csv_to_array(associations_assembla_csv)
+
 # --- Filter by date if TICKET_CREATED_ON is defined --- #
 tickets_created_on = get_tickets_created_on
 
@@ -31,6 +44,28 @@ end
 puts "\nTotal Assembla ticket epics: #{@tickets_assembla_epic_h.length + @tickets_assembla_epic_s.length}"
 puts "* hierarchy (#{@tickets_assembla_epic_h.length})"
 puts "* summary (#{@tickets_assembla_epic_s.length})"
+
+puts "\nScan associations:"
+@tickets_assembla_epic_h.each do |epic|
+  epic_id = epic['id'].to_i
+  epic_nr = epic['number'].to_i
+  children = @asociations_assembla.select do |association|
+    epic['id'].to_i == association['ticket_id'].to_i && association['relationship_name'] == 'parent'
+  end
+  nr = children.length
+  plural = nr == 1 ? 'child' : 'children'
+  puts "epic id=#{epic_id} nr=#{epic_nr} has #{children.length} #{plural}:"
+  children.each do |child|
+    ticket_id = child['ticket1_id'].to_i
+    ticket_nr = @a_id_to_a_nr[ticket_id]
+    is_story = @a_id_to_a_is[ticket_id]
+    hierarchy_type = @a_id_to_a_ht[ticket_id]
+    puts "* id=#{ticket_id} nr=#{ticket_nr} is=#{is_story} ht=#{get_hierarchy_type(hierarchy_type)}"
+  end
+end
+
+exit
+
 # Jira tickets
 
 # jira-tickets.csv: result,retries,message,jira_ticket_id,jira_ticket_key,project_id,summary,issue_type_id,

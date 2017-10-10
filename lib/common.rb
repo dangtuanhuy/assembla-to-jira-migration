@@ -108,6 +108,21 @@ URL_JIRA_BOARDS = "#{JIRA_AGILE_HOST}/board"
 URL_JIRA_SPRINTS = "#{JIRA_AGILE_HOST}/sprint"
 URL_JIRA_ISSUE_RANKS = "#{JIRA_AGILE_HOST}/issue/rank"
 
+def get_hierarchy_type(n)
+  case n.to_i
+    when 0
+      'No plan level'
+    when 1
+      'Subtask'
+    when 2
+      'Story'
+    when 3
+      'Epic'
+    else
+      "Unknown (#{n})"
+  end
+end
+
 def get_tickets_created_on
   env = ENV['TICKETS_CREATED_ON']
   return nil unless env
