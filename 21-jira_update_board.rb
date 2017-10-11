@@ -2,6 +2,8 @@
 
 load './lib/common.rb'
 
+### --- EXPERIMENTAL --- ###
+
 # --- Assembla --- #
 assembla_statuses_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets-statuses.csv"
 @statuses_assembla = csv_to_array(assembla_statuses_csv)
