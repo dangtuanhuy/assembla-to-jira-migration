@@ -213,6 +213,7 @@ goodbye('Cannot find board name') unless @board
 
 puts "\nTotal remote epics: #{@remote_epics.length}"
 
+# Sanity check that all epics have been created.
 @remote_epics.each do |remote_epic|
   key = remote_epic['key']
   found = @epics_with_stories.find {|epic| key == epic[:jira_key]}
