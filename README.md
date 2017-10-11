@@ -1127,8 +1127,8 @@ gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, c
 
 ## Trouble-shooting
 
-* A `403 Forbidden` or `401 Unauthorized` error is returned. Ensure that the Authorization header is correct. if that doesn't work, log into your Atlassian account id.atlassian.com and try changing your password. There are some known problems with a recent cloud upgrade, see [Atlassian Community Ticket](https://community.developer.atlassian.com/t/401-unauthorized/9540), and certain extra actions must be taken. If cloud, make sure that you are physically logged in to the `id.atlassian.net` cloud instance.
-* Error "User cannot be assigned issues." Activate, login as user and then deactivate.
+* A `403 Forbidden` or `401 Unauthorized` error is returned. Ensure that the Authorization header is correct. if that doesn't work, log into your Atlassian account id.atlassian.com and try changing your password. There are some known problems with a recent cloud upgrade, see [Atlassian Community Ticket](https://community.developer.atlassian.com/t/401-unauthorized/9540), and certain extra actions must be taken. If problem persists, make sure that you are physically logged in to the hosted or cloud instance.
+* Error `User cannot be assigned issues.` Activate, login as user and then deactivate.
 * If issue is an epic then the epic name custom field is required.
 * XSRF check failed => This is a known [bug](https://confluence.atlassian.com/jirakb/rest-api-calls-with-a-browser-user-agent-header-may-fail-csrf-checks-802591455.html).
 * Ticket or other import fails with the error message `Field 'field-name' cannot be set. It is not on the appropriate screen, or unknown`. Ensure that the custom field 'field-name' has been created and assigned to the required screens (see above). If this doesn't work, make sure that the user named in the authorization header has enough rights to make these changes.
