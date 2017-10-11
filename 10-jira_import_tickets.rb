@@ -48,8 +48,9 @@ end
 puts "\nTotal custom fields: #{@custom_fields.keys.length}"
 
 @custom_fields.keys.each do |k|
-  puts "\n#{k}:"
-  @custom_fields[k].sort.each do |name|
+  custom_field = @custom_fields[k]
+  puts "\nTotal #{k} #{custom_field.length}"
+  custom_field.sort.each do |name|
     puts "* #{name}"
   end
 end
@@ -67,7 +68,7 @@ attachments_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-attachments-download.csv"
   @list_of_images[attachment['assembla_attachment_id']] = attachment['filename']
 end
 
-puts "Attachments: #{@attachments_jira.length}"
+puts "\nAttachments: #{@attachments_jira.length}"
 puts
 
 @fields_jira = []
@@ -371,10 +372,10 @@ end
 
 # --- USERS --- #
 
-puts "\nUsers:"
+puts "\nTotal users: #{@user_id_to_login.length}"
 
 @user_id_to_login.each do |k, v|
-  puts "#{k} #{v}"
+  puts "* #{k} #{v}"
 end
 
 # Make sure that the unknown user exists and is active, otherwise try and create
@@ -398,7 +399,7 @@ end
 
 # --- MILESTONES --- #
 
-puts "\nMilestones:"
+puts "\nTotal milestones: #{@milestones_assembla.length}"
 
 @milestone_id_to_name = {}
 @milestones_assembla.each do |milestone|
@@ -406,7 +407,7 @@ puts "\nMilestones:"
 end
 
 @milestone_id_to_name.each do |k, v|
-  puts "#{k} #{v}"
+  puts "* #{k} #{v}"
 end
 
 # --- ISSUE TYPES --- #
@@ -414,7 +415,7 @@ end
 # IMPORTANT: the sub-tasks MUST be done last in order to be able to be associated with the parent tasks/stories.
 @issue_types = %w(epic story task spike bug sub-task)
 
-puts "\nIssue types:"
+puts "\nTotal issue types: #{@issue_types_jira.length}"
 
 @issue_type_name_to_id = {}
 @issue_types_jira.each do |type|
@@ -422,7 +423,7 @@ puts "\nIssue types:"
 end
 
 @issue_type_name_to_id.each do |k, v|
-  puts "#{v} #{k}"
+  puts "* #{v} #{k}"
 end
 
 # Make sure that all issue types are indeed available.

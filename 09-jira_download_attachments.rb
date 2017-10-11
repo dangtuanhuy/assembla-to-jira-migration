@@ -55,7 +55,7 @@ end
   assembla_ticket_id = attachment['ticket_id']
   content_type = attachment['content_type']
   counter = index + 1
-  filename = attachment['filename']
+  filename = attachment['filename'] || 'nil.txt'
   filepath = "#{OUTPUT_DIR_JIRA_ATTACHMENTS}/#{filename}"
   nr = 0
   while File.exist?(filepath)

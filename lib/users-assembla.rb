@@ -12,7 +12,7 @@ users_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
   login = user['login'].sub(/@.*$/,'')
   email = user['email']
   if email.nil? || email.empty?
-    email = "#{login}@example.org"
+    email = "#{login}@#{JIRA_API_DEFAULT_EMAIL}"
   end
   @user_id_to_login[id] = login
   @user_id_to_email[id] = email

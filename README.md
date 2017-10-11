@@ -106,24 +106,25 @@ Now that all of the Assembla data is available, we can now take this and import 
 15. Update ticket associations
 16. Update ticket watchers
 17. Resolve/update ticket and comment external links
-18. Rank tickets (cloud only)
+18. Update epics and stories
+19. Rank tickets (cloud only)
 
 ### Scrum/Kanban board
 
 Using the Agile extension, create the sprints and populate the scrum/kanban board.
 
-19. Create sprints
-20. Update board
+20. Create sprints
+21. Update board
 
 ### Manual cleanup
 
 Finally, cleanup actions need to be taken to finish things off.
 
-21. Deactivate users not needed
-22. Give admin rights to relevant users
-23. Ask users to change password, check email and create avatar
-24. Distribute issues into epics
-25. Make backup of `data` directory for future reference
+* Deactivate users not needed
+* Give admin rights to relevant users
+* Ask users to change password, check email and create avatar
+* Distribute issues into epics
+* Make backup of `data` directory for future reference
 
 ## Preparations
 
@@ -178,8 +179,9 @@ JIRA_API_PROJECT_NAME=Project Name
 JIRA_API_PROJECT_TYPE=scrum
 JIRA_API_ADMIN_USERNAME=john.doe
 JIRA_API_ADMIN_PASSWORD=secret
-JIRA_API_ADMIN_EMAIL=john.doe@example.com
+JIRA_API_ADMIN_EMAIL=john.doe@example.org
 JIRA_API_UNKNOWN_USER=unknown.user
+JIRA_API_DEFAULT_EMAIL=example.org
 JIRA_API_IMAGES_THUMBNAIL=description:false,comments:true
 
 # Cross project ticket linking
@@ -711,12 +713,22 @@ jira-links-external-all.csv     => all detected external links are listed
 jira-links-external-updated.csv => only those external links actually updated
 ```
 
+### Update epics and stories
+
+The Jira stories originally belonging to an epic in Assembla now need to be added to the newly created Jira epic.
+
+In order to do this you need to execute the following command.
+
+```
+$ ruby 18-jira_update_epics.rb
+```
+
 ### External ticket/comment links
 
 Only needed for the Jira cloud version, e.g. when `JIRA_SERVER_TYPE=cloud` in the `.env` file. Since this was not possible during the ticket creation, now is the time to rank the imported issues using the original Assembla values.
 
 ```
-$ ruby 18-jira_rank_tikets.rb
+$ ruby 19-jira_rank_tikets.rb
 ```
 
 Still not yet implemented, sorry.
@@ -740,7 +752,7 @@ When the scrum board was created with the project, all issues are assigned to th
 Now you are ready to setup the sprints by executing the following command:
 
 ```
-$ ruby 19-jira_create_sprints.rb # => data/jira/:space/jira-create-sprints.csv
+$ ruby 20-jira_create_sprints.rb # => data/jira/:space/jira-create-sprints.csv
 ```
 
 The issues are redistributed to the sprints they belong to and the most recent sprint is set as the `active` sprint.
@@ -752,7 +764,7 @@ The final step after the board and sprints have been created is to copy the Asse
 In order to achieve this, execute the following command:
 
 ```
-$ ruby 20-jira_update_board.rb
+$ ruby 21-jira_update_board.rb
 ```
 
 ```

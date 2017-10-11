@@ -39,6 +39,7 @@ end
 JIRA_API_HOST = "#{JIRA_API_BASE}/#{ENV['JIRA_API_HOST']}"
 JIRA_API_ADMIN_USER = ENV['JIRA_API_ADMIN_USER'].freeze
 JIRA_API_ADMIN_EMAIL = ENV['JIRA_API_ADMIN_EMAIL'].freeze
+JIRA_API_DEFAULT_EMAIL = (ENV['JIRA_API_DEFAULT_EMAIL'] || 'example.org').gsub(/^@/,'').freeze
 JIRA_API_UNKNOWN_USER = ENV['JIRA_API_UNKNOWN_USER'].freeze
 
 JIRA_API_IMAGES_THUMBNAIL = (ENV['JIRA_API_IMAGES_THUMBNAIL'] || 'description:false,comments:true').freeze
@@ -88,7 +89,11 @@ def output_dir_assembla(name)
 end
 
 def output_dir_jira(name)
-  output_dir(name, 'jira')
+  uri = URI(JIRA_API_HOST)
+  host = uri.host
+  port = uri.port
+  hn = "#{host.gsub('.', '-')}-#{port}"
+  output_dir("#{name}/#{hn}", 'jira')
 end
 
 OUTPUT_DIR_ASSEMBLA = output_dir_assembla(ASSEMBLA_SPACE)
@@ -573,7 +578,7 @@ def jira_create_user(user)
   username = user['login']
   email = user['email']
   if email.nil? || email.empty?
-    email = "#{username}@example.org"
+    email = "#{username}@#{JIRA_API_DEFAULT_EMAIL}"
   end
   payload = {
     name: username,
