@@ -123,6 +123,10 @@ def get_hierarchy_type(n)
   end
 end
 
+def hierarchy_type_epic(n)
+  get_hierarchy_type(n) == 'Epic'
+end
+
 def get_tickets_created_on
   env = ENV['TICKETS_CREATED_ON']
   return nil unless env
