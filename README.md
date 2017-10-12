@@ -1149,6 +1149,7 @@ With such a complicated tool, there will always be some loose ends and/or additi
 * Use a user-defined Jira project template instead of requiring the user to define stuff manually. [Issue 9](https://github.com/kgish/assembla-to-jira-migration/issues/9)
 * Assign original authors as creators of tickets (this might not be possible) [Issue 10](https://github.com/kgish/assembla-to-jira-migration/issues/10)
 * Refactor: cleanup code, remove duplication, fix rubocop warnings, and make more object-oriented using classes. [Issue 11](https://github.com/kgish/assembla-to-jira-migration/issues/11)
+* Bug: Ticket type 'Spike' is converted to an Epic. [Issue 11](https://github.com/kgish/assembla-to-jira-migration/issues/12)
 
 ## References
 

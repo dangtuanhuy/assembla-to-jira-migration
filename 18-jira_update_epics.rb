@@ -6,7 +6,10 @@ load './lib/common.rb'
 
 ### --- Assembla tickets --- ###
 
-# tickets.csv: id,number,summary,description,priority,completed_date,component_id,created_on,permission_type,importance,is_story,milestone_id,notification_list,space_id,state,status,story_importance,updated_at,working_hours,estimate,total_estimate,total_invested_hours,total_working_hours,assigned_to_id,reporter_id,custom_fields,hierarchy_type,due_date,assigned_to_name,picture_url
+# tickets.csv: id,number,summary,description,priority,completed_date,component_id,created_on,permission_type,
+# importance,is_story,milestone_id,notification_list,space_id,state,status,story_importance,updated_at,working_hours,
+# estimate,total_estimate,total_invested_hours,total_working_hours,assigned_to_id,reporter_id,custom_fields,
+# hierarchy_type,due_date,assigned_to_name,picture_url
 tickets_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
 @tickets_assembla = csv_to_array(tickets_assembla_csv)
 
@@ -37,14 +40,17 @@ else
 end
 
 # hierarchy_type => epic
-@tickets_assembla_epic_h = @tickets_assembla.select { |epic_h| hierarchy_type_epic(epic_h['hierarchy_type']) }
-@tickets_assembla_epic_s = @tickets_assembla.select do |epic_s| 
-  epic_s['summary'] =~ /^epic/i && 
-    hierarchy_type_epic(epic_s['hierarchy_type']) && 
-    !@tickets_assembla_epic_h.find { |epic_h| epic_h['id'].to_i == epic_s['id'].to_i }
+@tickets_assembla_epic_h = @tickets_assembla.select do |epic_h| 
+  hierarchy_type_epic(epic_h['hierarchy_type']) && 
+    epic_h['summary'] !~ /^(spike|bug)/i
+end
+@tickets_assembla_epic_s = @tickets_assembla.select do |epic_s|
+  hierarchy_type_epic(epic_s['hierarchy_type']) &&
+    !@tickets_assembla_epic_h.detect { |epic_h| epic_h['id'].to_i == epic_s['id'].to_i }
 end
 
-puts "\nTotal Assembla epics: #{@tickets_assembla_epic_h.length} + #{@tickets_assembla_epic_s.length} = #{@tickets_assembla_epic_h.length + @tickets_assembla_epic_s.length}"
+puts "\nTotal Assembla epics: #{@tickets_assembla_epic_h.length} + #{@tickets_assembla_epic_s.length} =
+ #{@tickets_assembla_epic_h.length + @tickets_assembla_epic_s.length}"
 
 ### --- Jira tickets --- ###
 
@@ -57,8 +63,8 @@ tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 puts "\nTotal Jira tickets: #{@tickets_jira.length}"
 
 @tickets_jira_epics = @tickets_jira.select do |jira_ticket|
-  @tickets_assembla_epic_h.find { |assembla_ticket| assembla_ticket['id'].to_i == jira_ticket['assembla_ticket_id'].to_i} ||
-    @tickets_assembla_epic_s.find { |assembla_ticket| assembla_ticket['id'].to_i == jira_ticket['assembla_ticket_id'].to_i}
+  @tickets_assembla_epic_h.detect { |assembla_ticket| assembla_ticket['id'].to_i == jira_ticket['assembla_ticket_id'].to_i } ||
+    @tickets_assembla_epic_s.detect { |assembla_ticket| assembla_ticket['id'].to_i == jira_ticket['assembla_ticket_id'].to_i }
 end
 
 puts "\nTotal Jira epics: #{@tickets_jira_epics.length}"
@@ -83,8 +89,8 @@ def epic_overview(epic)
   end
   nr = children.length
   plural = nr == 1 ? 'story' : 'stories'
-  jira_id = @a_id_to_j_id[epic_id].to_i
-  jira_key = @a_nr_to_j_key[epic_nr]
+  jira_id = (@a_id_to_j_id[epic_id] || 0).to_i
+  jira_key = @a_nr_to_j_key[epic_nr] || 'unknown'
   if nr.positive?
     epic_with_stories = {
       epic_id: epic_id,
@@ -94,12 +100,14 @@ def epic_overview(epic)
       stories: []
     }
   end
-  puts "Epic #{epic_id}|#{epic_nr}|#{jira_id}|#{jira_key} has #{children.length} #{plural}"
+  summary = epic['summary']
+  summary = "#{summary [0..50]}..." if summary.length > 53
+  puts "Epic #{epic_id}|#{epic_nr}|#{jira_id}|#{jira_key} has #{children.length} #{plural} '#{summary}'"
   children.each do |child|
     ticket_id = child['ticket1_id'].to_i
-    ticket_nr = @a_id_to_a_nr[ticket_id].to_i
-    story_id = @a_id_to_j_id[ticket_id]
-    story_key = @a_nr_to_j_key[ticket_nr]
+    ticket_nr = (@a_id_to_a_nr[ticket_id] || 0).to_i
+    story_id = @a_id_to_j_id[ticket_id] || 'unknwn'
+    story_key = @a_nr_to_j_key[ticket_nr] || 'unknown'
     epic_with_stories[:stories] << {
       ticket_id: ticket_id,
       ticket_nr: ticket_nr,
@@ -111,12 +119,12 @@ def epic_overview(epic)
   @epics_with_stories << epic_with_stories if epic_with_stories
 end
 
-puts "Hierarchy (#{@tickets_assembla_epic_h.length})"
+puts "\nHierarchy (#{@tickets_assembla_epic_h.length}) => OK"
 @tickets_assembla_epic_h.each do |epic|
   epic_overview(epic)
 end
 
-puts "\nSummary (#{@tickets_assembla_epic_s.length})"
+puts "\nSummary (#{@tickets_assembla_epic_s.length}) => OK"
 @tickets_assembla_epic_s.each do |epic|
   epic_overview(epic)
 end
@@ -166,44 +174,44 @@ def jira_get_epics(board)
   epics
 end
 
-# Issues for epic
-# GET /rest/agile/1.0/board/{boardId}/epic/{epicId}/issue
-def jira_get_issues_for_epic(board, epic)
-  board_id = board['id']
-  epic_id = epic['id']
-  start_at = 0
-  max_results = 50
-  is_last = false
-  issues = []
-  headers = if JIRA_SERVER_TYPE == 'hosted'
-              JIRA_HEADERS
-            else
-              JIRA_HEADERS_CLOUD
-            end
-  until is_last
-    url = "#{URL_JIRA_BOARDS}/#{board_id}/epic/#{epic_id}/issue?startAt=#{start_at}&maxResults=#{max_results}"
-    begin
-      response = RestClient::Request.execute(method: :get, url: url, headers: headers)
-      json = JSON.parse(response)
-      values = json['issues']
-      count = values.length
-      if count.positive?
-        values.each do |issue|
-          issues << issue
-        end
-      else
-        is_last = true
-      end
-      start_at += max_results
-      # puts "GET #{url} => ok (#{count})"
-    rescue RestClient::ExceptionWithResponse => e
-      rest_client_exception(e, 'GET', url)
-    rescue => e
-      puts "GET #{url} => nok (#{e.message})"
-    end
-  end
-  issues
-end
+# # Issues for epic
+# # GET /rest/agile/1.0/board/{boardId}/epic/{epicId}/issue
+# def jira_get_issues_for_epic(board, epic)
+#   board_id = board['id']
+#   epic_id = epic['id']
+#   start_at = 0
+#   max_results = 50
+#   is_last = false
+#   issues = []
+#   headers = if JIRA_SERVER_TYPE == 'hosted'
+#               JIRA_HEADERS
+#             else
+#               JIRA_HEADERS_CLOUD
+#             end
+#   until is_last
+#     url = "#{URL_JIRA_BOARDS}/#{board_id}/epic/#{epic_id}/issue?startAt=#{start_at}&maxResults=#{max_results}"
+#     begin
+#       response = RestClient::Request.execute(method: :get, url: url, headers: headers)
+#       json = JSON.parse(response)
+#       values = json['issues']
+#       count = values.length
+#       if count.positive?
+#         values.each do |issue|
+#           issues << issue
+#         end
+#       else
+#         is_last = true
+#       end
+#       start_at += max_results
+#       # puts "GET #{url} => ok (#{count})"
+#     rescue RestClient::ExceptionWithResponse => e
+#       rest_client_exception(e, 'GET', url)
+#     rescue => e
+#       puts "GET #{url} => nok (#{e.message})"
+#     end
+#   end
+#   issues
+# end
 
 @board = jira_get_board_by_project_name(JIRA_API_PROJECT_NAME)
 puts
@@ -214,8 +222,34 @@ goodbye('Cannot find board name') unless @board
 puts "\nTotal remote epics: #{@remote_epics.length}"
 
 # Sanity check that all epics have been created.
+@remote_epics_found = []
+@remote_epics_not_found = []
 @remote_epics.each do |remote_epic|
   key = remote_epic['key']
-  found = @epics_with_stories.find {|epic| key == epic[:jira_key]}
-  puts "* #{key} => #{found ? 'OK' : 'Not found'}"
+  if @tickets_jira_epics.detect { |epic| key == epic['jira_ticket_key'] }
+    @remote_epics_found << remote_epic
+  else
+    @remote_epics_not_found << remote_epic
+  end
+end
+
+puts "* Epics real (#{@remote_epics_found.length}) => #{@remote_epics_found.map { |epic| epic['key'] }}"
+puts "* Epics converted (#{@remote_epics_not_found.length}) => #{@remote_epics_not_found.map { |epic| epic['key'] }}"
+
+@local_epics_not_found = []
+@tickets_jira_epics.each do |epic|
+  key = epic['jira_ticket_key']
+  unless @remote_epics_found.detect { |remote_epic| key == remote_epic['key'] }
+    @local_epics_not_found << epic 
+  end
+end
+
+if @local_epics_not_found.length.positive?
+  puts "\nSanity check => NOK"
+  puts "\nEpics not found: #{@local_epics_not_found.length}"
+  @local_epics_not_found.each do |epic|
+    puts "* #{epic['jira_ticket_key']} '#{epic['summary']}'"
+  end
+else
+  puts "\nSanity check => OK"
 end
