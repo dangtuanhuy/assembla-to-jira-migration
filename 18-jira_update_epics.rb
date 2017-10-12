@@ -88,24 +88,22 @@ def epic_overview(epic)
   end
   nr = children.length
   plural = nr == 1 ? 'story' : 'stories'
-  jira_id = (@a_id_to_j_id[epic_id] || 0).to_i
   jira_key = @a_nr_to_j_key[epic_nr] || 'unknown'
   if nr.positive?
     epic_with_stories = {
       epic_id: epic_id,
       epic_nr: epic_nr,
-      jira_id: jira_id,
       jira_key: jira_key,
       stories: []
     }
   end
   summary = epic['summary']
   summary = "#{summary [0..50]}..." if summary.length > 53
-  puts "Epic #{epic_id}|#{epic_nr}|#{jira_id}|#{jira_key} has #{children.length} #{plural} '#{summary}'"
+  puts "Epic #{epic_id}|#{epic_nr}|#{jira_key} has #{children.length} #{plural} '#{summary}'"
   children.each do |child|
     ticket_id = child['ticket1_id'].to_i
     ticket_nr = (@a_id_to_a_nr[ticket_id] || 0).to_i
-    story_id = @a_id_to_j_id[ticket_id] || 'unknwn'
+    story_id = (@a_id_to_j_id[ticket_id] || 0).to_i
     story_key = @a_nr_to_j_key[ticket_nr] || 'unknown'
     epic_with_stories[:stories] << {
       ticket_id: ticket_id,
@@ -133,7 +131,7 @@ puts "\nTotal Jira epics with stories: #{@epics_with_stories.length}"
 @epics_with_stories.each do |epic|
   nr = epic[:stories].length
   unique = @epics_with_stories.select { |epic2| epic2[:epic_id].to_i == epic[:epic_id].to_i }.length == 1
-  puts "* #{epic[:epic_id]}|#{epic[:epic_nr]}|#{epic[:jira_id]}|#{epic[:jira_key]} => #{nr}#{unique ? '' : ' NOT UNIQUE!'}"
+  puts "* #{epic[:epic_id]}|#{epic[:epic_nr]}|#{epic[:jira_key]} => #{nr}#{unique ? '' : ' NOT UNIQUE!'}"
 end
 puts
 
@@ -174,19 +172,23 @@ def jira_get_epics(board)
 end
 
 # POST /rest/agile/1.0/epic/{epicIdOrKey}/issue
-def jira_move_stories_to_epic(epic, stories, counter, total)
+# The maximum number of issues that can be moved in one operation is 50.
+def jira_move_stories_to_epic(epic, story_keys, counter, total)
+  goodbye("Number of stories (#{story_keys.length}) must be less than or equal to 50") if story_keys.length > 50
+  goodbye("Number of stories (#{story_keys.length}) must be greater than 0") if story_keys.length.zero?
   result = nil
   epic_id = epic[:epic_id]
   url = "#{URL_JIRA_EPICS}/#{epic_id}/issue"
   payload = {
-    issues: stories
+    issues: story_keys
   }.to_json
-  list = stories.map { |story| story.sub(/^[^\-]+\-/, '').to_i }
+  list = story_keys.map { |story| story.sub(/^[^\-]+\-/, '').to_i }
   headers = JIRA_SERVER_TYPE == 'hosted' ? JIRA_HEADERS : JIRA_HEADERS_CLOUD
   begin
     # RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
     percentage = ((counter * 100) / total).round.to_s.rjust(3)
     puts "#{percentage}% [#{counter}|#{total}] POST #{url} #{list} => OK"
+    result = true
   rescue RestClient::ExceptionWithResponse => e
     rest_client_exception(e, 'POST', url)
   rescue => e
@@ -196,8 +198,8 @@ def jira_move_stories_to_epic(epic, stories, counter, total)
 end
 
 @board = jira_get_board_by_project_name(JIRA_API_PROJECT_NAME)
-puts
 goodbye('Cannot find board name') unless @board
+puts
 
 @remote_epics = jira_get_epics(@board)
 
@@ -239,8 +241,19 @@ puts "\nMoving stories to epics"
 @total_epics_with_stories = @epics_with_stories.length
 @updated_epics = []
 @epics_with_stories.each_with_index do |epic, index|
-  stories = epic[:stories].map { |story| story[:story_key]}
-  results = jira_move_stories_to_epic(epic, stories, index + 1, @total_epics_with_stories)
+  stories_nonzero = epic[:stories].select { |story| story[:story_id].positive? }
+  story_keys = stories_nonzero.map { |story| story[:story_key]}
+  while story_keys.length.positive?
+    story_keys_slice = story_keys.slice!(0, 50)
+    result = jira_move_stories_to_epic(epic, story_keys_slice, index + 1, @total_epics_with_stories)
+    @updated_epics << {
+      result: result ? 'OK' : 'NOK',
+      epic_nr: epic[:epic_nr],
+      jira_key: epic[:jira_key],
+      stories: story_keys_slice.length,
+      story_keys: "[#{story_keys_slice.join(',')}]"
+    }
+  end
 end
 
 puts "Total updated epics: #{@updated_epics.length}"
