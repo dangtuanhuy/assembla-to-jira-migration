@@ -23,7 +23,7 @@ This is by far the best migration toolset around. Here are the reasons why this 
 * Resolve cross linking between external projects
 * Take into account the API differences between hosted and cloud
 
-Note: at present only a single Assembla custom field can be migrated.
+Need help? Look [here](https://github.com/kgish/assembla-to-jira-migration#support).
 
 ## Introduction
 
@@ -45,9 +45,7 @@ Although the documentation states that the Jira API for hosted server is nearly 
 
 Don't worry, if you read all of the instructions below and do not skip anything, these annoying differences should not affect you.
 
-## Help
-
-If you need any help, have a look at the [support](https://github.com/kgish/assembla-to-jira-migration#support) section below.
+Need help? Look [here](https://github.com/kgish/assembla-to-jira-migration#support).
 
 ## Installation
 
