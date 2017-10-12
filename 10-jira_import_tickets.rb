@@ -197,7 +197,7 @@ def create_ticket_jira(ticket, counter, total)
       'description': description,
 
       # IMPORTANT: The following custom fields MUST be on the create issue screen for this project
-      #  Admin > Issues > Screens > Configure screen > 'ECT: Scrum Default Issue Screen'
+      #  Admin > Issues > Screens > Configure screen > 'PROJECT_KEY: Scrum Default Issue Screen'
       # Assembla
 
       "#{@customfield_name_to_id['Assembla-Id']}": ticket_number,

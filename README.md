@@ -19,7 +19,7 @@ This is by far the best migration toolset around. Here are the reasons why this 
 * Create scrum or kanban board with workflow
 * Map Assembla milestones to Jira sprints
 * Populate the backlog, future and current sprints
-* Assign stories to epics
+* Assign stories to epics 
 * Resolve cross linking between external projects
 * Take into account the API differences between hosted and cloud
 
@@ -104,7 +104,7 @@ Now that all of the Assembla data is available, we can now take this and import 
 15. Update ticket associations
 16. Update ticket watchers
 17. Resolve/update ticket and comment external links
-18. Move stories to epics
+18. Move stories to epics [Issue 14](https://github.com/kgish/assembla-to-jira-migration/issues/14)
 19. Rank tickets (cloud only)
 
 ### Scrum/Kanban board
@@ -121,7 +121,7 @@ Finally, cleanup actions need to be taken to finish things off.
 * Deactivate users not needed
 * Give admin rights to relevant users
 * Ask users to change password, check email and create avatar
-* Distribute issues into epics
+* Check that tickets which are spikes are NOT epics.
 * Make backup of `data` directory for future reference
 
 Congratulations, you did it!

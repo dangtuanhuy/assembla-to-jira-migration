@@ -49,8 +49,7 @@ end
     !@tickets_assembla_epic_h.detect { |epic_h| epic_h['id'].to_i == epic_s['id'].to_i }
 end
 
-puts "\nTotal Assembla epics: #{@tickets_assembla_epic_h.length} + #{@tickets_assembla_epic_s.length} =
- #{@tickets_assembla_epic_h.length + @tickets_assembla_epic_s.length}"
+puts "\nTotal Assembla epics: #{@tickets_assembla_epic_h.length} + #{@tickets_assembla_epic_s.length} = #{@tickets_assembla_epic_h.length + @tickets_assembla_epic_s.length}"
 
 ### --- Jira tickets --- ###
 
@@ -176,7 +175,24 @@ end
 
 # POST /rest/agile/1.0/epic/{epicIdOrKey}/issue
 def jira_move_stories_to_epic(epic, stories, counter, total)
-  
+  result = nil
+  epic_id = epic[:epic_id]
+  url = "#{URL_JIRA_EPICS}/#{epic_id}/issue"
+  payload = {
+    issues: stories
+  }.to_json
+  list = stories.map { |story| story.sub(/^[^\-]+\-/, '').to_i }
+  headers = JIRA_SERVER_TYPE == 'hosted' ? JIRA_HEADERS : JIRA_HEADERS_CLOUD
+  begin
+    # RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
+    percentage = ((counter * 100) / total).round.to_s.rjust(3)
+    puts "#{percentage}% [#{counter}|#{total}] POST #{url} #{list} => OK"
+  rescue RestClient::ExceptionWithResponse => e
+    rest_client_exception(e, 'POST', url)
+  rescue => e
+    puts "#{percentage}% [#{counter}|#{total}] POST #{url} #{list} => NOK (#{e.message})"
+  end
+  result 
 end
 
 @board = jira_get_board_by_project_name(JIRA_API_PROJECT_NAME)
@@ -216,11 +232,14 @@ if @local_epics_not_found.length.positive?
   @local_epics_not_found.each do |epic|
     puts "* #{epic['jira_ticket_key']} '#{epic['summary']}'"
   end
+  puts
 end
 
+puts "\nMoving stories to epics"
 @total_epics_with_stories = @epics_with_stories.length
 @updated_epics = []
 @epics_with_stories.each_with_index do |epic, index|
+  stories = epic[:stories].map { |story| story[:story_key]}
   results = jira_move_stories_to_epic(epic, stories, index + 1, @total_epics_with_stories)
 end
 
