@@ -40,8 +40,8 @@ else
 end
 
 # hierarchy_type => epic
-@tickets_assembla_epic_h = @tickets_assembla.select do |epic_h| 
-  hierarchy_type_epic(epic_h['hierarchy_type']) && 
+@tickets_assembla_epic_h = @tickets_assembla.select do |epic_h|
+  hierarchy_type_epic(epic_h['hierarchy_type']) &&
     epic_h['summary'] !~ /^(spike|bug)/i
 end
 @tickets_assembla_epic_s = @tickets_assembla.select do |epic_s|
@@ -49,7 +49,8 @@ end
     !@tickets_assembla_epic_h.detect { |epic_h| epic_h['id'].to_i == epic_s['id'].to_i }
 end
 
-puts "\nTotal Assembla epics: #{@tickets_assembla_epic_h.length} + #{@tickets_assembla_epic_s.length} = #{@tickets_assembla_epic_h.length + @tickets_assembla_epic_s.length}"
+puts "\nTotal Assembla epics: #{@tickets_assembla_epic_h.length} + #{@tickets_assembla_epic_s.length} = " \
+     "#{@tickets_assembla_epic_h.length + @tickets_assembla_epic_s.length}"
 
 ### --- Jira tickets --- ###
 
@@ -176,25 +177,29 @@ end
 def jira_move_stories_to_epic(epic, story_keys, counter, total)
   goodbye("Number of stories (#{story_keys.length}) must be less than or equal to 50") if story_keys.length > 50
   goodbye("Number of stories (#{story_keys.length}) must be greater than 0") if story_keys.length.zero?
-  result = nil
-  epic_id = epic[:epic_id]
-  url = "#{URL_JIRA_EPICS}/#{epic_id}/issue"
+  result = {
+    result: false,
+    error: ''
+  }
+  epic_key = epic[:jira_key]
+  url = "#{URL_JIRA_EPICS}/#{epic_key}/issue"
   payload = {
     issues: story_keys
   }.to_json
   list = story_keys.map { |story| story.sub(/^[^\-]+\-/, '').to_i }
   headers = JIRA_SERVER_TYPE == 'hosted' ? JIRA_HEADERS : JIRA_HEADERS_CLOUD
   begin
-    # RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
+    RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
     percentage = ((counter * 100) / total).round.to_s.rjust(3)
     puts "#{percentage}% [#{counter}|#{total}] POST #{url} #{list} => OK"
-    result = true
+    result[:result] = true
   rescue RestClient::ExceptionWithResponse => e
-    rest_client_exception(e, 'POST', url)
+    result[:error] = rest_client_exception(e, 'POST', url)
   rescue => e
     puts "#{percentage}% [#{counter}|#{total}] POST #{url} #{list} => NOK (#{e.message})"
+    result[:error] = e.message
   end
-  result 
+  result
 end
 
 @board = jira_get_board_by_project_name(JIRA_API_PROJECT_NAME)
@@ -224,7 +229,7 @@ puts "* Epics converted (#{@remote_epics_not_found.length}) => #{@remote_epics_n
 @tickets_jira_epics.each do |epic|
   key = epic['jira_ticket_key']
   unless @remote_epics_found.detect { |remote_epic| key == remote_epic['key'] }
-    @local_epics_not_found << epic 
+    @local_epics_not_found << epic
   end
 end
 
@@ -242,16 +247,17 @@ puts "\nMoving stories to epics"
 @updated_epics = []
 @epics_with_stories.each_with_index do |epic, index|
   stories_nonzero = epic[:stories].select { |story| story[:story_id].positive? }
-  story_keys = stories_nonzero.map { |story| story[:story_key]}
+  story_keys = stories_nonzero.map { |story| story[:story_key] }
   while story_keys.length.positive?
     story_keys_slice = story_keys.slice!(0, 50)
     result = jira_move_stories_to_epic(epic, story_keys_slice, index + 1, @total_epics_with_stories)
     @updated_epics << {
-      result: result ? 'OK' : 'NOK',
+      result: result[:result] ? 'OK' : 'NOK',
       epic_nr: epic[:epic_nr],
       jira_key: epic[:jira_key],
       stories: story_keys_slice.length,
-      story_keys: "[#{story_keys_slice.join(',')}]"
+      story_keys: "[#{story_keys_slice.join(',')}]",
+      error: result[:error]
     }
   end
 end

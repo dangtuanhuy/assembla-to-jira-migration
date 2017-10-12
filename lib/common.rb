@@ -112,7 +112,7 @@ JIRA_AGILE_HOST = "#{JIRA_API_BASE}/#{ENV['JIRA_AGILE_HOST']}"
 URL_JIRA_BOARDS = "#{JIRA_AGILE_HOST}/board"
 URL_JIRA_SPRINTS = "#{JIRA_AGILE_HOST}/sprint"
 URL_JIRA_ISSUE_RANKS = "#{JIRA_AGILE_HOST}/issue/rank"
-URL_JIRA_EPICS = "#{JIRA_AGILE_HOST}/issue/rank"
+URL_JIRA_EPICS = "#{JIRA_AGILE_HOST}/epic"
 
 def get_hierarchy_type(n)
   case n.to_i
@@ -775,4 +775,5 @@ def rest_client_exception(e, method, url, payload = {})
     message = e.to_s
   end
   puts "#{method} #{url}#{payload.empty? ? '' : ' ' + payload.inspect} => NOK (#{message})"
+  message
 end
