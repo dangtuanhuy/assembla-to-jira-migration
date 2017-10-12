@@ -1138,18 +1138,18 @@ gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, c
 
 With such a complicated tool, there will always be some loose ends and/or additional work to be done at a later time. Hopefully in the not so distant future, I'll have some time to tackle one or more of the following items:
 
-* Associate stories with epics (parent) and epic with stories (child story). [Issue 1](https://github.com/kgish/assembla-to-jira-migration/issues/1)
-* Support multiple Assembla [custom fields](http://api-docs.assembla.cc/content/ref/ticket_custom_fields_fields.html) instead of just one. [Issue 2](https://github.com/kgish/assembla-to-jira-migration/issues/2)
-* Allow themes to be converted into Epics (additional .env file option). Currently epics are only created for tickets with summaries that start with 'EPIC:' which in hindsight is probably not the best way of doing this. [Issue 3](https://github.com/kgish/assembla-to-jira-migration/issues/3)
-* Create JIra board columns in line with the original Assembla cardwall columns (statuses = blocked, testable, ready for acceptance, in acceptance testing, ready for deploy) and populate with the relevant issues. [Issue 4](https://github.com/kgish/assembla-to-jira-migration/issues/4)
-* Allow data dumps to restart with all newer items since last dump, rather than having to start all over again. This is already the case for attachments, but should be possible with tickets, comments, etc. [Issue 5](https://github.com/kgish/assembla-to-jira-migration/issues/5)
-* Update readme screenshots and relevant screen associations, e.g. only `Scrum Default Issue Screen` is required. [Issue 6](https://github.com/kgish/assembla-to-jira-migration/issues/6)
-* Assembla tickets with tag `bug` should be converted into Jira issue of type `bug`. [Issue 7](https://github.com/kgish/assembla-to-jira-migration/issues/7)
-* Automatically create custom fields instead of requiring the user to do this manually (see above). [Issue 8](https://github.com/kgish/assembla-to-jira-migration/issues/8)
-* Use a user-defined Jira project template instead of requiring the user to define stuff manually. [Issue 9](https://github.com/kgish/assembla-to-jira-migration/issues/9)
-* Assign original authors as creators of tickets (this might not be possible) [Issue 10](https://github.com/kgish/assembla-to-jira-migration/issues/10)
+* Must have: Associate stories with epics (parent) and epic with stories (child story). [Issue 13](https://github.com/kgish/assembla-to-jira-migration/issues/13)
+* Must have: Update readme screenshots and relevant screen associations, e.g. only `Scrum Default Issue Screen` is required. [Issue 6](https://github.com/kgish/assembla-to-jira-migration/issues/6)
+* Bug: Ticket type 'Spike' is converted to an Epic. [Issue 14](https://github.com/kgish/assembla-to-jira-migration/issues/14)
+* Nice to have: Support multiple Assembla [custom fields](http://api-docs.assembla.cc/content/ref/ticket_custom_fields_fields.html) instead of just one. [Issue 2](https://github.com/kgish/assembla-to-jira-migration/issues/2)
+* Nice to have: Create Jira board columns in line with the original Assembla cardwall columns (statuses = blocked, testable, ready for acceptance, in acceptance testing, ready for deploy) and populate with the relevant issues. [Issue 8](https://github.com/kgish/assembla-to-jira-migration/issues/8)
+* Nice to have: Allow data dumps to restart with all newer items since last dump, rather than having to start all over again. This is already the case for attachments, but should be possible with tickets, comments, etc. [Issue 5](https://github.com/kgish/assembla-to-jira-migration/issues/5)
+* Nice to have: Assembla tickets with tag `bug` should be converted into Jira issue of type `bug`. [Issue 7](https://github.com/kgish/assembla-to-jira-migration/issues/7)
+* Wish: Allow themes to be converted into Epics (additional .env file option). Currently epics are only created for tickets with summaries that start with 'EPIC:' which in hindsight is probably not the best way of doing this. [Issue 3](https://github.com/kgish/assembla-to-jira-migration/issues/3)
+* Wish: Automatically create custom fields instead of requiring the user to do this manually (see above). [Issue 8](https://github.com/kgish/assembla-to-jira-migration/issues/8)
+* Wish: Use a user-defined Jira project template instead of requiring the user to define stuff manually. [Issue 9](https://github.com/kgish/assembla-to-jira-migration/issues/9)
+* Wish: Assign original authors as creators of tickets (this might not be possible) [Issue 10](https://github.com/kgish/assembla-to-jira-migration/issues/10)
 * Refactor: cleanup code, remove duplication, fix rubocop warnings, and make more object-oriented using classes. [Issue 11](https://github.com/kgish/assembla-to-jira-migration/issues/11)
-* Bug: Ticket type 'Spike' is converted to an Epic. [Issue 11](https://github.com/kgish/assembla-to-jira-migration/issues/12)
 
 ## References
 
