@@ -19,7 +19,7 @@ This is by far the best migration toolset around. Here are the reasons why this 
 * Create scrum or kanban board with workflow
 * Map Assembla milestones to Jira sprints
 * Populate the backlog, future and current sprints
-* Assign issues to epics
+* Assign stories to epics
 * Resolve cross linking between external projects
 * Take into account the API differences between hosted and cloud
 
@@ -104,7 +104,7 @@ Now that all of the Assembla data is available, we can now take this and import 
 15. Update ticket associations
 16. Update ticket watchers
 17. Resolve/update ticket and comment external links
-18. Update epics and stories
+18. Move stories to epics
 19. Rank tickets (cloud only)
 
 ### Scrum/Kanban board
@@ -123,6 +123,8 @@ Finally, cleanup actions need to be taken to finish things off.
 * Ask users to change password, check email and create avatar
 * Distribute issues into epics
 * Make backup of `data` directory for future reference
+
+Congratulations, you did it!
 
 ## Preparations
 
@@ -711,7 +713,14 @@ jira-links-external-all.csv     => all detected external links are listed
 jira-links-external-updated.csv => only those external links actually updated
 ```
 
-### Update epics and stories
+### Move stories to epics
+
+```
+POST /rest/agile/1.0/epic/{epicIdOrKey}/issue
+{
+  "issues": issues
+}
+```
 
 The Jira stories originally belonging to an epic in Assembla now need to be added to the newly created Jira epic.
 
@@ -868,7 +877,7 @@ In the `data/jira/:space` directory:
 
 ## Ticket field conversions
 
-Most of the ticket fields are converted from Assembla to Jira via a one-to-one mapping and are indicated as **bold** below.
+Most of the ticket fields are converted from Assembla to Jira via a one-to-one mapping. These fields are indicated as **bold** below:
 
 ### Assembla ticket fields:
 * id
