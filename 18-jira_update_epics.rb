@@ -174,6 +174,11 @@ def jira_get_epics(board)
   epics
 end
 
+# POST /rest/agile/1.0/epic/{epicIdOrKey}/issue
+def jira_move_stories_to_epic(epic, stories, counter, total)
+  
+end
+
 @board = jira_get_board_by_project_name(JIRA_API_PROJECT_NAME)
 puts
 goodbye('Cannot find board name') unless @board
@@ -205,12 +210,20 @@ puts "* Epics converted (#{@remote_epics_not_found.length}) => #{@remote_epics_n
   end
 end
 
+# Another sanity check just in case
 if @local_epics_not_found.length.positive?
-  puts "\nSanity check => NOK"
   puts "\nEpics not found: #{@local_epics_not_found.length}"
   @local_epics_not_found.each do |epic|
     puts "* #{epic['jira_ticket_key']} '#{epic['summary']}'"
   end
-else
-  puts "\nSanity check => OK"
 end
+
+@total_epics_with_stories = @epics_with_stories.length
+@updated_epics = []
+@epics_with_stories.each_with_index do |epic, index|
+  results = jira_move_stories_to_epic(epic, stories, index + 1, @total_epics_with_stories)
+end
+
+puts "Total updated epics: #{@updated_epics.length}"
+updated_epics_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-update-epics.csv"
+write_csv_file(updated_epics_jira_csv, @updated_epics)

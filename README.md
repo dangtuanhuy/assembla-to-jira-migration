@@ -730,15 +730,15 @@ In order to do this you need to execute the following command.
 $ ruby 18-jira_update_epics.rb
 ```
 
-### External ticket/comment links
+The results are saved in the `jira-update-epics.csv` output file.
+
+### Rank tickets
 
 Only needed for the Jira cloud version, e.g. when `JIRA_SERVER_TYPE=cloud` in the `.env` file. Since this was not possible during the ticket creation, now is the time to rank the imported issues using the original Assembla values.
 
 ```
 $ ruby 19-jira_rank_tikets.rb
 ```
-
-Still not yet implemented, sorry.
 
 ## Scrum Board
 
@@ -873,6 +873,7 @@ In the `data/jira/:space` directory:
 * jira-tickets-diffs.csv
 * jira-tickets-status-updates.csv
 * jira-tickets-watchers.csv
+* jira-update-epics.csv
 * jira-users.csv
 
 ## Ticket field conversions

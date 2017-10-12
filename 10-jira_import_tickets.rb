@@ -140,7 +140,6 @@ def create_ticket_jira(ticket, counter, total)
   project_id = @project['id']
   ticket_id = ticket['id']
   ticket_number = ticket['number']
-  return if ticket['summary'] !~ /^spike/i
   summary = reformat_markdown(ticket['summary'], logins: @list_of_logins, images: @list_of_images, content_type: 'summary', tickets: @assembla_number_to_jira_key)
   created_on = ticket['created_on']
   completed_date = date_format_yyyy_mm_dd(ticket['completed_date'])
