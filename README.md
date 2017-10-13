@@ -1186,11 +1186,17 @@ With such a complicated tool, there will always be some loose ends and/or additi
 
 ## Support
 
-Do you require assistance with the migration or need some functionality that is not yet present in this version? I can certainly help you out. Feel free to contact me!
+Do you require assistance with the migration or need some new functionality that is not yet part of this package?
+
+No worried, I can certainly help you out.
+
+Feel free to contact me!
 
 ## Author
 
-Kiffin Gish
+Kiffin Gish \< kiffin.gish@planet.nl \>
 
-Email:   kiffin.gish@planet.nl
-Website: http://gishtech.com
+[Gishtech](http://gishtech.com) => Advanced Software Development for the Web
+
+"You're never too old to learn new stuff..."
+
