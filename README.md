@@ -27,23 +27,23 @@ Need help? Look [here](https://github.com/kgish/assembla-to-jira-migration#suppo
 
 ## Introduction
 
-Have you ever wanted to use Jira instead of Assembla, but were afraid that the switch to Jira was too risky? Are you worried that business-critical data in Assembla will get corrupted during the transition?
+Have you ever wanted to use Jira instead of Assembla, but were afraid that the switch to Jira was too risky? Are you worried that business-critical data in Assembla will get corrupted or even lost during the conversion?
 
-Jira does offer a number of standard add-ons to make certain migrations easier, but unfortunately it does not offer a tool for migrating Assembla.
+Jira already offers a number of standard add-ons to make certain migrations easier. Unfortunately, it does not offer a tool for migrating Assembla (bummer).
 
-However, **you are now in luck!** By using the Assembla-to-Jira migration tools, it should be very easy to export all of the relevant Assembla data and import most (if not all) of it into a Jira project without loss and/or corruption of data.
+However, **you are now in luck!** By using the Assembla-to-Jira migration tools, it should be very easy to export all of the relevant Assembla data and import most (if not all) of it into a Jira project without loss or corruption of data.
 
-By making use of the [Assembla API](http://api-docs.assembla.cc/content/api_reference.html) and the [Jira API](https://docs.atlassian.com/jira/REST/cloud/), both environments are hooked up in order to make all necessary data transformations.
+By making use of the [Assembla API](http://api-docs.assembla.cc/content/api_reference.html) and the [Jira API](https://docs.atlassian.com/jira/REST/cloud/), both environments are hooked up in order to make all necessary data transformations run smoothly and automatically.
 
 Most of the actions can be done automatically via a pipeline of scripts. Just define the required parameters in the `.env` configuration file, and you are ready to go.
 
-Some manual actions are required since the Jira API does not support all the required data transformations, but these actions are minimal. It is very important NOT to skip these manual changes, as the successful migration depends on them.
+Some manual actions are required since the Jira API does not support all of the required data transformations. But these actions are few and clearly documented below. It is very important NOT to skip these manual actions because a successful migration depends on them being done.
 
-It is best to start with a fresh installation, e.g. one in which the desired project has not yet been created. Otherwise, unexpected problems may occur. Also note that in addition to a new project, all the Assembla users are also created.
+It is best to start with a fresh installation, e.g. one in which the desired project has not yet been created and no users present. Otherwise, unexpected problems might occur. A quick scan is made to detect if a given project already exists. If not then the new project is created for you, as well as all of the Assembla users who have not yet been created.
 
-Although the documentation states that the Jira API for hosted server is nearly identical to the cloud, there are some subtle, tricky differences that can bite you when you least expect.
+Although the official Atlassian documentation states that the Jira API for hosted server is nearly identical to the cloud server, there are some subtle, tricky differences that can bite you when you least expect.
 
-Don't worry, if you read all of the instructions below and do not skip anything, these annoying differences should not affect you.
+Don't worry, if you read all of the instructions below, follow them carefully without skipping anything, you can avoid these annoying bumps on the road on your way to a successful migration.
 
 Need help? Look [here](https://github.com/kgish/assembla-to-jira-migration#support).
 
@@ -104,7 +104,7 @@ Now that all of the Assembla data is available, we can now take this and import 
 15. Update ticket associations
 16. Update ticket watchers
 17. Resolve/update ticket and comment external links
-18. Move stories to epics [Issue 14](https://github.com/kgish/assembla-to-jira-migration/issues/14)
+18. Move stories to epics
 19. Rank tickets (cloud only)
 
 ### Scrum/Kanban board
@@ -1157,7 +1157,6 @@ gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, c
 
 With such a complicated tool, there will always be some loose ends and/or additional work to be done at a later time. Hopefully in the not so distant future, I'll have some time to tackle one or more of the following items:
 
-* Must have: Associate stories with epics (parent) and epic with stories (child story). [Issue 13](https://github.com/kgish/assembla-to-jira-migration/issues/13)
 * Must have: Update readme screenshots and relevant screen associations, e.g. only `Scrum Default Issue Screen` is required. [Issue 6](https://github.com/kgish/assembla-to-jira-migration/issues/6)
 * Bug: Ticket type 'Spike' is converted to an Epic. [Issue 14](https://github.com/kgish/assembla-to-jira-migration/issues/14)
 * Nice to have: Support multiple Assembla [custom fields](http://api-docs.assembla.cc/content/ref/ticket_custom_fields_fields.html) instead of just one. [Issue 2](https://github.com/kgish/assembla-to-jira-migration/issues/2)
