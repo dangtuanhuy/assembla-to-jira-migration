@@ -19,7 +19,7 @@ This is by far the best migration toolset around. Here are the reasons why this 
 * Create scrum or kanban board with workflow
 * Map Assembla milestones to Jira sprints
 * Populate the backlog, future and current sprints
-* Assign stories to epics 
+* Assign stories to epics
 * Resolve cross linking between external projects
 * Take into account the API differences between hosted and cloud
 
@@ -120,6 +120,7 @@ Finally, cleanup actions need to be taken to finish things off.
 
 * Deactivate users not needed
 * Give admin rights to relevant users
+* Assign project leads (and give permissions)
 * Ask users to change password, check email and create avatar
 * Check that tickets which are spikes are NOT epics.
 * Make backup of `data` directory for future reference
@@ -139,7 +140,7 @@ Create the following new issue types:
 
 The issue type `spike` or `bug` will be defined for any tickets whose summary starts with `Spike: ` or `Bug: `.
 
-Additionally, any tickets whose summary starts with `Epic :` will be defined as issue type `epic` (which is already part of the default Jira ticket types on project creation).
+These are defined in the `.env` file, see `ASSEMBLA_TYPES_IN_SUMMARY` below.
 
 ![](images/jira-issue-types.png)
 
@@ -165,7 +166,7 @@ ASSEMBLA_URL_TICKETS=https://app.assembla.com/spaces/:space-name/tickets
 ASSEMBLA_SPACE=space
 ASSEMBLA_SKIP_ASSOCIATIONS=parent,child,story,subtask
 # Ticket types extracted from ticket summary, e.g. starting with 'Spike: '
-ASSEMBLA_TYPES_IN_SUMMARY=epic,spike,bug
+ASSEMBLA_TYPES_IN_SUMMARY=spike,bug
 ASSEMBLA_CUSTOM_FIELD=field-name
 
 # --- Jira API settings --- #/
@@ -217,7 +218,7 @@ There are a couple of minor differences that must be taken into account:
 
 * Users - When creating users the hosted version will automatically set activated to true, whereas the cloud version will NOT.
 * Ranking - The hosted version will allow you to set the issue rank when creating issues while the cloud version will NOT.
-* Comments - The hosted version will allow original comment authors to import comments while cloud version will NOT. 
+* Comments - The hosted version will allow original comment authors to import comments while cloud version will NOT.
 * Attachments - The cloud version is [problematic](https://community.developer.atlassian.com/t/401-unauthorized/9540), and certain extra actions must be taken.
 
 In the `.evv` file this is indicated by setting the `JIRA_SERVER_TYPE` configuration parameter to either `hosted` or `cloud`.
@@ -1181,5 +1182,5 @@ Do you require assistance with the migration or need some functionality that is 
 
 Kiffin Gish
 
-Email:   kiffin.gish@planet.nl  
+Email:   kiffin.gish@planet.nl
 Website: http://gishtech.com

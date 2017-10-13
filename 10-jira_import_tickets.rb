@@ -126,9 +126,10 @@ def get_issue_type(ticket)
              { id: @issue_type_name_to_id['task'], name: 'task' }
            end
 
-  # Ticket type is overruled if summary begins with the type (EPIC, SPIKE, STORY or BUG)
-  %w(epic spike story bug).each do |s|
-    if ticket['summary'] =~ /^#{s}/i
+  # Ticket type is overruled if summary begins with the type (SPIKE or BUG)
+  ASSEMBLA_TYPES_IN_SUMMARY.each do |s|
+    # if ticket['summary'] =~ /^#{s}/i
+    if /^#{s}/i.match?(ticket['summary'])
       result = { id: @issue_type_name_to_id[s], name: s }
       break
     end
@@ -154,13 +155,13 @@ def create_ticket_jira(ticket, counter, total)
   status_name = ticket['status']
   story_rank = ticket['importance']
   story_points = ticket['story_importance']
-  
+
   headers = if JIRA_SERVER_TYPE == 'hosted'
               # It is not possible for reporter to create own issues, must be admin
               # headers_user_login(reporter_name, reporter_email)
               JIRA_HEADERS
             else
-              JIRA_HEADERS_CLOUD 
+              JIRA_HEADERS_CLOUD
             end
 
   # Prepend the description text with a link to the original assembla ticket on the first line.
@@ -211,7 +212,7 @@ def create_ticket_jira(ticket, counter, total)
     assembla_custom_field = "Assembla-#{ASSEMBLA_CUSTOM_FIELD}"
     payload[:fields]["#{@customfield_name_to_id[assembla_custom_field]}".to_sym] = custom_field
   end
-  
+
   if JIRA_SERVER_TYPE == 'hosted'
     payload[:fields]["#{@customfield_name_to_id['Rank']}".to_sym] = story_rank
   end
@@ -487,7 +488,7 @@ end
 @all_custom_field_names = CUSTOM_FIELD_NAMES
 
 @all_custom_field_names << "Assembla-#{ASSEMBLA_CUSTOM_FIELD}" unless ASSEMBLA_CUSTOM_FIELD&.empty?
-  
+
 missing_fields = []
 @all_custom_field_names.each do |name|
   field = jira_get_field_by_name(name)
