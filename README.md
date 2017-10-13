@@ -122,6 +122,7 @@ Finally, cleanup actions need to be taken to finish things off.
 * Give admin rights to relevant users.
 * Assign project leads (and give permissions).
 * Ask users to change password, check email and create avatar.
+* Recover failed attachment uploads listed in `jira-attachments-import-nok.csv`.
 * Use label filters to move issue to correct types, e.g. `bug` might be a label.
 * Check that tickets which are spikes are NOT epics [Issue 14](https://github.com/kgish/assembla-to-jira-migration/issues/14).
 * Make backup of `data` directory for future reference.
@@ -537,7 +538,9 @@ curl -D- -u admin:admin -X POST -H "X-Atlassian-Token: no-check" -F "file=@myfil
 Now you are ready to import all of the attachments that were downloaded earlier. Execute the following command:
 
 ```
-$ ruby 13-jira_import_attachments.rb [restart_offset] # => data/jira/:space/jira-attachments-import.csv
+$ ruby 13-jira_import_attachments.rb [restart_offset] # => \
+    data/jira/:space/jira-attachments-import-ok.csv
+    data/jira/:space/jira-attachments-import-nok.csv
 ```
 
 Note: The Jira server sometimes has problems processing attachments too quickly and might return an error. In that case, just restart the command and pass it the offset where you want to restart from.
@@ -553,6 +556,8 @@ headers = { 'Authorization': "Basic #{auth}", 'X-Atlassian-Token': 'no-check' }
 See: [Atlassian Community Ticket](https://community.developer.atlassian.com/t/401-unauthorized/9540).
 
 Another note: we allow the original creators of the Assembla attachments to be able to create the new Jira attachments, therefore retaining ownership.
+
+When the migration is completed, one may have a look at the `jira-attachments-import-nok.csv` file and decide whether the failed attachments can be recovered.
 
 ### Update ticket status
 
@@ -652,6 +657,8 @@ Important: the Jira API requests MUST be made with an Authorization Header const
 ### External ticket/comment links
 
 In the Assembla ticket description and comment body, we might have embedded (external) ticket links that have to be converted to the Jira format.
+
+IMPORTANT: In order to be able to resolve links to external projects, all external projects which are sharing this data need to have been migrated up to but NOT including this step. Once all relevant projects have been migrated to this point, then it is possible to proceed.
 
 These tickets can only be resolved using existing dumps files (`data/jira/:space-name/jira-tickets.csv` and `data/jira/:space-name/jira-comments.csv`) from previous migrations that are indicated in the `.env` file as follows:
 
@@ -856,7 +863,8 @@ In the `data/assembla/:space` directory:
 In the `data/jira/:space` directory:
 
 * jira-attachments-download.csv
-* jira-attachments-import.csv
+* jira-attachments-import-nok.csv
+* jira-attachments-import-ok.csv
 * jira-comments.csv
 * jira-comments-diffs.csv
 * jira-issuelink-types.csv

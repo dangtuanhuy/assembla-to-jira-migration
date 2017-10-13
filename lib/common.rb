@@ -655,7 +655,7 @@ def goodbye(message)
 end
 
 def warning(message)
-  puts "\nWARNING: #{message}"
+  puts "WARNING: #{message}"
 end
 
 # Markdown conversion
@@ -682,7 +682,7 @@ def markdown_name(name, logins)
   return @cache_markdown_names[name] if @cache_markdown_names[name]
   ok = logins[name]
   result = ok ? "[~#{name}]" : "@#{name}"
-  puts "Reformat markdown name='#{name}' => #{ok ? '' : 'N'}OK" unless ok
+  warning "Reformat markdown name='#{name}' => #{ok ? '' : 'N'}OK" unless ok
   @cache_markdown_names[name] = result
 end
 
@@ -700,7 +700,7 @@ def markdown_ticket_link(ticket, tickets, strikethru = false)
     if strikethru
       result = "-#{result}-"
     end
-    puts "Reformat markdown ticket='#{ticket_number}' => Cannot find"
+    warning "Reformat markdown ticket='#{ticket_number}' => Cannot find"
   end
   @cache_markdown_ticket_links[ticket_number] = result
 end
@@ -720,7 +720,7 @@ def markdown_image(image, images, content_type)
     result = "!#{name}#{@content_types_thumbnail[content_type] ? '|thumbnail' : ''}!"
   else
     result = image
-    puts "Reformat markdown image='#{image}', id='#{id}', text='#{text}' => NOK"
+    warning "Reformat markdown image='#{image}', id='#{id}', text='#{text}' => NOK"
   end
   result
 end

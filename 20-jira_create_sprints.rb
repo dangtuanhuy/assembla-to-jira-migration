@@ -28,7 +28,7 @@ puts
 @sprints = @milestones_assembla.select { |milestone| milestone['title'] =~ /sprint/i }
 
 # Need to sort the sprints so that they appear in the correct order.
-@sprints.sort! { |x, y| y['start_date'] <=> x['start_date'] }
+@sprints.sort! { |x, y| y['start_date'].to_s <=> x['start_date'].to_s }
 
 puts "Total sprints: #{@sprints.length}"
 
