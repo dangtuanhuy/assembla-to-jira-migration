@@ -118,12 +118,13 @@ Using the Agile extension, create the sprints and populate the scrum/kanban boar
 
 Finally, cleanup actions need to be taken to finish things off.
 
-* Deactivate users not needed
-* Give admin rights to relevant users
-* Assign project leads (and give permissions)
-* Ask users to change password, check email and create avatar
-* Check that tickets which are spikes are NOT epics.
-* Make backup of `data` directory for future reference
+* Deactivate users not needed.
+* Give admin rights to relevant users.
+* Assign project leads (and give permissions).
+* Ask users to change password, check email and create avatar.
+* Use label filters to move issue to correct types, e.g. `bug` might be a label.
+* Check that tickets which are spikes are NOT epics [Issue 14](https://github.com/kgish/assembla-to-jira-migration/issues/14).
+* Make backup of `data` directory for future reference.
 
 Congratulations, you did it!
 

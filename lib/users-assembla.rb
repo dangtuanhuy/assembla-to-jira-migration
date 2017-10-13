@@ -9,7 +9,7 @@ users_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
 @list_of_logins = {}
 @users_assembla.each do |user|
   id = user['id']
-  login = user['login'].sub(/@.*$/,'')
+  login = user['login'].sub(/@.*$/, '')
   email = user['email']
   if email.nil? || email.empty?
     email = "#{login}@#{JIRA_API_DEFAULT_EMAIL}"

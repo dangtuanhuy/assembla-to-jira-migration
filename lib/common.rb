@@ -24,14 +24,14 @@ ASSEMBLA_CUSTOM_FIELD = ENV['ASSEMBLA_CUSTOM_FIELD']
 
 JIRA_SERVER_TYPE = ENV['JIRA_SERVER_TYPE'] || 'hosted'
 
-unless /cloud|hosted/.match(JIRA_SERVER_TYPE)
+unless /cloud|hosted/.match?(JIRA_SERVER_TYPE)
   puts "Invalid value JIRA_SERVER_TYPE='#{JIRA_SERVER_TYPE}', must be 'cloud' or 'hosted' (see .env file)"
   exit
 end
 
 JIRA_API_BASE = ENV['JIRA_API_BASE'].freeze
 
-unless %r{^https?://}.match(JIRA_API_BASE)
+unless %r{^https?://}.match?(JIRA_API_BASE)
   puts "Invalid value JIRA_API_BASE='#{JIRA_API_BASE}', must start with 'https?://' (see .env file)"
   exit
 end
@@ -116,16 +116,16 @@ URL_JIRA_EPICS = "#{JIRA_AGILE_HOST}/epic"
 
 def get_hierarchy_type(n)
   case n.to_i
-    when 0
-      'No plan level'
-    when 1
-      'Subtask'
-    when 2
-      'Story'
-    when 3
-      'Epic'
-    else
-      "Unknown (#{n})"
+  when 0
+    'No plan level'
+  when 1
+    'Subtask'
+  when 2
+    'Story'
+  when 3
+    'Epic'
+  else
+    "Unknown (#{n})"
   end
 end
 
@@ -146,7 +146,7 @@ end
 
 def item_newer_than?(item, date)
   item_date = item['created_on'] || item['created_at']
-  goodbye("Item created date cannot be found") unless item_date
+  goodbye('Item created date cannot be found') unless item_date
   DateTime.parse(item_date) > date
 end
 
@@ -165,8 +165,8 @@ def date_format_yyyy_mm_dd(dt)
     return dt
   end
   year = date.year
-  month = "%02d" % date.month
-  day = "%02d" % date.day
+  month = '%02d' % date.month
+  day = '%02d' % date.day
   "#{year}-#{month}-#{day}"
 end
 
@@ -177,11 +177,11 @@ def date_time(dt)
   rescue
     return dt
   end
-  day = "%02d" % date.day
-  month = %w(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec)[date.month-1]
+  day = '%02d' % date.day
+  month = %w(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec)[date.month - 1]
   year = date.year
-  hour = "%02d" % date.hour
-  minute = "%02d" % date.minute
+  hour = '%02d' % date.hour
+  minute = '%02d' % date.minute
   "#{day} #{month} #{year} #{hour}:#{minute}"
 end
 
@@ -220,7 +220,7 @@ def get_response_count(response)
   begin
     json = JSON.parse(response)
     return 0 unless json.is_a?(Array)
-     return json.length
+    return json.length
   rescue
     return 0
   end
@@ -237,7 +237,7 @@ end
 
 def get_space(name)
   spaces = csv_to_array("#{OUTPUT_DIR_ASSEMBLA}/spaces.csv")
-  space = spaces.find { |s| s['name'] == name }
+  space = spaces.detect { |s| s['name'] == name }
   unless space
     goodbye("Couldn't find space with name = '#{name}'")
   end
@@ -275,7 +275,7 @@ def create_csv_files(space, items)
   items.each do |item|
     create_csv_file(space, item)
   end
-  puts "#{space['name']} #{items.map{|item| item[:name]}.to_json} => done!"
+  puts "#{space['name']} #{items.map { |item| item[:name] }.to_json} => done!"
 end
 
 def create_csv_file(space, item)
@@ -313,13 +313,13 @@ def write_csv_file(filename, results)
 end
 
 def get_output_dirname(space, dir = nil)
-  dirname = "#{OUTPUT_DIR}/#{dir ? (normalize_name(dir) + '/' ) : ''}#{normalize_name(space['name'])}"
+  dirname = "#{OUTPUT_DIR}/#{dir ? (normalize_name(dir) + '/') : ''}#{normalize_name(space['name'])}"
   FileUtils.mkdir_p(dirname) unless File.directory?(dirname)
   dirname
 end
 
 def csv_to_array(pathname)
-  csv = CSV::parse(File.open(pathname, 'r') { |f| f.read } )
+  csv = CSV::parse(File.open(pathname, 'r') { |f| f.read })
   fields = csv.shift
   fields = fields.map { |f| f.downcase.tr(' ', '_') }
   csv.map { |record| Hash[*fields.zip(record).flatten] }
@@ -635,7 +635,7 @@ def jira_get_board_by_project_name(project_name)
     # is_last = body['isLast']
     values = body['values']
     if values
-      result = values.detect { |h| h['name'].match(/^#{key}/) }
+      result = values.detect { |h| h['name'].match?(/^#{key}/) }
       if result
         result.delete_if { |k, _| k =~ /self/i }
         puts "GET #{url} name='#{project_name}', key='#{key}' => FOUND"
@@ -658,7 +658,6 @@ def warning(message)
   puts "\nWARNING: #{message}"
 end
 
-
 # Markdown conversion
 #
 # See: https://github.com/kgish/assembla-to-jira/blob/develop/README.md#markdown
@@ -678,7 +677,7 @@ def markdown_name(name, logins)
   elsif name[0..6] == '[[user:'
     name = name[7..-3].gsub(/\|.*$/, '').strip
   else
-   goodbye("markdown_name(name='#{name}') has unknown format")
+    goodbye("markdown_name(name='#{name}') has unknown format")
   end
   return @cache_markdown_names[name] if @cache_markdown_names[name]
   ok = logins[name]
@@ -742,11 +741,11 @@ def reformat_markdown(content, opts = {})
     end
     line.gsub!(/#(\d+)\b/) { |ticket| markdown_ticket_link(ticket, tickets, strikethru) } if tickets
     markdown << line.
-                gsub(/<pre><code>/i,'{code:java}').
+                gsub(/<pre><code>/i, '{code:java}').
                 gsub(/<\/code><\/pre>/i,'{code}').
                 gsub(/\[\[url:(.*?)\|(.*?)\]\]/i, '[\2|\1]').
                 gsub(/\[\[url:(.*?)\]\]/i, '[\1|\1]').
-                gsub(/<code>(.*?)<\/code>/i,'{{\1}}').
+                gsub(/<code>(.*?)<\/code>/i, '{{\1}}').
                 gsub(/@([^@]*)@( |$)/, '{{\1}}\2').
                 gsub(/@([a-z.-_]*)/i) { |name| markdown_name(name, logins) }.
                 gsub(/\[\[user:(.*?)(\|(.*?))?\]\]/i) { |name| markdown_name(name, logins) }.
