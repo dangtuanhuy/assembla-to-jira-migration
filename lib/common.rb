@@ -589,12 +589,15 @@ def jira_create_user(user)
     displayName: user['name'],
   }.to_json
   begin
-    response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS, timeout: 30)
     body = JSON.parse(response.body)
     body.delete_if { |k, _| k =~ /self|avatarurls|timezone|locale|groups|applicationroles|expand/i }
     puts "POST #{url} username='#{username}' => OK (#{body.to_json})"
     result = body
   rescue RestClient::ExceptionWithResponse => e
+    if (e.class == RestClient::InternalServerError)
+      goodbye("POST #{url} username='#{username}' => NOK (#{e.to_s}) please retry")
+    end
     error = JSON.parse(e.response)
     message = error['errors'].map { |k, v| "#{k}: #{v}" }.join(' | ')
     goodbye("POST #{url} username='#{username}' => NOK (#{message})")

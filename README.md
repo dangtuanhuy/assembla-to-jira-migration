@@ -74,7 +74,7 @@ Like a pipeline, each script processes data and generates a dump file to store t
 
 The reason for doing this that if something goes wrong you do not lose everything and can restart from the previous step.
 
-Each step will generate a log of the results in the form of a csv file for reference purposes, e.g. detecting which requests failed and why. For example, importing tickets will create the `data/jira/:space/jira-tickets.csv` file where `:space` is the Assembla space name `ASSEMBLA_SPACE` in the `.env` file.
+Each step will generate a log of the results in the form of a csv file for reference purposes, e.g. detecting which requests failed and why. For example, importing tickets will create the `data/jira/:space/jira-tickets.csv` file where `:space` is the Assembla space name `ASSEMBLA_SPACE` in the `.env` file hyphenated with the `hostname-port`. For example: `space-name-jira-example-org-8080`.
 
 While the script is being executed, information will be logged to the console. Be sure to inspect the information, as certain instruction might be given that you must follow before continuing to the next step.
 
@@ -1145,6 +1145,7 @@ gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, c
 
 ## Trouble-shooting
 
+* Import users to the cloud fails for some user for some mysterious reason (500 Internal Server Error). This happens sometimes, just restart the script. It should recover and continue where it last failed. If the problem keeps repeating itself, just keep on retrying the script until you make your way through the complete list.
 * A `403 Forbidden` or `401 Unauthorized` error is returned. Ensure that the Authorization header is correct. if that doesn't work, log into your Atlassian account id.atlassian.com and try changing your password. There are some known problems with a recent cloud upgrade, see [Atlassian Community Ticket](https://community.developer.atlassian.com/t/401-unauthorized/9540), and certain extra actions must be taken. If problem persists, make sure that you are physically logged in to the hosted or cloud instance.
 * Error `User cannot be assigned issues.` Activate, login as user and then deactivate.
 * If issue is an epic then the epic name custom field is required.
