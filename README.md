@@ -43,7 +43,7 @@ It is best to start with a fresh installation, e.g. one in which the desired pro
 
 Although the official Atlassian documentation states that the Jira API for hosted server is nearly identical to the cloud server, there are some subtle, tricky differences that can bite you when you least expect.
 
-Don't worry, if you read all of the instructions below, follow them carefully without skipping anything, you can avoid these annoying bumps on the road on your way to a successful migration.
+Don't worry, if you read all of the instructions below, follow them carefully without skipping anything, you can avoid these annoying bumps in the road on your way to a successful migration.
 
 Need help? Look [here](https://github.com/kgish/assembla-to-jira-migration#support).
 
