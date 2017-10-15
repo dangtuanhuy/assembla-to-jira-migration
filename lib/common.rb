@@ -39,7 +39,7 @@ end
 JIRA_API_HOST = "#{JIRA_API_BASE}/#{ENV['JIRA_API_HOST']}"
 JIRA_API_ADMIN_USER = ENV['JIRA_API_ADMIN_USER'].freeze
 JIRA_API_ADMIN_EMAIL = ENV['JIRA_API_ADMIN_EMAIL'].freeze
-JIRA_API_DEFAULT_EMAIL = (ENV['JIRA_API_DEFAULT_EMAIL'] || 'example.org').gsub(/^@/,'').freeze
+JIRA_API_DEFAULT_EMAIL = (ENV['JIRA_API_DEFAULT_EMAIL'] || 'example.org').gsub(/^@/, '').freeze
 JIRA_API_UNKNOWN_USER = ENV['JIRA_API_UNKNOWN_USER'].freeze
 
 JIRA_API_IMAGES_THUMBNAIL = (ENV['JIRA_API_IMAGES_THUMBNAIL'] || 'description:false,comments:true').freeze
@@ -49,8 +49,20 @@ JIRA_API_PROJECT_NAME = ENV['JIRA_API_PROJECT_NAME'].freeze
 # Jira project type us 'scrum' by default
 JIRA_API_PROJECT_TYPE = (ENV['JIRA_API_PROJECT_TYPE'] || 'scrum').freeze
 
-JIRA_HEADERS = { 'Authorization': "Basic #{Base64.encode64(JIRA_API_ADMIN_USER + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])}", 'Content-Type': 'application/json', 'Accept': 'application/json' }.freeze
-JIRA_HEADERS_CLOUD = { 'Authorization': "Basic #{Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])}", 'Content-Type': 'application/json', 'Accept': 'application/json' }.freeze
+base64_admin = Base64.encode64(JIRA_API_ADMIN_USER + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
+base64_admin_cloud = Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
+
+JIRA_HEADERS = {
+  'Authorization': "Basic #{base64_admin}",
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}.freeze
+
+JIRA_HEADERS_CLOUD = {
+  'Authorization': "Basic #{base64_admin_cloud}",
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}.freeze
 
 URL_JIRA_PROJECTS = "#{JIRA_API_HOST}/project"
 URL_JIRA_ISSUE_TYPES = "#{JIRA_API_HOST}/issuetype"
@@ -92,7 +104,7 @@ def output_dir_jira(name)
   uri = URI(JIRA_API_HOST)
   host = uri.host
   port = uri.port
-  hn = "#{host.gsub('.', '-')}-#{port}"
+  hn = "#{host.tr('.', '-')}-#{port}"
   output_dir("#{name}/#{hn}", 'jira')
 end
 
@@ -106,7 +118,7 @@ OUTPUT_DIR_JIRA_ATTACHMENTS = "#{OUTPUT_DIR_JIRA}/attachments"
 end
 
 # The following custom fields MUST be defined AND associated with the proper screens
-CUSTOM_FIELD_NAMES = %w(Assembla-Id Assembla-Milestone Assembla-Status Assembla-Reporter Assembla-Assignee Assembla-Completed Epic\ Name Rank Story\ Points)
+CUSTOM_FIELD_NAMES = %w(Assembla-Id Assembla-Milestone Assembla-Status Assembla-Reporter Assembla-Assignee Assembla-Completed Epic\ Name Rank Story\ Points).freeze
 
 JIRA_AGILE_HOST = "#{JIRA_API_BASE}/#{ENV['JIRA_AGILE_HOST']}"
 URL_JIRA_BOARDS = "#{JIRA_AGILE_HOST}/board"
@@ -137,7 +149,7 @@ def get_tickets_created_on
   env = ENV['TICKETS_CREATED_ON']
   return nil unless env
   begin
-    tickets_created_on = Date.strptime(env, "%Y-%m-%d")
+    tickets_created_on = Date.strptime(env, '%Y-%m-%d')
   rescue
     goodbye("File '.env' contains an invalid date for ENV['TICKETS_CREATED_ON']='#{env}'")
   end
@@ -165,8 +177,8 @@ def date_format_yyyy_mm_dd(dt)
     return dt
   end
   year = date.year
-  month = '%02d' % date.month
-  day = '%02d' % date.day
+  month = format('%02d', date.month)
+  day = format('%02d', date.day)
   "#{year}-#{month}-#{day}"
 end
 
@@ -177,11 +189,11 @@ def date_time(dt)
   rescue
     return dt
   end
-  day = '%02d' % date.day
+  day = format('%02d', date.day)
   month = %w(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec)[date.month - 1]
   year = date.year
-  hour = '%02d' % date.hour
-  minute = '%02d' % date.minute
+  hour = format('%02d', date.hour)
+  minute = format('%02d', date.minute)
   "#{day} #{month} #{year} #{hour}:#{minute}"
 end
 
@@ -595,8 +607,8 @@ def jira_create_user(user)
     puts "POST #{url} username='#{username}' => OK (#{body.to_json})"
     result = body
   rescue RestClient::ExceptionWithResponse => e
-    if (e.class == RestClient::InternalServerError)
-      goodbye("POST #{url} username='#{username}' => NOK (#{e.to_s}) please retry")
+    if e.class == RestClient::InternalServerError
+      goodbye("POST #{url} username='#{username}' => NOK (#{e}) please retry")
     end
     error = JSON.parse(e.response)
     message = error['errors'].map { |k, v| "#{k}: #{v}" }.join(' | ')
@@ -745,7 +757,7 @@ def reformat_markdown(content, opts = {})
     line.gsub!(/#(\d+)\b/) { |ticket| markdown_ticket_link(ticket, tickets, strikethru) } if tickets
     markdown << line.
                 gsub(/<pre><code>/i, '{code:java}').
-                gsub(/<\/code><\/pre>/i,'{code}').
+                gsub(/<\/code><\/pre>/i, '{code}').
                 gsub(/\[\[url:(.*?)\|(.*?)\]\]/i, '[\2|\1]').
                 gsub(/\[\[url:(.*?)\]\]/i, '[\1|\1]').
                 gsub(/<code>(.*?)<\/code>/i, '{{\1}}').

@@ -732,6 +732,8 @@ jira-links-external-all.csv     => all detected external links are listed
 jira-links-external-updated.csv => only those external links actually updated
 ```
 
+Check the output file `jira-links-external-all.csv` for the external links that resulted in errors, e.g. result `NOK`. The `message` field will give you the errow that the server returned, so that you can hopefully fix thi manually.
+
 ### Move stories to epics
 
 ```
@@ -750,6 +752,8 @@ $ ruby 18-jira_update_epics.rb
 ```
 
 The results are saved in the `jira-update-epics.csv` output file.
+
+Check tis output file for the epics that resulted in errors, e.g. result `NOK`. The `message` field will give you the errow that the server returned, so that you can hopefully fix thi manually.
 
 ### Rank tickets
 
@@ -850,6 +854,8 @@ Finally, cleanup actions need to be taken to finish things off.
 * Assign project leads (and give permissions).
 * Ask users to change password, check email and create avatar.
 * Recover failed attachment uploads listed in `jira-attachments-import-nok.csv`.
+* Resolve failed external links listed as `NOK` in `jira-external-links.csv`.
+* Recover failed epic updates listed as `NOK` in `jira-external-links.csv`.
 * Use label filters to move issue to correct types, e.g. `bug` might be a label.
 * Check that tickets which are spikes are NOT epics [Issue 14](https://github.com/kgish/assembla-to-jira-migration/issues/14).
 * Make backup of `data` directory for future reference.
@@ -1232,6 +1238,7 @@ With such a complicated tool, there will always be some loose ends and/or additi
 * Wish: Use a user-defined Jira project template instead of requiring the user to define stuff manually. [Issue 9](https://github.com/kgish/assembla-to-jira-migration/issues/9)
 * Wish: Assign original authors as creators of tickets (this might not be possible) [Issue 10](https://github.com/kgish/assembla-to-jira-migration/issues/10)
 * Refactor: cleanup code, remove duplication, fix rubocop warnings, and make more object-oriented using classes. [Issue 11](https://github.com/kgish/assembla-to-jira-migration/issues/11)
+* Wish: Rank tickets (cloud) in batches of fifty instead of individually. [Issue 15](https://github.com/kgish/assembla-to-jira-migration/issues/15)
 
 ## References
 
