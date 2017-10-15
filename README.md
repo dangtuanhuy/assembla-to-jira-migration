@@ -205,14 +205,14 @@ $ cp .env.example .env
 
 ### Jira hosted versus cloud
 
-Although the official Jira documentation claims that the hosted and cloud APIs are identical, I've found out that this isn't entirely true.
+Although the official Jira documentation claims that the hosted and cloud APIs are identical, I've found out that this isn't entirely true. There are a couple of minor differences that must be taken into account:
 
-There are a couple of minor differences that must be taken into account:
-
-* Users - When creating users the hosted version will automatically set activated to true, whereas the cloud version will NOT.
-* Ranking - The hosted version will allow you to set the issue rank when creating issues while the cloud version will NOT.
-* Comments - The hosted version will allow original comment authors to import comments while cloud version will NOT.
-* Attachments - The cloud version is [problematic](https://community.developer.atlassian.com/t/401-unauthorized/9540), and certain extra actions must be taken.
+* Performance - The cloud server is MUCH slower than the hosted server, meaning that when imported long lists of tickets or whatever extreme patience is required.
+* Stability - The hosted server generally works flawlessy and completes after the first run whereas the cloud server occasionally times out or returns a server error. For example, importing attachments.
+* Users - When creating users the hosted server will automatically set activated to true, whereas the cloud server will NOT.
+* Ranking - The hosted server will allow you to set the issue rank when creating issues while the cloud server will NOT.
+* Comments - The hosted server will allow original comment authors to import comments while cloud server will NOT.
+* Attachments - The cloud server is [problematic](https://community.developer.atlassian.com/t/401-unauthorized/9540), and certain extra actions must be taken.
 
 In the `.evv` file this is indicated by setting the `JIRA_SERVER_TYPE` configuration parameter to either `hosted` or `cloud`.
 
