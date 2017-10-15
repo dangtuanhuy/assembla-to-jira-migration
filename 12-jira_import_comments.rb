@@ -10,7 +10,7 @@ total_comments = @comments_assembla.length
 
 # Ignore empty comments
 @comments_assembla_empty = @comments_assembla.select { |comment| comment['comment'].nil? || comment['comment'].strip.empty? }
-@comments_assembla.select! { |comment| ! (comment['comment'].nil? || comment['comment'].strip.empty?) }
+@comments_assembla.reject! { |comment| comment['comment'].nil? || comment['comment'].strip.empty? }
 
 puts "Total comments: #{total_comments}"
 puts "Empty comments: #{@comments_assembla_empty.length}"
@@ -59,14 +59,15 @@ def jira_create_comment(issue_id, user_id, comment, counter)
   result = nil
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/comment"
   user_login = @user_id_to_login[user_id]
-  user_login.sub!(/@.*$/,'')
+  user_login.sub!(/@.*$/, '')
   user_email = @user_id_to_email[user_id]
   headers = if JIRA_SERVER_TYPE == 'hosted'
               headers_user_login(user_login, user_email)
             else
               JIRA_HEADERS_CLOUD
             end
-  reformatted_body = reformat_markdown(comment['comment'], logins: @list_of_logins, images: @list_of_images, content_type: 'comments', strikethru: true)
+  reformatted_body = reformat_markdown(comment['comment'], logins: @list_of_logins,
+                                                           images: @list_of_images, content_type: 'comments', strikethru: true)
   body = "Created on #{date_time(comment['created_on'])}\n\n#{reformatted_body}"
   if JIRA_SERVER_TYPE == 'cloud'
     author_link = user_login ? "[~#{user_login}]" : "unknown (#{user_id})"
@@ -94,13 +95,13 @@ def jira_create_comment(issue_id, user_id, comment, counter)
     issue_key = @assembla_id_to_jira_key[ticket_id]
     comment_id = result['id']
     @comments_diffs << {
-        jira_comment_id: comment_id,
-        jira_ticket_id: issue_id,
-        jira_ticket_key: issue_key,
-        assembla_comment_id: id,
-        assembla_ticket_id: ticket_id,
-        before: comment['comment'],
-        after: reformatted_body
+      jira_comment_id: comment_id,
+      jira_ticket_id: issue_id,
+      jira_ticket_key: issue_key,
+      assembla_comment_id: id,
+      assembla_ticket_id: ticket_id,
+      before: comment['comment'],
+      after: reformatted_body
     }
   end
   result

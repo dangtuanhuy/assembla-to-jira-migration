@@ -214,6 +214,7 @@ Although the official Jira documentation claims that the hosted and cloud APIs a
 * Ranking - The hosted server will allow you to set the issue rank when creating issues while the cloud server will NOT.
 * Comments - The hosted server will allow original comment authors to import comments while cloud server will NOT.
 * Attachments - The cloud server is [problematic](https://community.developer.atlassian.com/t/401-unauthorized/9540), and certain extra actions must be taken.
+* Storage - The cloud server imposes a file upload size limit (100MB). If possible, compress the file and try again my manually adding it as an attachment to the Jira issue.
 
 In the `.evv` file this is indicated by setting the `JIRA_SERVER_TYPE` configuration parameter to either `hosted` or `cloud`. For example, if you are importing data to the cloud:
 
