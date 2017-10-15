@@ -114,18 +114,9 @@ Using the Agile extension, create the sprints and populate the scrum/kanban boar
 20. Create sprints
 21. Update board
 
-### Manual cleanup
+### Cleanup
 
-Finally, cleanup actions need to be taken to finish things off.
-
-* Deactivate users not needed.
-* Give admin rights to relevant users.
-* Assign project leads (and give permissions).
-* Ask users to change password, check email and create avatar.
-* Recover failed attachment uploads listed in `jira-attachments-import-nok.csv`.
-* Use label filters to move issue to correct types, e.g. `bug` might be a label.
-* Check that tickets which are spikes are NOT epics [Issue 14](https://github.com/kgish/assembla-to-jira-migration/issues/14).
-* Make backup of `data` directory for future reference.
+22. Manual cleanup actions
 
 Congratulations, you did it!
 
@@ -553,6 +544,8 @@ auth = Base64.encode64(admin_email + ':' + admin_password)
 headers = { 'Authorization': "Basic #{auth}", 'X-Atlassian-Token': 'no-check' }
 ```
 
+Once this script has completed, check out the `jira-attachments-import-nok.csv` file and recover the failed attachments by manually adding them to the indicated Jira issue.
+
 See: [Atlassian Community Ticket](https://community.developer.atlassian.com/t/401-unauthorized/9540).
 
 Another note: we allow the original creators of the Assembla attachments to be able to create the new Jira attachments, therefore retaining ownership.
@@ -831,6 +824,18 @@ JIRA_API_STATUSES=New:To Do,In Progress,Blocked,Testable,Ready for Acceptance, \
 
 ![](images/jira-create-workflow.png)
 
+### Cleanup
+
+Finally, cleanup actions need to be taken to finish things off.
+
+* Deactivate users not needed.
+* Give admin rights to relevant users.
+* Assign project leads (and give permissions).
+* Ask users to change password, check email and create avatar.
+* Recover failed attachment uploads listed in `jira-attachments-import-nok.csv`.
+* Use label filters to move issue to correct types, e.g. `bug` might be a label.
+* Check that tickets which are spikes are NOT epics [Issue 14](https://github.com/kgish/assembla-to-jira-migration/issues/14).
+* Make backup of `data` directory for future reference.
 
 ## Output files
 
