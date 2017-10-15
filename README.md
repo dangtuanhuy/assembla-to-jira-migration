@@ -478,6 +478,8 @@ During the conversion, any differences between the original Assembla ticket desc
 
 An additional output file `data/jira/:space/jira-ticket-links.csv` is created which contains those embedded ticket links that could not be resolved. This is used in the following step.
 
+Once completed, check if there are any failed ticket imports where in the `results` column a value of `NOK` is indicated. If present, you can create the Jira issue manually.
+
 Note: it is not possible for the original reporter (creator) of the Assembla ticket to be able to create a new issue, this is only allowed for the admin user, e.g. `headers = JIRA_HEADERS`.
 
 ### Update ticket links
