@@ -840,6 +840,41 @@ Finally, cleanup actions need to be taken to finish things off.
 * Check that tickets which are spikes are NOT epics [Issue 14](https://github.com/kgish/assembla-to-jira-migration/issues/14).
 * Make backup of `data` directory for future reference.
 
+## Checklist
+
+It can be slightly tedious running scripts that take a long time to complete and keeping track of where you stand in the scripts pipeline.
+
+In order to make this easier for you to track, here is a simple checklist where you can sign off each step and remember where you are.
+
+
+| Step | Actions  | Item         | Dir | Start | Done |
+| ---- | -------  | -----        | --- | ----- | ---- |
+|  01  | Assembla | Space        | dn  |       |      |
+|  02  | Assembla | Tickets      | dn  |       |      |
+|  03  | Assembla | Users        | na  |       |      |
+|  04  | Assembla | Reports      | na  |       |      |
+|  05  | Jira     | Projects     | up  |       |      |
+|  06  | Jira     | Issue links  | na  |       |      |
+|  07  | Jira     | General info | na  |       |      |
+|  08  | Jira     | Users        | up  |       |      |
+|  09  | Jira     | Attachments  | dn  |       |      |
+|  10  | Jira     | Tickets      | up  |       |      |
+|  11  | Jira     | Ticket links | up  |       |      |
+|  12  | Jira     | Comments     | up  |       |      |
+|  13  | Jira     | Attachments  | up  |       |      |
+|  14  | Jira     | Status       | up  |       |      |
+|  15  | Jira     | Associations | up  |       |      |
+|  16  | Jira     | Watchers     | up  |       |      |
+|  17  | Jira (1) | Ext links    | up  |       |      |
+|  18  | Jira     | Epics        | up  |       |      |
+|  19  | Jira (2) | Ranking      | up  |       |      |
+|  20  | Board    | Sprints      | up  |       |      |
+|  21  | Board    | Update       | up  |       |      |
+|  22  | Cleanup  | See list     | na  |       |      |
+
+(1) first complete all projects up to this point before continuing (in order to ensure that all of the external links are resolved correctly)
+(2) only for cloud server
+
 ## Output files
 
 As mentioned previously, during each step of the migration pipeline, the script will generate output in the form of CSV files to capture the data at that given moment.
