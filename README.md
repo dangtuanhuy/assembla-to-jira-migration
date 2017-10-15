@@ -6,22 +6,23 @@ A collection of advanced tooling which provides seamless data migration from [As
 
 This is by far the best migration toolset around. Here are the reasons why this version beats out all others hands down:
 
-* Fully automated with minimal manual actions
-* Configuration file with various options
-* Import users (names, emails, roles and permissions)
-* Import tickets, comments, attachments and relationships
-* Retain ticket status, labels, ranking and custom fields
-* Link back to original Assembla tickets for reference
-* Save relevant Assembla context in user-defined fields
-* Insert embedded image thumbnails in descriptions and comments
-* Convert markdown and urls
-* Retain watchers of tickets
-* Create scrum or kanban board with workflow
-* Map Assembla milestones to Jira sprints
-* Populate the backlog, future and current sprints
-* Assign stories to epics
-* Resolve cross linking between external projects
-* Take into account the API differences between hosted and cloud
+* Fully automated with minimal manual actions.
+* Configuration file with various options.
+* Import users (names, emails, roles and permissions).
+* Import tickets, comments, attachments and relationships.
+* Retain ticket status, labels, ranking and custom fields.
+* Link back to original Assembla tickets for reference.
+* Save relevant Assembla context in user-defined fields.
+* Insert embedded image thumbnails in descriptions and comments.
+* Convert markdown and urls.
+* Retain watchers of tickets.
+* Create scrum or kanban board with workflow.
+* Map Assembla milestones to Jira sprints.
+* Populate the backlog, future and current sprints.
+* Assign stories to epics.
+* Resolve cross linking between external projects.
+* Take into account the API differences between hosted and cloud.
+* Tons of great documentation and trouble-shooting guide.
 
 Need help? Look [here](https://github.com/kgish/assembla-to-jira-migration#support).
 
