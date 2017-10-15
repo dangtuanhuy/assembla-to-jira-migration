@@ -732,7 +732,7 @@ jira-links-external-all.csv     => all detected external links are listed
 jira-links-external-updated.csv => only those external links actually updated
 ```
 
-Check the output file `jira-links-external-all.csv` for the external links that resulted in errors, e.g. result `NOK`. The `message` field will give you the errow that the server returned, so that you can hopefully fix thi manually.
+Check the output file `jira-links-external-all.csv` for the external links that resulted in errors, e.g. result `NOK`. The `message` field will give you the error that the server returned, so that you can hopefully fix this manually.
 
 ### Move stories to epics
 
@@ -753,7 +753,7 @@ $ ruby 18-jira_update_epics.rb
 
 The results are saved in the `jira-update-epics.csv` output file.
 
-Check tis output file for the epics that resulted in errors, e.g. result `NOK`. The `message` field will give you the errow that the server returned, so that you can hopefully fix thi manually.
+Check this output file for the epics that resulted in errors, e.g. result `NOK`. The `message` field will give you the error that the server returned, so that you can hopefully fix this manually. For example, `Issue 'EC-71' is an epic and therefore cannot be associated to another epic` is a common message.
 
 ### Rank tickets
 
