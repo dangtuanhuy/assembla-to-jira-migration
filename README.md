@@ -1258,7 +1258,7 @@ With such a complicated tool, there will always be some loose ends and/or additi
 
 Do you require assistance with the migration or need some new functionality that is not yet part of this package?
 
-No worried, I can certainly help you out.
+No worries, I can certainly help you out.
 
 Feel free to contact me!
 
