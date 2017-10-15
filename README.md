@@ -1207,6 +1207,7 @@ gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, c
 
 ## Trouble-shooting
 
+* Ticket import error `key='issuetype', reason='The issue type selected is invalid.'`. Go to the project issue types scheme, edit and ensure that issue type is included in the list, e.g. spike.
 * Import users to the cloud fails for some user for some mysterious reason (500 Internal Server Error). This happens sometimes, just restart the script. It should recover and continue where it last failed. If the problem keeps repeating itself, just keep on retrying the script until you make your way through the complete list.
 * A `403 Forbidden` or `401 Unauthorized` error is returned. Ensure that the Authorization header is correct. if that doesn't work, log into your Atlassian account id.atlassian.com and try changing your password. There are some known problems with a recent cloud upgrade, see [Atlassian Community Ticket](https://community.developer.atlassian.com/t/401-unauthorized/9540), and certain extra actions must be taken. If problem persists, make sure that you are physically logged in to the hosted or cloud instance.
 * Error `User cannot be assigned issues.` Activate, login as user and then deactivate.
