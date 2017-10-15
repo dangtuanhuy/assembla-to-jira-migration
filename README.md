@@ -755,6 +755,14 @@ The results are saved in the `jira-update-epics.csv` output file.
 
 Check this output file for the epics that resulted in errors, e.g. result `NOK`. The `message` field will give you the error that the server returned, so that you can hopefully fix this manually. For example, `Issue 'EC-71' is an epic and therefore cannot be associated to another epic` is a common message.
 
+If errors occur, e.g. `Issue 'EC-71' is an epic and therefore cannot be associated to another epic`, you should run the following recory script which will attempt to fix most of the problems:
+
+```
+$ ruby 18-jira_update_epics_nok.rb
+```
+
+The results are saved in the `jira-update-epics_nok.csv` output file, a result of `NOK` meaning that you may attempt to fix it manually with the help of the `message` column giving the error text.
+
 ### Rank tickets
 
 Only needed for the Jira cloud version, e.g. when `JIRA_SERVER_TYPE=cloud` in the `.env` file. Since this was not possible during the ticket creation, now is the time to rank the imported issues using the original Assembla values.
@@ -886,14 +894,17 @@ In order to make this easier for you to track, here is a simple checklist where 
 |  16  | Jira     | Watchers     | up  |       |      |
 |  17  | Jira (1) | Ext links    | up  |       |      |
 |  18  | Jira     | Epics        | up  |       |      |
-|  19  | Jira (2) | Ranking      | up  |       |      |
+|      | Jira (2) | Epics NOK    | up  |       |      |
+|  19  | Jira (3) | Ranking      | up  |       |      |
 |  20  | Board    | Sprints      | up  |       |      |
 |  21  | Board    | Update       | up  |       |      |
 |  22  | Cleanup  | See list     | na  |       |      |
 
 (1) first complete all projects up to this point before continuing (in order to ensure that all of the external links are resolved correctly).
 
-(2) only for cloud server.
+(2) only if errors occurred in the previous step.
+
+(3) only for cloud server.
 
 ## Output files
 
@@ -1230,15 +1241,17 @@ With such a complicated tool, there will always be some loose ends and/or additi
 * Must have: Update readme screenshots and relevant screen associations, e.g. only `Scrum Default Issue Screen` is required. [Issue 6](https://github.com/kgish/assembla-to-jira-migration/issues/6)
 * Bug: Ticket type 'Spike' is converted to an Epic. [Issue 14](https://github.com/kgish/assembla-to-jira-migration/issues/14)
 * Nice to have: Support multiple Assembla [custom fields](http://api-docs.assembla.cc/content/ref/ticket_custom_fields_fields.html) instead of just one. [Issue 2](https://github.com/kgish/assembla-to-jira-migration/issues/2)
-* Nice to have: Create Jira board columns in line with the original Assembla cardwall columns (statuses = blocked, testable, ready for acceptance, in acceptance testing, ready for deploy) and populate with the relevant issues. [Issue 8](https://github.com/kgish/assembla-to-jira-migration/issues/8)
+* Nice to have: Autodetect whether cloud or hosted. [Issue 12](https://github.com/kgish/assembla-to-jira-migration/issues/12)
+* Nice to have: Rank tickets (cloud) in batches of fifty instead of individually. [Issue 15](https://github.com/kgish/assembla-to-jira-migration/issues/15)
+* Nice to have: Create Jira board columns in line with the original Assembla cardwall columns (statuses = blocked, testable, ready for acceptance, in acceptance testing, ready for deploy) and populate with the relevant issues. [Issue 4](https://github.com/kgish/assembla-to-jira-migration/issues/4)
 * Nice to have: Allow data dumps to restart with all newer items since last dump, rather than having to start all over again. This is already the case for attachments, but should be possible with tickets, comments, etc. [Issue 5](https://github.com/kgish/assembla-to-jira-migration/issues/5)
 * Nice to have: Assembla tickets with tag `bug` should be converted into Jira issue of type `bug`. [Issue 7](https://github.com/kgish/assembla-to-jira-migration/issues/7)
 * Wish: Allow themes to be converted into Epics (additional .env file option). Currently epics are only created for tickets with summaries that start with 'EPIC:' which in hindsight is probably not the best way of doing this. [Issue 3](https://github.com/kgish/assembla-to-jira-migration/issues/3)
 * Wish: Automatically create custom fields instead of requiring the user to do this manually (see above). [Issue 8](https://github.com/kgish/assembla-to-jira-migration/issues/8)
 * Wish: Use a user-defined Jira project template instead of requiring the user to define stuff manually. [Issue 9](https://github.com/kgish/assembla-to-jira-migration/issues/9)
 * Wish: Assign original authors as creators of tickets (this might not be possible) [Issue 10](https://github.com/kgish/assembla-to-jira-migration/issues/10)
+* Refactor: Merge the recovery script `18-jira_update_epics_nok.rb` into `18-jira_update_epics.rb` [Issue 16](https://github.com/kgish/assembla-to-jira-migration/issues/16)
 * Refactor: cleanup code, remove duplication, fix rubocop warnings, and make more object-oriented using classes. [Issue 11](https://github.com/kgish/assembla-to-jira-migration/issues/11)
-* Wish: Rank tickets (cloud) in batches of fifty instead of individually. [Issue 15](https://github.com/kgish/assembla-to-jira-migration/issues/15)
 
 ## References
 
