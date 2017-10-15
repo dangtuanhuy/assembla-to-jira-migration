@@ -181,10 +181,10 @@ JIRA_API_IMAGES_THUMBNAIL=description:false,comments:true
 
 # Cross project ticket linking
 JIRA_API_SPACE_TO_PROJECT=space1-name:project1-key,space2-name:project2-name
-JIRA_API_RE_TICKET=https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)(?:\-[^)\]]+)?(?:\?.*\b)?
-JIRA_API_RE_COMMENT=https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+).*?\?comment=(\d+)(?:#comment:\d+)?
+JIRA_API_RE_TICKET=https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)...
+JIRA_API_RE_COMMENT=https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)...
 JIRA_API_BROWSE_ISSUE=browse/[:jira-ticket-key]
-JIRA_API_BROWSE_COMMENT=browse/[:jira-ticket-key]?focusedCommentId=:jira-comment-id&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-[:jira-comment-id]
+JIRA_API_BROWSE_COMMENT=browse/[:jira-ticket-key]?focusedCommentId=...
 
 # --- Jira Agile settings --- #
 JIRA_AGILE_HOST=rest/agile/1.0
@@ -215,7 +215,11 @@ Although the official Jira documentation claims that the hosted and cloud APIs a
 * Comments - The hosted server will allow original comment authors to import comments while cloud server will NOT.
 * Attachments - The cloud server is [problematic](https://community.developer.atlassian.com/t/401-unauthorized/9540), and certain extra actions must be taken.
 
-In the `.evv` file this is indicated by setting the `JIRA_SERVER_TYPE` configuration parameter to either `hosted` or `cloud`.
+In the `.evv` file this is indicated by setting the `JIRA_SERVER_TYPE` configuration parameter to either `hosted` or `cloud`. For example, if you are importing data to the cloud:
+
+```
+JIRA_SERVER_TYPE=cloud
+```
 
 Make sure you're using your Atlassian account email address and password for basic authentication, not your Jira username.
 
@@ -459,6 +463,15 @@ POST /rest/api/2/issue
     ...
   }
 }
+```
+
+Custom fields are also handled accordingly:
+
+```
+if custom_field
+  assembla_custom_field = "Assembla-#{ASSEMBLA_CUSTOM_FIELD}"
+  payload[:fields]["#{@customfield_name_to_id[assembla_custom_field]}".to_sym] = custom_field
+end
 ```
 
 Now you are ready to import all of the tickets. Execute the following command:
@@ -846,7 +859,6 @@ It can be slightly tedious running scripts that take a long time to complete and
 
 In order to make this easier for you to track, here is a simple checklist where you can sign off each step and remember where you are.
 
-
 | Step | Actions  | Item         | Dir | Start | Done |
 | ---- | -------  | -----        | --- | ----- | ---- |
 |  01  | Assembla | Space        | dn  |       |      |
@@ -872,8 +884,9 @@ In order to make this easier for you to track, here is a simple checklist where 
 |  21  | Board    | Update       | up  |       |      |
 |  22  | Cleanup  | See list     | na  |       |      |
 
-(1) first complete all projects up to this point before continuing (in order to ensure that all of the external links are resolved correctly)
-(2) only for cloud server
+(1) first complete all projects up to this point before continuing (in order to ensure that all of the external links are resolved correctly).
+
+(2) only for cloud server.
 
 ## Output files
 
@@ -1044,8 +1057,14 @@ Depending on the server type, the authorization is handled slightly differently.
 
 ```
 def headers_user_login(user_login, user_email)
-  cloud = (JIRA_SERVER_TYPE == 'cloud')
-  { 'Authorization': "Basic #{Base64.encode64((cloud ? user_email : user_login) + ':' + user_login)}", 'Content-Type': 'application/json' }
+  cloud = JIRA_SERVER_TYPE == 'cloud'
+  user_login_or_email = cloud ? user_email : user_login
+  user_password = user_login
+  base64_encoded = Base64.encode64(user_login_or_email + ':' + user_password)
+  {
+    'Authorization': "Basic #{base64_encoded}",
+    'Content-Type': 'application/json'
+  }
 end
 ```
 
