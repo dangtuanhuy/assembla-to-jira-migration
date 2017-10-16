@@ -958,6 +958,7 @@ In the `data/jira/:space` directory:
 * jira-tickets-status-updates.csv
 * jira-tickets-watchers.csv
 * jira-update-epics.csv
+* jira-update-epics-nok.csv
 * jira-users.csv
 
 ## Ticket field conversions
