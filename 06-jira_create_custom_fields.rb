@@ -2,7 +2,6 @@
 
 load './lib/common.rb'
 
-
 # --- JIRA fields --- #
 
 @fields_jira = jira_get_fields
