@@ -22,13 +22,6 @@ ASSEMBLA_TYPES_IN_SUMMARY = (ENV['ASSEMBLA_TYPES_IN_SUMMARY'] || '').split(',')
 
 ASSEMBLA_CUSTOM_FIELD = ENV['ASSEMBLA_CUSTOM_FIELD']
 
-JIRA_SERVER_TYPE = ENV['JIRA_SERVER_TYPE'] || 'hosted'
-
-unless /cloud|hosted/.match?(JIRA_SERVER_TYPE)
-  puts "Invalid value JIRA_SERVER_TYPE='#{JIRA_SERVER_TYPE}', must be 'cloud' or 'hosted' (see .env file)"
-  exit
-end
-
 JIRA_API_BASE = ENV['JIRA_API_BASE'].freeze
 
 unless %r{^https?://}.match?(JIRA_API_BASE)
@@ -49,21 +42,7 @@ JIRA_API_PROJECT_NAME = ENV['JIRA_API_PROJECT_NAME'].freeze
 # Jira project type us 'scrum' by default
 JIRA_API_PROJECT_TYPE = (ENV['JIRA_API_PROJECT_TYPE'] || 'scrum').freeze
 
-base64_admin = Base64.encode64(JIRA_API_ADMIN_USER + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
-base64_admin_cloud = Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
-
-JIRA_HEADERS = {
-  'Authorization': "Basic #{base64_admin}",
-  'Content-Type': 'application/json',
-  'Accept': 'application/json'
-}.freeze
-
-JIRA_HEADERS_CLOUD = {
-  'Authorization': "Basic #{base64_admin_cloud}",
-  'Content-Type': 'application/json',
-  'Accept': 'application/json'
-}.freeze
-
+URL_JIRA_SERVERINFO = "#{JIRA_API_HOST}/serverInfo"
 URL_JIRA_PROJECTS = "#{JIRA_API_HOST}/project"
 URL_JIRA_ISSUE_TYPES = "#{JIRA_API_HOST}/issuetype"
 URL_JIRA_PRIORITIES = "#{JIRA_API_HOST}/priority"
@@ -83,6 +62,57 @@ JIRA_API_BROWSE_ISSUE = ENV['JIRA_API_BROWSE_ISSUE'] || 'browse/[:jira-ticket-ke
 JIRA_API_BROWSE_COMMENT = ENV['JIRA_API_BROWSE_COMMENT'] || 'browse/[:jira-ticket-key]?focusedCommentId=[:jira-comment-id]&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-[:jira-comment-id]'
 
 JIRA_API_STATUSES = ENV['JIRA_API_STATUSES']
+
+# GET /rest/api/2/serverInfo
+def jira_get_server_type
+  url = URL_JIRA_SERVERINFO
+  result = nil
+  begin
+    response = RestClient::Request.execute(method: :get, url: url)
+    result = JSON.parse(response.body)
+    result = result['deploymentType'].downcase
+    result = 'hosted' if result == 'server'
+    puts "GET #{url} => OK (#{result})"
+  rescue RestClient::ExceptionWithResponse => e
+    message = rest_client_exception(e, 'GET', url)
+    puts "GET #{url} => NOK (#{message})"
+  rescue => e
+    puts "GET #{url} => NOK (#{e.message})"
+  end
+  result
+end
+
+JIRA_SERVER_TYPE = jira_get_server_type
+
+unless /cloud|hosted/.match?(JIRA_SERVER_TYPE)
+  puts "Invalid value JIRA_SERVER_TYPE='#{JIRA_SERVER_TYPE}', must be 'cloud' or 'hosted'"
+  exit
+end
+
+base64_admin = if JIRA_SERVER_TYPE == 'hosted'
+                 Base64.encode64(JIRA_API_ADMIN_USER + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
+               else
+                 Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
+               end
+
+JIRA_HEADERS = {
+    'Authorization': "Basic #{base64_admin}",
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+}.freeze
+
+JIRA_HEADERS_CLOUD = {
+    'Authorization': "Basic #{base64_admin}",
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+}.freeze
+
+# Assuming that the user name is the same as the user password
+# For the cloud we use the email otherwise login
+def headers_user_login(user_login, user_email)
+  cloud = (JIRA_SERVER_TYPE == 'cloud')
+  { 'Authorization': "Basic #{Base64.encode64((cloud ? user_email : user_login) + ':' + user_login)}", 'Content-Type': 'application/json' }
+end
 
 MAX_RETRY = 3
 
@@ -160,13 +190,6 @@ def item_newer_than?(item, date)
   item_date = item['created_on'] || item['created_at']
   goodbye('Item created date cannot be found') unless item_date
   DateTime.parse(item_date) > date
-end
-
-# Assuming that the user name is the same as the user password
-# For the cloud we use the email otherwise login
-def headers_user_login(user_login, user_email)
-  cloud = (JIRA_SERVER_TYPE == 'cloud')
-  { 'Authorization': "Basic #{Base64.encode64((cloud ? user_email : user_login) + ':' + user_login)}", 'Content-Type': 'application/json' }
 end
 
 def date_format_yyyy_mm_dd(dt)
