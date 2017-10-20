@@ -63,58 +63,36 @@ JIRA_API_BROWSE_COMMENT = ENV['JIRA_API_BROWSE_COMMENT'] || 'browse/[:jira-ticke
 
 JIRA_API_STATUSES = ENV['JIRA_API_STATUSES']
 
-# GET /rest/api/2/serverInfo
-def jira_get_server_type
-  url = URL_JIRA_SERVERINFO
-  result = nil
-  begin
-    response = RestClient::Request.execute(method: :get, url: url)
-    result = JSON.parse(response.body)
-    result = result['deploymentType'].downcase
-    result = 'hosted' if result == 'server'
-    puts "GET #{url} => OK (#{result})"
-  rescue RestClient::ExceptionWithResponse => e
-    message = rest_client_exception(e, 'GET', url)
-    puts "GET #{url} => NOK (#{message})"
-  rescue => e
-    puts "GET #{url} => NOK (#{e.message})"
-  end
-  result
-end
-
-JIRA_SERVER_TYPE = jira_get_server_type
-
-unless /cloud|hosted/.match?(JIRA_SERVER_TYPE)
-  puts "Invalid value JIRA_SERVER_TYPE='#{JIRA_SERVER_TYPE}', must be 'cloud' or 'hosted'"
-  exit
-end
-
-base64_admin = if JIRA_SERVER_TYPE == 'hosted'
-                 Base64.encode64(JIRA_API_ADMIN_USER + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
-               else
-                 Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
-               end
-
-JIRA_HEADERS = {
-    'Authorization': "Basic #{base64_admin}",
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-}.freeze
-
-JIRA_HEADERS_CLOUD = {
-    'Authorization': "Basic #{base64_admin}",
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-}.freeze
-
-# Assuming that the user name is the same as the user password
-# For the cloud we use the email otherwise login
-def headers_user_login(user_login, user_email)
-  cloud = (JIRA_SERVER_TYPE == 'cloud')
-  { 'Authorization': "Basic #{Base64.encode64((cloud ? user_email : user_login) + ':' + user_login)}", 'Content-Type': 'application/json' }
-end
-
 MAX_RETRY = 3
+
+def csv_to_array(pathname)
+  csv = CSV::parse(File.open(pathname, 'r') { |f| f.read })
+  fields = csv.shift
+  fields = fields.map { |f| f.downcase.tr(' ', '_') }
+  csv.map { |record| Hash[*fields.zip(record).flatten] }
+end
+
+def write_csv_file(filename, results)
+  puts filename
+  CSV.open(filename, 'wb') do |csv|
+    # Scan whole file to collect all possible field names so that
+    # the list of columns is complete.
+    fields = []
+    results.each do |result|
+      result.keys.each do |field|
+        fields << field unless fields.include?(field)
+      end
+    end
+    csv << fields
+    results.each do |result|
+      row = []
+      fields.each do |field|
+        row.push(result[field])
+      end
+      csv << row
+    end
+  end
+end
 
 def normalize_name(name)
   name.downcase.tr(' /_', '-')
@@ -155,6 +133,63 @@ URL_JIRA_BOARDS = "#{JIRA_AGILE_HOST}/board"
 URL_JIRA_SPRINTS = "#{JIRA_AGILE_HOST}/sprint"
 URL_JIRA_ISSUE_RANKS = "#{JIRA_AGILE_HOST}/issue/rank"
 URL_JIRA_EPICS = "#{JIRA_AGILE_HOST}/epic"
+
+# GET /rest/api/2/serverInfo
+def jira_get_server_type
+
+  serverinfo_csv = "#{OUTPUT_DIR_JIRA}/jira-serverinfo.csv"
+  unless File.exist?(serverinfo_csv)
+    url = URL_JIRA_SERVERINFO
+    begin
+      response = RestClient::Request.execute(method: :get, url: url)
+      serverinfo = JSON.parse(response.body)
+      puts "GET #{url} => OK"
+      write_csv_file(serverinfo_csv, [serverinfo])
+    rescue RestClient::ExceptionWithResponse => e
+      message = rest_client_exception(e, 'GET', url)
+      puts "GET #{url} => NOK (#{message})"
+    rescue => e
+      puts "GET #{url} => NOK (#{e.message})"
+    end
+  end
+  serverinfo = csv_to_array(serverinfo_csv)[0]
+  server_type = serverinfo['deploymenttype'].downcase
+  server_type = 'hosted' if server_type == 'server'
+  puts "Server type = #{server_type}"
+  server_type
+end
+
+JIRA_SERVER_TYPE = jira_get_server_type
+
+unless /cloud|hosted/.match?(JIRA_SERVER_TYPE)
+  puts "Invalid value JIRA_SERVER_TYPE='#{JIRA_SERVER_TYPE}', must be 'cloud' or 'hosted'"
+  exit
+end
+
+base64_admin = if JIRA_SERVER_TYPE == 'hosted'
+                 Base64.encode64(JIRA_API_ADMIN_USER + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
+               else
+                 Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
+               end
+
+JIRA_HEADERS = {
+    'Authorization': "Basic #{base64_admin}",
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+}.freeze
+
+JIRA_HEADERS_CLOUD = {
+    'Authorization': "Basic #{base64_admin}",
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+}.freeze
+
+# Assuming that the user name is the same as the user password
+# For the cloud we use the email otherwise login
+def headers_user_login(user_login, user_email)
+  cloud = (JIRA_SERVER_TYPE == 'cloud')
+  { 'Authorization': "Basic #{Base64.encode64((cloud ? user_email : user_login) + ':' + user_login)}", 'Content-Type': 'application/json' }
+end
 
 def get_hierarchy_type(n)
   case n.to_i
@@ -325,39 +360,10 @@ def export_assembla_items(list)
   create_csv_files(space, items)
 end
 
-def write_csv_file(filename, results)
-  puts filename
-  CSV.open(filename, 'wb') do |csv|
-    # Scan whole file to collect all possible field names so that
-    # the list of columns is complete.
-    fields = []
-    results.each do |result|
-      result.keys.each do |field|
-        fields << field unless fields.include?(field)
-      end
-    end
-    csv << fields
-    results.each do |result|
-      row = []
-      fields.each do |field|
-        row.push(result[field])
-      end
-      csv << row
-    end
-  end
-end
-
 def get_output_dirname(space, dir = nil)
   dirname = "#{OUTPUT_DIR}/#{dir ? (normalize_name(dir) + '/') : ''}#{normalize_name(space['name'])}"
   FileUtils.mkdir_p(dirname) unless File.directory?(dirname)
   dirname
-end
-
-def csv_to_array(pathname)
-  csv = CSV::parse(File.open(pathname, 'r') { |f| f.read })
-  fields = csv.shift
-  fields = fields.map { |f| f.downcase.tr(' ', '_') }
-  csv.map { |record| Hash[*fields.zip(record).flatten] }
 end
 
 def jira_check_unknown_user(b)

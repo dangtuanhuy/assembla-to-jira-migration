@@ -218,9 +218,12 @@ The Jira server type is given by `JIRA_SERVER_TYPE` which is defined as either `
 
 ```
 GET /rest/api/2/serverInfo
+def jira_get_server_type
+  ...
+end
 ```
 
-where the value of `response['deploymentType']` is used: `Server => hosted` or `Cloud => cloud`.
+where the value of `response['deploymentType']` is used: `Server => hosted` or `Cloud => cloud`. This value is cached in the `jira-serverinfo.csv` dump file.
 
 Make sure you're using your Atlassian account email address and password for basic authentication, not your Jira username.
 
@@ -272,7 +275,7 @@ POST /rest/api/2/project
 where `#{type}` must be either `scrum` or `kanban`.
 
 ```
-$ ruby 05-jira_create_project.rb
+$ ruby 05-jira_create_project.rb # => data/jira/:space/jira-serverinfo.csv
 ```
 
 Depending on the value of `JIRA_API_PROJECT_TYPE` in the `.env` file, a scrum or kanban board will be created as well with board name `{projectKey} board`.
@@ -949,6 +952,7 @@ In the `data/jira/:space` directory:
 * jira-projects.csv
 * jira-resolutions.csv
 * jira-roles.csv
+* jira-serverinfo.csv
 * jira-sprints.csv
 * jira-statuses.csv
 * jira-ticket-links.csv
