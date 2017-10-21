@@ -45,11 +45,7 @@ def jira_update_watcher(issue_id, watcher, counter)
   user_login = watcher
   user_login.sub!(/@.*$/,'')
   user_email = @user_login_to_email[user_login]
-  headers = if JIRA_SERVER_TYPE == 'hosted'
-              headers_user_login(user_login, user_email)
-            else
-              JIRA_HEADERS_CLOUD
-            end
+  headers = headers_user_login(user_login, user_email)
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/watchers"
   payload = "\"#{watcher}\""
   begin

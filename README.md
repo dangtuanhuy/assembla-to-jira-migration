@@ -498,7 +498,7 @@ An additional output file `data/jira/:space/jira-ticket-links.csv` is created wh
 
 Once completed, check if there are any failed ticket imports where in the `results` column a value of `NOK` is indicated. If present, you can create the Jira issue manually.
 
-Note: it is not possible for the original reporter (creator) of the Assembla ticket to be able to create a new issue, this is only allowed for the admin user, e.g. `headers = JIRA_HEADERS`.
+Note: it is not possible for the original reporter (creator) of the Assembla ticket to be able to create a new issue, this is only allowed for the admin user, e.g. `headers = JIRA_HEADERS_ADMIN`.
 
 ### Update ticket links
 

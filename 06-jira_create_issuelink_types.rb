@@ -79,7 +79,7 @@ def jira_create_issuelink_type(issuelink_type)
   }.to_json
   url = URL_JIRA_ISSUELINK_TYPES
   begin
-    result = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS)
+    result = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN)
     puts "POST #{url} '#{name}' => OK"
   rescue RestClient::ExceptionWithResponse => e
     rest_client_exception(e, 'POST', url, payload)

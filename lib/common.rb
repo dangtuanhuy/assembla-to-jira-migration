@@ -172,13 +172,7 @@ base64_admin = if JIRA_SERVER_TYPE == 'hosted'
                  Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
                end
 
-JIRA_HEADERS = {
-    'Authorization': "Basic #{base64_admin}",
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-}.freeze
-
-JIRA_HEADERS_CLOUD = {
+JIRA_HEADERS_ADMIN = {
     'Authorization': "Basic #{base64_admin}",
     'Content-Type': 'application/json',
     'Accept': 'application/json'
@@ -187,8 +181,8 @@ JIRA_HEADERS_CLOUD = {
 # Assuming that the user name is the same as the user password
 # For the cloud we use the email otherwise login
 def headers_user_login(user_login, user_email)
-  cloud = (JIRA_SERVER_TYPE == 'cloud')
-  { 'Authorization': "Basic #{Base64.encode64((cloud ? user_email : user_login) + ':' + user_login)}", 'Content-Type': 'application/json' }
+  return JIRA_HEADERS_ADMIN if JIRA_SERVER_TYPE == 'cloud'
+  { 'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json' }
 end
 
 def get_hierarchy_type(n)
@@ -414,7 +408,7 @@ def jira_create_project(project_name, project_type)
     lead: JIRA_API_ADMIN_USER
   }.to_json
   begin
-    response = RestClient::Request.execute(method: :post, url: URL_JIRA_PROJECTS, payload: payload, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :post, url: URL_JIRA_PROJECTS, payload: payload, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
     puts "POST #{URL_JIRA_PROJECTS} name='#{project_name}', key='#{key}' => OK"
   rescue RestClient::ExceptionWithResponse => e
@@ -430,7 +424,7 @@ end
 def jira_get_projects
   result = nil
   begin
-    response = RestClient::Request.execute(method: :get, url: URL_JIRA_PROJECTS, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: URL_JIRA_PROJECTS, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response)
     if result
       result.each do |r|
@@ -447,7 +441,7 @@ end
 def jira_get_project_by_name(name)
   result = nil
   begin
-    response = RestClient::Request.execute(method: :get, url: URL_JIRA_PROJECTS, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: URL_JIRA_PROJECTS, headers: JIRA_HEADERS_ADMIN)
     body = JSON.parse(response.body)
     result = body.detect { |h| h['name'] == name }
     if result
@@ -463,7 +457,7 @@ end
 def jira_get_priorities
   result = []
   begin
-    response = RestClient::Request.execute(method: :get, url: URL_JIRA_PRIORITIES, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: URL_JIRA_PRIORITIES, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
     if result
       result.each do |r|
@@ -480,7 +474,7 @@ end
 def jira_get_resolutions
   result = []
   begin
-    response = RestClient::Request.execute(method: :get, url: URL_JIRA_RESOLUTIONS, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: URL_JIRA_RESOLUTIONS, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
     if result
       result.each do |r|
@@ -497,7 +491,7 @@ end
 def jira_get_roles
   result = []
   begin
-    response = RestClient::Request.execute(method: :get, url: URL_JIRA_ROLES, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: URL_JIRA_ROLES, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
     if result
       result.each do |r|
@@ -514,7 +508,7 @@ end
 def jira_get_statuses
   result = []
   begin
-    response = RestClient::Request.execute(method: :get, url: URL_JIRA_STATUSES, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: URL_JIRA_STATUSES, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
     if result
       result.each do |r|
@@ -532,7 +526,7 @@ def jira_get_issue(issue_id)
   result = nil
   url = "#{URL_JIRA_ISSUES}/#{issue_id}"
   begin
-    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
     if result
       result.delete_if { |k, _| k =~ /self|expand/i }
@@ -549,7 +543,7 @@ end
 def jira_get_issue_types
   result = nil
   begin
-    response = RestClient::Request.execute(method: :get, url: URL_JIRA_ISSUE_TYPES, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: URL_JIRA_ISSUE_TYPES, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response)
     if result
       result.each do |r|
@@ -566,7 +560,7 @@ end
 def jira_get_issuelink_types
   result = nil
   begin
-    response = RestClient::Request.execute(method: :get, url: URL_JIRA_ISSUELINK_TYPES, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: URL_JIRA_ISSUELINK_TYPES, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response)
     result = result['issueLinkTypes']
     if result
@@ -589,7 +583,7 @@ def jira_create_custom_field(name, description, type)
     type: type
   }.to_json
   begin
-    response = RestClient::Request.execute(method: :post, url: URL_JIRA_FIELDS, payload: payload, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :post, url: URL_JIRA_FIELDS, payload: payload, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
     puts "POST #{URL_JIRA_FIELDS} name='#{name}' => OK (#{result['id']})"
   rescue RestClient::ExceptionWithResponse => e
@@ -605,7 +599,7 @@ end
 def jira_get_fields
   result = []
   begin
-    response = RestClient::Request.execute(method: :get, url: URL_JIRA_FIELDS, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: URL_JIRA_FIELDS, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
     puts "GET #{URL_JIRA_FIELDS} => (#{result.length})"
   rescue => e
@@ -630,7 +624,7 @@ def jira_create_user(user)
     displayName: user['name'],
   }.to_json
   begin
-    response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS, timeout: 30)
+    response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN, timeout: 30)
     body = JSON.parse(response.body)
     body.delete_if { |k, _| k =~ /self|avatarurls|timezone|locale|groups|applicationroles|expand/i }
     puts "POST #{url} username='#{username}' => OK (#{body.to_json})"
@@ -652,7 +646,7 @@ def jira_get_user(username)
   result = nil
   url = "#{JIRA_API_HOST}/user?username=#{username}"
   begin
-    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
     body = JSON.parse(response.body)
     body.delete_if { |k, _| k =~ /self|avatarurls|timezone|locale|groups|applicationroles|expand/i }
     puts "GET #{url} => OK (#{body.to_json})"
@@ -672,7 +666,7 @@ def jira_get_board_by_project_name(project_name)
   url = URL_JIRA_BOARDS
   key = jira_build_project_key(project_name)
   begin
-    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
     body = JSON.parse(response.body)
     # max_results = body['maxResults'].to_i
     # start_at = body['startAt'].to_i

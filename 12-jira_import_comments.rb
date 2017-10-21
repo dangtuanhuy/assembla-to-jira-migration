@@ -61,11 +61,7 @@ def jira_create_comment(issue_id, user_id, comment, counter)
   user_login = @user_id_to_login[user_id]
   user_login.sub!(/@.*$/, '')
   user_email = @user_id_to_email[user_id]
-  headers = if JIRA_SERVER_TYPE == 'hosted'
-              headers_user_login(user_login, user_email)
-            else
-              JIRA_HEADERS_CLOUD
-            end
+  headers = headers_user_login(user_login, user_email)
   reformatted_body = reformat_markdown(comment['comment'], logins: @list_of_logins,
                                                            images: @list_of_images, content_type: 'comments', strikethru: true)
   body = "Created on #{date_time(comment['created_on'])}\n\n#{reformatted_body}"

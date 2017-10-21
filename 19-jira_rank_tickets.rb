@@ -22,7 +22,6 @@ tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 # PUT /rest/agile/1.0/issue/rank
 def jira_rank_issues(issues, after_issue, counter)
   result = nil
-  headers = JIRA_HEADERS_CLOUD
   url = URL_JIRA_ISSUE_RANKS
   payload = {
     issues: issues,
@@ -30,7 +29,7 @@ def jira_rank_issues(issues, after_issue, counter)
   }.to_json
   begin
     percentage = ((counter * 100) / @total_jira_tickets).round.to_s.rjust(3)
-    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: headers)
+    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN)
     puts "#{percentage}% [#{counter}|#{@total_jira_tickets}] PUT #{url} issues=#{issues.to_s} after=\"#{after_issue}\" => OK"
     result = true
   rescue RestClient::ExceptionWithResponse => e
@@ -50,7 +49,7 @@ diff = 0 - @tickets_jira.first['story_rank'].to_i.round
 @list = []
 puts "\nTotal tickets: #{@total_jira_tickets}"
 @tickets_rank.each do |ticket|
-  @list << "#{ticket[:rank]}:#{ticket[:key]}" 
+  @list << "#{ticket[:rank]}:#{ticket[:key]}"
 end
 puts @list.to_s
 

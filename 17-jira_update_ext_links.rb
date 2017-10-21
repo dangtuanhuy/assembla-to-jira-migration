@@ -69,11 +69,7 @@ def jira_update_issue_description(issue_key, description)
   user_login = @ticket_j_key_to_j_reporter[issue_key]
   user_login.sub!(/@.*$/,'')
   user_email = @user_login_to_email[user_login]
-  headers = if JIRA_SERVER_TYPE == 'hosted'
-              headers_user_login(user_login, user_email)
-            else
-              JIRA_HEADERS_CLOUD
-            end
+  headers = headers_user_login(user_login, user_email)
   url = "#{URL_JIRA_ISSUES}/#{issue_key}"
   payload = {
     update: {},
@@ -98,11 +94,7 @@ def jira_update_comment_body(issue_key, comment_id, body)
   user_login = @comment_j_key_to_j_login[issue_key]
   user_login.sub!(/@.*$/,'')
   user_email = @user_login_to_email[user_login]
-  headers = if JIRA_SERVER_TYPE == 'hosted'
-              headers_user_login(user_login, user_email)
-            else
-              JIRA_HEADERS_CLOUD
-            end
+  headers = headers_user_login(user_login, user_email)
   url = "#{URL_JIRA_ISSUES}/#{issue_key}/comment/#{comment_id}"
   payload = {
     body: body
