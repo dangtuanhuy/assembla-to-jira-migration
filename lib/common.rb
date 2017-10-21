@@ -22,13 +22,6 @@ ASSEMBLA_TYPES_IN_SUMMARY = (ENV['ASSEMBLA_TYPES_IN_SUMMARY'] || '').split(',')
 
 ASSEMBLA_CUSTOM_FIELD = ENV['ASSEMBLA_CUSTOM_FIELD']
 
-JIRA_SERVER_TYPE = ENV['JIRA_SERVER_TYPE'] || 'hosted'
-
-unless /cloud|hosted/.match?(JIRA_SERVER_TYPE)
-  puts "Invalid value JIRA_SERVER_TYPE='#{JIRA_SERVER_TYPE}', must be 'cloud' or 'hosted' (see .env file)"
-  exit
-end
-
 JIRA_API_BASE = ENV['JIRA_API_BASE'].freeze
 
 unless %r{^https?://}.match?(JIRA_API_BASE)
@@ -49,21 +42,7 @@ JIRA_API_PROJECT_NAME = ENV['JIRA_API_PROJECT_NAME'].freeze
 # Jira project type us 'scrum' by default
 JIRA_API_PROJECT_TYPE = (ENV['JIRA_API_PROJECT_TYPE'] || 'scrum').freeze
 
-base64_admin = Base64.encode64(JIRA_API_ADMIN_USER + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
-base64_admin_cloud = Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
-
-JIRA_HEADERS = {
-  'Authorization': "Basic #{base64_admin}",
-  'Content-Type': 'application/json',
-  'Accept': 'application/json'
-}.freeze
-
-JIRA_HEADERS_CLOUD = {
-  'Authorization': "Basic #{base64_admin_cloud}",
-  'Content-Type': 'application/json',
-  'Accept': 'application/json'
-}.freeze
-
+URL_JIRA_SERVERINFO = "#{JIRA_API_HOST}/serverInfo"
 URL_JIRA_PROJECTS = "#{JIRA_API_HOST}/project"
 URL_JIRA_ISSUE_TYPES = "#{JIRA_API_HOST}/issuetype"
 URL_JIRA_PRIORITIES = "#{JIRA_API_HOST}/priority"
@@ -85,6 +64,35 @@ JIRA_API_BROWSE_COMMENT = ENV['JIRA_API_BROWSE_COMMENT'] || 'browse/[:jira-ticke
 JIRA_API_STATUSES = ENV['JIRA_API_STATUSES']
 
 MAX_RETRY = 3
+
+def csv_to_array(pathname)
+  csv = CSV::parse(File.open(pathname, 'r') { |f| f.read })
+  fields = csv.shift
+  fields = fields.map { |f| f.downcase.tr(' ', '_') }
+  csv.map { |record| Hash[*fields.zip(record).flatten] }
+end
+
+def write_csv_file(filename, results)
+  puts filename
+  CSV.open(filename, 'wb') do |csv|
+    # Scan whole file to collect all possible field names so that
+    # the list of columns is complete.
+    fields = []
+    results.each do |result|
+      result.keys.each do |field|
+        fields << field unless fields.include?(field)
+      end
+    end
+    csv << fields
+    results.each do |result|
+      row = []
+      fields.each do |field|
+        row.push(result[field])
+      end
+      csv << row
+    end
+  end
+end
 
 def normalize_name(name)
   name.downcase.tr(' /_', '-')
@@ -126,6 +134,57 @@ URL_JIRA_SPRINTS = "#{JIRA_AGILE_HOST}/sprint"
 URL_JIRA_ISSUE_RANKS = "#{JIRA_AGILE_HOST}/issue/rank"
 URL_JIRA_EPICS = "#{JIRA_AGILE_HOST}/epic"
 
+# GET /rest/api/2/serverInfo
+def jira_get_server_type
+
+  serverinfo_csv = "#{OUTPUT_DIR_JIRA}/jira-serverinfo.csv"
+  unless File.exist?(serverinfo_csv)
+    url = URL_JIRA_SERVERINFO
+    begin
+      response = RestClient::Request.execute(method: :get, url: url)
+      serverinfo = JSON.parse(response.body)
+      puts "GET #{url} => OK"
+      write_csv_file(serverinfo_csv, [serverinfo])
+    rescue RestClient::ExceptionWithResponse => e
+      message = rest_client_exception(e, 'GET', url)
+      puts "GET #{url} => NOK (#{message})"
+    rescue => e
+      puts "GET #{url} => NOK (#{e.message})"
+    end
+  end
+  serverinfo = csv_to_array(serverinfo_csv)[0]
+  server_type = serverinfo['deploymenttype'].downcase
+  server_type = 'hosted' if server_type == 'server'
+  puts "Server type = #{server_type}"
+  server_type
+end
+
+JIRA_SERVER_TYPE = jira_get_server_type
+
+unless /cloud|hosted/.match?(JIRA_SERVER_TYPE)
+  puts "Invalid value JIRA_SERVER_TYPE='#{JIRA_SERVER_TYPE}', must be 'cloud' or 'hosted'"
+  exit
+end
+
+base64_admin = if JIRA_SERVER_TYPE == 'hosted'
+                 Base64.encode64(JIRA_API_ADMIN_USER + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
+               else
+                 Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
+               end
+
+JIRA_HEADERS_ADMIN = {
+    'Authorization': "Basic #{base64_admin}",
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+}.freeze
+
+# Assuming that the user name is the same as the user password
+# For the cloud we use the email otherwise login
+def headers_user_login(user_login, user_email)
+  return JIRA_HEADERS_ADMIN if JIRA_SERVER_TYPE == 'cloud'
+  { 'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json' }
+end
+
 def get_hierarchy_type(n)
   case n.to_i
   when 0
@@ -160,13 +219,6 @@ def item_newer_than?(item, date)
   item_date = item['created_on'] || item['created_at']
   goodbye('Item created date cannot be found') unless item_date
   DateTime.parse(item_date) > date
-end
-
-# Assuming that the user name is the same as the user password
-# For the cloud we use the email otherwise login
-def headers_user_login(user_login, user_email)
-  cloud = (JIRA_SERVER_TYPE == 'cloud')
-  { 'Authorization': "Basic #{Base64.encode64((cloud ? user_email : user_login) + ':' + user_login)}", 'Content-Type': 'application/json' }
 end
 
 def date_format_yyyy_mm_dd(dt)
@@ -302,39 +354,10 @@ def export_assembla_items(list)
   create_csv_files(space, items)
 end
 
-def write_csv_file(filename, results)
-  puts filename
-  CSV.open(filename, 'wb') do |csv|
-    # Scan whole file to collect all possible field names so that
-    # the list of columns is complete.
-    fields = []
-    results.each do |result|
-      result.keys.each do |field|
-        fields << field unless fields.include?(field)
-      end
-    end
-    csv << fields
-    results.each do |result|
-      row = []
-      fields.each do |field|
-        row.push(result[field])
-      end
-      csv << row
-    end
-  end
-end
-
 def get_output_dirname(space, dir = nil)
   dirname = "#{OUTPUT_DIR}/#{dir ? (normalize_name(dir) + '/') : ''}#{normalize_name(space['name'])}"
   FileUtils.mkdir_p(dirname) unless File.directory?(dirname)
   dirname
-end
-
-def csv_to_array(pathname)
-  csv = CSV::parse(File.open(pathname, 'r') { |f| f.read })
-  fields = csv.shift
-  fields = fields.map { |f| f.downcase.tr(' ', '_') }
-  csv.map { |record| Hash[*fields.zip(record).flatten] }
 end
 
 def jira_check_unknown_user(b)
@@ -385,7 +408,7 @@ def jira_create_project(project_name, project_type)
     lead: JIRA_API_ADMIN_USER
   }.to_json
   begin
-    response = RestClient::Request.execute(method: :post, url: URL_JIRA_PROJECTS, payload: payload, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :post, url: URL_JIRA_PROJECTS, payload: payload, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
     puts "POST #{URL_JIRA_PROJECTS} name='#{project_name}', key='#{key}' => OK"
   rescue RestClient::ExceptionWithResponse => e
@@ -401,7 +424,7 @@ end
 def jira_get_projects
   result = nil
   begin
-    response = RestClient::Request.execute(method: :get, url: URL_JIRA_PROJECTS, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: URL_JIRA_PROJECTS, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response)
     if result
       result.each do |r|
@@ -418,7 +441,7 @@ end
 def jira_get_project_by_name(name)
   result = nil
   begin
-    response = RestClient::Request.execute(method: :get, url: URL_JIRA_PROJECTS, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: URL_JIRA_PROJECTS, headers: JIRA_HEADERS_ADMIN)
     body = JSON.parse(response.body)
     result = body.detect { |h| h['name'] == name }
     if result
@@ -434,7 +457,7 @@ end
 def jira_get_priorities
   result = []
   begin
-    response = RestClient::Request.execute(method: :get, url: URL_JIRA_PRIORITIES, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: URL_JIRA_PRIORITIES, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
     if result
       result.each do |r|
@@ -451,7 +474,7 @@ end
 def jira_get_resolutions
   result = []
   begin
-    response = RestClient::Request.execute(method: :get, url: URL_JIRA_RESOLUTIONS, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: URL_JIRA_RESOLUTIONS, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
     if result
       result.each do |r|
@@ -468,7 +491,7 @@ end
 def jira_get_roles
   result = []
   begin
-    response = RestClient::Request.execute(method: :get, url: URL_JIRA_ROLES, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: URL_JIRA_ROLES, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
     if result
       result.each do |r|
@@ -485,7 +508,7 @@ end
 def jira_get_statuses
   result = []
   begin
-    response = RestClient::Request.execute(method: :get, url: URL_JIRA_STATUSES, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: URL_JIRA_STATUSES, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
     if result
       result.each do |r|
@@ -503,7 +526,7 @@ def jira_get_issue(issue_id)
   result = nil
   url = "#{URL_JIRA_ISSUES}/#{issue_id}"
   begin
-    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
     if result
       result.delete_if { |k, _| k =~ /self|expand/i }
@@ -520,7 +543,7 @@ end
 def jira_get_issue_types
   result = nil
   begin
-    response = RestClient::Request.execute(method: :get, url: URL_JIRA_ISSUE_TYPES, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: URL_JIRA_ISSUE_TYPES, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response)
     if result
       result.each do |r|
@@ -537,7 +560,7 @@ end
 def jira_get_issuelink_types
   result = nil
   begin
-    response = RestClient::Request.execute(method: :get, url: URL_JIRA_ISSUELINK_TYPES, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: URL_JIRA_ISSUELINK_TYPES, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response)
     result = result['issueLinkTypes']
     if result
@@ -560,7 +583,7 @@ def jira_create_custom_field(name, description, type)
     type: type
   }.to_json
   begin
-    response = RestClient::Request.execute(method: :post, url: URL_JIRA_FIELDS, payload: payload, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :post, url: URL_JIRA_FIELDS, payload: payload, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
     puts "POST #{URL_JIRA_FIELDS} name='#{name}' => OK (#{result['id']})"
   rescue RestClient::ExceptionWithResponse => e
@@ -576,7 +599,7 @@ end
 def jira_get_fields
   result = []
   begin
-    response = RestClient::Request.execute(method: :get, url: URL_JIRA_FIELDS, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: URL_JIRA_FIELDS, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
     puts "GET #{URL_JIRA_FIELDS} => (#{result.length})"
   rescue => e
@@ -601,7 +624,7 @@ def jira_create_user(user)
     displayName: user['name'],
   }.to_json
   begin
-    response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS, timeout: 30)
+    response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN, timeout: 30)
     body = JSON.parse(response.body)
     body.delete_if { |k, _| k =~ /self|avatarurls|timezone|locale|groups|applicationroles|expand/i }
     puts "POST #{url} username='#{username}' => OK (#{body.to_json})"
@@ -623,7 +646,7 @@ def jira_get_user(username)
   result = nil
   url = "#{JIRA_API_HOST}/user?username=#{username}"
   begin
-    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
     body = JSON.parse(response.body)
     body.delete_if { |k, _| k =~ /self|avatarurls|timezone|locale|groups|applicationroles|expand/i }
     puts "GET #{url} => OK (#{body.to_json})"
@@ -643,7 +666,7 @@ def jira_get_board_by_project_name(project_name)
   url = URL_JIRA_BOARDS
   key = jira_build_project_key(project_name)
   begin
-    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
     body = JSON.parse(response.body)
     # max_results = body['maxResults'].to_i
     # start_at = body['startAt'].to_i

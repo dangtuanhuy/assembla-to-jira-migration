@@ -143,15 +143,10 @@ def jira_get_epics(board)
   max_results = 50
   is_last = false
   epics = []
-  headers = if JIRA_SERVER_TYPE == 'hosted'
-              JIRA_HEADERS
-            else
-              JIRA_HEADERS_CLOUD
-            end
   until is_last
     url = "#{URL_JIRA_BOARDS}/#{board_id}/epic?startAt=#{start_at}&maxResults=#{max_results}"
     begin
-      response = RestClient::Request.execute(method: :get, url: url, headers: headers)
+      response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
       json = JSON.parse(response)
       is_last = json['isLast']
       values = json['values']
@@ -187,9 +182,8 @@ def jira_move_stories_to_epic(epic, story_keys, counter, total)
     issues: story_keys
   }.to_json
   list = story_keys.map { |story| story.sub(/^[^\-]+\-/, '').to_i }
-  headers = JIRA_SERVER_TYPE == 'hosted' ? JIRA_HEADERS : JIRA_HEADERS_CLOUD
   begin
-    RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
+    RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN)
     percentage = ((counter * 100) / total).round.to_s.rjust(3)
     puts "#{percentage}% [#{counter}|#{total}] POST #{url} #{list} => OK"
     result[:result] = true

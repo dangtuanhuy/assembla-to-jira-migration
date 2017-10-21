@@ -156,14 +156,6 @@ def create_ticket_jira(ticket, counter, total)
   story_rank = ticket['importance']
   story_points = ticket['story_importance']
 
-  headers = if JIRA_SERVER_TYPE == 'hosted'
-              # It is not possible for reporter to create own issues, must be admin
-              # headers_user_login(reporter_name, reporter_email)
-              JIRA_HEADERS
-            else
-              JIRA_HEADERS_CLOUD
-            end
-
   # Prepend the description text with a link to the original assembla ticket on the first line.
   description = "Assembla ticket [##{ticket_number}|#{ENV['ASSEMBLA_URL_TICKETS']}/#{ticket_number}] | "
   author_name = if reporter_name.nil? || reporter_name.length.zero? || @is_not_a_user.include?(reporter_name)
@@ -247,7 +239,7 @@ def create_ticket_jira(ticket, counter, total)
   ok = false
   retries = 0
   begin
-    response = RestClient::Request.execute(method: :post, url: URL_JIRA_ISSUES, payload: payload.to_json, headers: headers)
+    response = RestClient::Request.execute(method: :post, url: URL_JIRA_ISSUES, payload: payload.to_json, headers: JIRA_HEADERS_ADMIN)
     body = JSON.parse(response.body)
     jira_ticket_id = body['id']
     jira_ticket_key = body['key']

@@ -42,7 +42,7 @@ def jira_get_board_config(board)
   result = nil
   url = "#{URL_JIRA_BOARDS}/#{board['id']}/configuration"
   begin
-    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response)
     if result
       result.each do |r|

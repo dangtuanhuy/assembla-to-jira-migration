@@ -43,7 +43,7 @@ def jira_get_sprint(board, sprint)
   result = nil
   url = "#{URL_JIRA_BOARDS}/#{board['id']}/sprint"
   begin
-    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
     body = JSON.parse(response.body)
     # max_results = body['maxResults'].to_i
     # start_at = body['startAt'].to_i
@@ -76,7 +76,7 @@ def jira_create_sprint(board, sprint)
     # "goal": "sprint 1 goal"
   }.to_json
   begin
-    response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS)
+    response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
     if result
       result.delete_if { |k, _| k =~ /self/i }
@@ -102,13 +102,8 @@ def jira_move_issues_to_sprint(sprint, tickets)
   payload = {
     issues: issues
   }.to_json
-  headers = if JIRA_SERVER_TYPE == 'hosted'
-              JIRA_HEADERS
-            else
-              JIRA_HEADERS_CLOUD
-            end
   begin
-    RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
+    RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN)
     puts "POST #{url} name='#{sprint['name']}' #{issues.length} issues [#{issues.join(',')}] => OK"
     result = true
   rescue RestClient::ExceptionWithResponse => e
@@ -132,13 +127,8 @@ def jira_update_sprint_state(sprint, state)
     startDate: start_date,
     endDate: end_date
   }.to_json
-  headers = if JIRA_SERVER_TYPE == 'hosted'
-              JIRA_HEADERS
-            else
-              JIRA_HEADERS_CLOUD
-            end
   begin
-    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: headers)
+    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN)
     puts "PUT #{url} name='#{name}', state='#{state}' => OK"
     result = true
   rescue RestClient::ExceptionWithResponse => e

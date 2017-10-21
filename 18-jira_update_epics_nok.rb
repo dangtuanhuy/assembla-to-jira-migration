@@ -22,9 +22,8 @@ def jira_move_stories_to_epic(epic, story_key, counter, total)
   payload = {
     issues: [story_key]
   }.to_json
-  headers = JIRA_SERVER_TYPE == 'hosted' ? JIRA_HEADERS : JIRA_HEADERS_CLOUD
   begin
-    RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
+    RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN)
     percentage = ((counter * 100) / total).round.to_s.rjust(3)
     puts "#{percentage}% [#{counter}|#{total}] POST #{url} #{story_key} => OK"
     result[:result] = true

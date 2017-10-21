@@ -164,8 +164,6 @@ ASSEMBLA_TYPES_IN_SUMMARY=spike,bug
 ASSEMBLA_CUSTOM_FIELD=field-name
 
 # --- Jira API settings --- #/
-# Server type must be 'hosted' or 'cloud'
-JIRA_SERVER_TYPE=cloud
 # Base must start with 'https?://'
 JIRA_API_BASE=https://jira.example.org
 JIRA_API_HOST=rest/api/2
@@ -216,11 +214,16 @@ Although the official Jira documentation claims that the hosted and cloud APIs a
 * Attachments - The cloud server is [problematic](https://community.developer.atlassian.com/t/401-unauthorized/9540), and certain extra actions must be taken.
 * Storage - The cloud server imposes a file upload size limit (100MB). If possible, compress the file and try again my manually adding it as an attachment to the Jira issue.
 
-In the `.evv` file this is indicated by setting the `JIRA_SERVER_TYPE` configuration parameter to either `hosted` or `cloud`. For example, if you are importing data to the cloud:
+The Jira server type is given by `JIRA_SERVER_TYPE` which is defined as either `hosted` or `cloud`, and is detected automatically by the call:
 
 ```
-JIRA_SERVER_TYPE=cloud
+GET /rest/api/2/serverInfo
+def jira_get_server_type
+  ...
+end
 ```
+
+where the value of `response['deploymentType']` is used: `Server => hosted` or `Cloud => cloud`. This value is cached in the `jira-serverinfo.csv` dump file.
 
 Make sure you're using your Atlassian account email address and password for basic authentication, not your Jira username.
 
@@ -272,7 +275,7 @@ POST /rest/api/2/project
 where `#{type}` must be either `scrum` or `kanban`.
 
 ```
-$ ruby 05-jira_create_project.rb
+$ ruby 05-jira_create_project.rb # => data/jira/:space/jira-serverinfo.csv
 ```
 
 Depending on the value of `JIRA_API_PROJECT_TYPE` in the `.env` file, a scrum or kanban board will be created as well with board name `{projectKey} board`.
@@ -495,7 +498,7 @@ An additional output file `data/jira/:space/jira-ticket-links.csv` is created wh
 
 Once completed, check if there are any failed ticket imports where in the `results` column a value of `NOK` is indicated. If present, you can create the Jira issue manually.
 
-Note: it is not possible for the original reporter (creator) of the Assembla ticket to be able to create a new issue, this is only allowed for the admin user, e.g. `headers = JIRA_HEADERS`.
+Note: it is not possible for the original reporter (creator) of the Assembla ticket to be able to create a new issue, this is only allowed for the admin user, e.g. `headers = JIRA_HEADERS_ADMIN`.
 
 ### Update ticket links
 
@@ -765,7 +768,7 @@ The results are saved in the `jira-update-epics_nok.csv` output file, a result o
 
 ### Rank tickets
 
-Only needed for the Jira cloud version, e.g. when `JIRA_SERVER_TYPE=cloud` in the `.env` file. Since this was not possible during the ticket creation, now is the time to rank the imported issues using the original Assembla values.
+Only needed for the Jira server type is `cloud`. Since this was not possible during the ticket creation, now is the time to rank the imported issues using the original Assembla values.
 
 ```
 $ ruby 19-jira_rank_tikets.rb
@@ -949,6 +952,7 @@ In the `data/jira/:space` directory:
 * jira-projects.csv
 * jira-resolutions.csv
 * jira-roles.csv
+* jira-serverinfo.csv
 * jira-sprints.csv
 * jira-statuses.csv
 * jira-ticket-links.csv
