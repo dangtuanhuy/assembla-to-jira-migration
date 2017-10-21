@@ -1246,7 +1246,6 @@ With such a complicated tool, there will always be some loose ends and/or additi
 * Must have: Update readme screenshots and relevant screen associations, e.g. only `Scrum Default Issue Screen` is required. [Issue 6](https://github.com/kgish/assembla-to-jira-migration/issues/6)
 * Bug: Ticket type 'Spike' is converted to an Epic. [Issue 14](https://github.com/kgish/assembla-to-jira-migration/issues/14)
 * Nice to have: Support multiple Assembla [custom fields](http://api-docs.assembla.cc/content/ref/ticket_custom_fields_fields.html) instead of just one. [Issue 2](https://github.com/kgish/assembla-to-jira-migration/issues/2)
-* Nice to have: Autodetect whether cloud or hosted. [Issue 12](https://github.com/kgish/assembla-to-jira-migration/issues/12)
 * Nice to have: Rank tickets (cloud) in batches of fifty instead of individually. [Issue 15](https://github.com/kgish/assembla-to-jira-migration/issues/15)
 * Nice to have: Create Jira board columns in line with the original Assembla cardwall columns (statuses = blocked, testable, ready for acceptance, in acceptance testing, ready for deploy) and populate with the relevant issues. [Issue 4](https://github.com/kgish/assembla-to-jira-migration/issues/4)
 * Nice to have: Allow data dumps to restart with all newer items since last dump, rather than having to start all over again. This is already the case for attachments, but should be possible with tickets, comments, etc. [Issue 5](https://github.com/kgish/assembla-to-jira-migration/issues/5)
