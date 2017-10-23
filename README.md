@@ -285,54 +285,6 @@ The `projectKey` is usually just the abbreviation of the project name in all cap
 
 ![](images/jira-all-boards.png)
 
-### Custom fields
-
-This step is very important, so do not skip it. After the project is created, you will need to define manually the following custom fields (text field read-only):
-
-* Assembla-Id
-* Assembla-Status
-* Assembla-Milestone
-* Assembla-Reporter
-* Assembla-Assignee
-* Assembla-Completed
-* Assembla-(custom-field)
-
-![](images/jira-select-field-type.png)
-
-and assign them to the following screens:
-
-* Simple Issue Tracking Create Issue
-* Simple Issue Tracking Edit/View Issue
-
-Otherwise the ticket import will fail with the error message `Field 'field-name' cannot be set. It is not on the appropriate screen, or unknown`.
-
-Here, `Assembla-(custom-field)` is defined by `ASSEMBLA_CUSTOM_FIELD=custom-field` in the `.env` configuration file.
-
-Additionally the following already existing custom fields need to be assigned the the same screens:
-
-* Epic Link
-* Epic Name
-* Rank
-* Sprint
-* Story Points
-
-![](images/jira-custom-fields.png)
-
-On the `View Field Configuration Page` ensure the same for:
-
-* Resolution
-
-![](images/jira-view-field-configuration.png)
-
-The same applies to the `Configure Screen Page` for the following additional (default) fields:
-
-* Epic Name
-* Rank
-* Assignee
-* Labels
-
-![](images/jira-configure-screen.png)
-
 ### Create issue link types
 
 ```
@@ -456,12 +408,58 @@ Please go to the following custom field links:
 * 'Assembla-Reporter' => link?fieldId=customfield_10103
 * 'Assembla-Assignee' => link?fieldId=customfield_10104
 * 'Assembla-Completed' => link?fieldId=customfield_10105
-* 'Assembla-Theme' => link?fieldId=customfield_10106
+* 'Assembla-CustomField' => link?fieldId=customfield_10106
 
 and associate each to the following screens (checkbox):
 * XX: Scrum|Kanban Bug Screen
 * XX: Scrum|Kanban Default Issue Screen
 ```
+
+This step is very important, so do not skip it. If for one reason or the other the script above fails, you will need to define manually the following custom fields (text field read-only):
+
+* Assembla-Id
+* Assembla-Status
+* Assembla-Milestone
+* Assembla-Reporter
+* Assembla-Assignee
+* Assembla-Completed
+* Assembla-(custom-field)
+
+![](images/jira-select-field-type.png)
+
+and assign them to the following screens:
+
+* Simple Issue Tracking Create Issue
+* Simple Issue Tracking Edit/View Issue
+
+Otherwise the ticket import will fail with the error message `Field 'field-name' cannot be set. It is not on the appropriate screen, or unknown`.
+
+Here, `Assembla-(custom-field)` is defined by `ASSEMBLA_CUSTOM_FIELD=custom-field` in the `.env` configuration file.
+
+Additionally the following already existing custom fields need to be assigned the the same screens:
+
+* Epic Link
+* Epic Name
+* Rank
+* Sprint
+* Story Points
+
+![](images/jira-custom-fields.png)
+
+On the `View Field Configuration Page` ensure the same for:
+
+* Resolution
+
+![](images/jira-view-field-configuration.png)
+
+The same applies to the `Configure Screen Page` for the following additional (default) fields:
+
+* Epic Name
+* Rank
+* Assignee
+* Labels
+
+![](images/jira-configure-screen.png)
 
 ### Import tickets
 
