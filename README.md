@@ -97,27 +97,28 @@ Now that all of the Assembla data is available, we can now take this and import 
 7. Get settings (issue types, priorities, resolutions, roles, statuses and projects)
 8. Import users
 9. Download ticket attachments
-10. Import tickets
-11. Resolve/update ticket links
-12. Import ticket comments
-13. Import ticket attachments
-14. Update ticket status (resolutions)
-15. Update ticket associations
-16. Update ticket watchers
-17. Resolve/update ticket and comment external links
-18. Move stories to epics
-19. Rank tickets (cloud only)
+10. Create custom fields
+11. Import tickets
+12. Resolve/update ticket links
+13. Import ticket comments
+14. Import ticket attachments
+15. Update ticket status (resolutions)
+16. Update ticket associations
+17. Update ticket watchers
+18. Resolve/update ticket and comment external links
+19. Move stories to epics
+20. Rank tickets (cloud only)
 
 ### Scrum/Kanban board
 
 Using the Agile extension, create the sprints and populate the scrum/kanban board.
 
-20. Create sprints
-21. Update board
+21. Create sprints
+22. Update board
 
 ### Cleanup
 
-22. Manual cleanup actions
+23. Manual cleanup actions
 
 Congratulations, you did it!
 
@@ -434,9 +435,35 @@ Note that in Jira images are treated as attachments and can be accessed that way
 
 Important: this step needs to be done before importing tickets (next section) in order that the markdown for embedded attachment (images) will work correctly.
 
-### Import tickets
+### Create custom fields
 
-IMPORTANT: Make sure that the custom fields have been created (see above).
+You are now ready to create the Jira custom fields, so execute the following command:
+
+```
+$ ruby 10-jira_create_custom_fields.rb
+```
+
+This scripts scans the current Jira custom fields and creates the Assembla fields `Assembla-xxx` which are missing.
+
+If no errors occur, at the end you will be asked to associate manually the created custom fields with the relevant screens which looks something like this:
+
+```
+IMPORTANT!
+Please go to the following custom field links:
+* 'Assembla-Id' => link?fieldId=customfield_10100
+* 'Assembla-Milestone' => link?fieldId=customfield_10101
+* 'Assembla-Status' => link?fieldId=customfield_10102
+* 'Assembla-Reporter' => link?fieldId=customfield_10103
+* 'Assembla-Assignee' => link?fieldId=customfield_10104
+* 'Assembla-Completed' => link?fieldId=customfield_10105
+* 'Assembla-Theme' => link?fieldId=customfield_10106
+
+and associate each to the following screens (checkbox):
+* XX: Scrum|Kanban Bug Screen
+* XX: Scrum|Kanban Default Issue Screen
+```
+
+### Import tickets
 
 Alright, this is the moment we've all been waiting for. It's time to import the Assembla tickets and create the matching Jira issues.
 
@@ -481,7 +508,7 @@ end
 Now you are ready to import all of the tickets. Execute the following command:
 
 ```
-$ ruby 10-jira_import_tickets.rb # => data/jira/:space/jira-tickets.csv
+$ ruby 11-jira_import_tickets.rb # => data/jira/:space/jira-tickets.csv
 ```
 
 Results are saved in the output file `data/jira/:space/jira-tickets.csv` with the following columns:
@@ -509,7 +536,7 @@ The output file `data/jira/:space/jira-ticket-links.csv` generated in the previo
 Run the following command in order to do this:
 
 ```
-$ ruby 11-jira_update_ticket_links.rb
+$ ruby 12-jira_update_ticket_links.rb
 ```
 
 Note: for one reason or another, not all Assembla links point to valid tickets (deleted, moved or whatever), so these will be marked as invalid by strikethru, e.g. -#123-.
@@ -526,7 +553,7 @@ POST /rest/api/2/issue/{issueIdOrKey}/comment
 Now you are ready to import all of the comments. Execute the following command:
 
 ```
-$ ruby 12-jira_import_comments.rb # => data/jira/:space/jira-comments.csv
+$ ruby 13-jira_import_comments.rb # => data/jira/:space/jira-comments.csv
 ```
 
 Results are saved in the output file `data/jira/:space/jira-comments.csv` with the following columns:
@@ -549,7 +576,7 @@ curl -D- -u admin:admin -X POST -H "X-Atlassian-Token: no-check" -F "file=@myfil
 Now you are ready to import all of the attachments that were downloaded earlier. Execute the following command:
 
 ```
-$ ruby 13-jira_import_attachments.rb [restart_offset] # => \
+$ ruby 14-jira_import_attachments.rb [restart_offset] # => \
     data/jira/:space/jira-attachments-import-ok.csv
     data/jira/:space/jira-attachments-import-nok.csv
 ```
@@ -577,7 +604,7 @@ When the migration is completed, one may have a look at the `jira-attachments-im
 Now you are ready to update the Jira tickets in line with the original Assembla state. Execute the following command:
 
 ```
-$ ruby 14-jira_update_status.rb # => data/jira/:space/jira-update-status.csv
+$ ruby 15-jira_update_status.rb # => data/jira/:space/jira-update-status.csv
 ```
 
 Important: the Jira API requests MUST be made with an Authorization Header constructed with the `reporter_name` (issue creator), otherwise a `403 Forbidden` error will be returned.
@@ -647,7 +674,7 @@ If for some reason you do not want to do this, simply comment out the line, or i
 Now you are ready to update the Jira tickets to reflect the original Assembla associations. Execute the following command:
 
 ```
-$ ruby 15-jira_update_association.rb # => data/jira/:space/jira-update-associations.csv
+$ ruby 16-jira_update_association.rb # => data/jira/:space/jira-update-associations.csv
 ```
 
 Important: the Jira API requests MUST be made with an Authorization Header constructed with the `reporter_name` (issue creator), otherwise a `403 Forbidden` error will be returned.
@@ -662,7 +689,7 @@ POST /rest/api/2/issue/{issueIdOrKey}/watchers
 Now you are ready to convert the Assembla followers list to the Jira issue watchers list. Execute the following command:
 
 ```
-$ ruby 16-jira_update_watchers.rb # => data/jira/:space/jira-update-watchers.csv
+$ ruby 17-jira_update_watchers.rb # => data/jira/:space/jira-update-watchers.csv
 ```
 
 Important: the Jira API requests MUST be made with an Authorization Header constructed with the `username` (watcher), otherwise a `403 Forbidden` error will be returned.
@@ -724,7 +751,7 @@ comment => /browse/[JIRA_ISSUE_KEY]?focusedCommentId=[JIRA_COMMENT_ID]&page= \
 Execute the following command to update all external links:
 
 ```
-$ ruby 17-jira_update_ext_links.rb => jira-links-external-all.csv
+$ ruby 18-jira_update_ext_links.rb => jira-links-external-all.csv
                                       jira-links-external-updated.csv
 ```
 
@@ -751,7 +778,7 @@ The Jira stories originally belonging to an epic in Assembla now need to be adde
 In order to do this you need to execute the following command.
 
 ```
-$ ruby 18-jira_update_epics.rb
+$ ruby 19-jira_update_epics.rb
 ```
 
 The results are saved in the `jira-update-epics.csv` output file.
@@ -761,7 +788,7 @@ Check this output file for the epics that resulted in errors, e.g. result `NOK`.
 If errors occur, e.g. `Issue 'EC-71' is an epic and therefore cannot be associated to another epic`, you should run the following recory script which will attempt to fix most of the problems:
 
 ```
-$ ruby 18-jira_update_epics_nok.rb
+$ ruby 19-jira_update_epics_nok.rb
 ```
 
 The results are saved in the `jira-update-epics_nok.csv` output file, a result of `NOK` meaning that you may attempt to fix it manually with the help of the `message` column giving the error text.
@@ -771,7 +798,7 @@ The results are saved in the `jira-update-epics_nok.csv` output file, a result o
 Only needed for the Jira server type is `cloud`. Since this was not possible during the ticket creation, now is the time to rank the imported issues using the original Assembla values.
 
 ```
-$ ruby 19-jira_rank_tikets.rb
+$ ruby 20-jira_rank_tikets.rb
 ```
 
 ## Scrum Board
@@ -793,7 +820,7 @@ When the scrum board was created with the project, all issues are assigned to th
 Now you are ready to setup the sprints by executing the following command:
 
 ```
-$ ruby 20-jira_create_sprints.rb # => data/jira/:space/jira-create-sprints.csv
+$ ruby 21-jira_create_sprints.rb # => data/jira/:space/jira-create-sprints.csv
 ```
 
 The issues are redistributed to the sprints they belong to and the most recent sprint is set as the `active` sprint.
@@ -805,7 +832,7 @@ The final step after the board and sprints have been created is to copy the Asse
 In order to achieve this, execute the following command:
 
 ```
-$ ruby 21-jira_update_board.rb
+$ ruby 22-jira_update_board.rb
 ```
 
 ```
@@ -877,31 +904,32 @@ It can be slightly tedious running scripts that take a long time to complete and
 
 In order to make this easier for you to track, here is a simple checklist where you can sign off each step and remember where you are.
 
-| Step | Actions  | Item         | Dir | Start | Done |
-| ---- | -------  | -----        | --- | ----- | ---- |
-|  01  | Assembla | Space        | dn  |       |      |
-|  02  | Assembla | Tickets      | dn  |       |      |
-|  03  | Assembla | Users        | na  |       |      |
-|  04  | Assembla | Reports      | na  |       |      |
-|  05  | Jira     | Projects     | up  |       |      |
-|  06  | Jira     | Issue links  | na  |       |      |
-|  07  | Jira     | General info | na  |       |      |
-|  08  | Jira     | Users        | up  |       |      |
-|  09  | Jira     | Attachments  | dn  |       |      |
-|  10  | Jira     | Tickets      | up  |       |      |
-|  11  | Jira     | Ticket links | up  |       |      |
-|  12  | Jira     | Comments     | up  |       |      |
-|  13  | Jira     | Attachments  | up  |       |      |
-|  14  | Jira     | Status       | up  |       |      |
-|  15  | Jira     | Associations | up  |       |      |
-|  16  | Jira     | Watchers     | up  |       |      |
-|  17  | Jira (1) | Ext links    | up  |       |      |
-|  18  | Jira     | Epics        | up  |       |      |
-|      | Jira (2) | Epics NOK    | up  |       |      |
-|  19  | Jira (3) | Ranking      | up  |       |      |
-|  20  | Board    | Sprints      | up  |       |      |
-|  21  | Board    | Update       | up  |       |      |
-|  22  | Cleanup  | See list     | na  |       |      |
+| Step | Actions  | Item          | Dir | Start | Done |
+| ---- | -------  | -----         | --- | ----- | ---- |
+|  01  | Assembla | Space         | dn  |       |      |
+|  02  | Assembla | Tickets       | dn  |       |      |
+|  03  | Assembla | Users         | na  |       |      |
+|  04  | Assembla | Reports       | na  |       |      |
+|  05  | Jira     | Projects      | up  |       |      |
+|  06  | Jira     | Issue links   | na  |       |      |
+|  07  | Jira     | General info  | na  |       |      |
+|  08  | Jira     | Users         | up  |       |      |
+|  09  | Jira     | Attachments   | dn  |       |      |
+|  10  | Jira     | Custom fields | up  |       |      |
+|  11  | Jira     | Tickets       | up  |       |      |
+|  12  | Jira     | Ticket links  | up  |       |      |
+|  13  | Jira     | Comments      | up  |       |      |
+|  14  | Jira     | Attachments   | up  |       |      |
+|  15  | Jira     | Status        | up  |       |      |
+|  16  | Jira     | Associations  | up  |       |      |
+|  17  | Jira     | Watchers      | up  |       |      |
+|  18  | Jira (1) | Ext links     | up  |       |      |
+|  19  | Jira     | Epics         | up  |       |      |
+|      | Jira (2) | Epics NOK     | up  |       |      |
+|  20  | Jira (3) | Ranking       | up  |       |      |
+|  21  | Board    | Sprints       | up  |       |      |
+|  22  | Board    | Update        | up  |       |      |
+|  23  | Cleanup  | See list      | na  |       |      |
 
 (1) first complete all projects up to this point before continuing (in order to ensure that all of the external links are resolved correctly).
 

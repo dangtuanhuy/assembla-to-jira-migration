@@ -76,4 +76,16 @@ else
 end
 
 # --- Screens for JIRA assembla custom fields --- #
+project = jira_get_project_by_name(JIRA_API_PROJECT_NAME)
 
+puts "\nIMPORTANT!"
+puts "\nPlease go to the following custom field links:"
+
+@assembla_fields_jira.each do |field|
+  puts "* '#{field['name']}' => #{JIRA_API_BASE}/secure/admin/AssociateFieldToScreens!default.jspa?fieldId=#{field['id']}"
+end
+
+puts "\nand associate each to the following screens (checkbox):"
+['Bug Screen', 'Default Issue Screen'].each do |name|
+  puts "* #{project['key']}: #{JIRA_API_PROJECT_TYPE.capitalize} #{name}"
+end
