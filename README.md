@@ -389,33 +389,35 @@ Important: this step needs to be done before importing tickets (next section) in
 
 ### Create custom fields
 
-You are now ready to create the Jira custom fields, so execute the following command:
+This step is very important, so do not skip it. You are now ready to create the Jira custom fields, so execute the following command:
 
 ```
-$ ruby 10-jira_create_custom_fields.rb
+$ ruby 10-jira_create_custom_fields.rb screen_id1 screenid2
 ```
 
-This scripts scans the current Jira custom fields and creates the Assembla fields `Assembla-xxx` which are missing.
+The values of `screen_id1` and `screen_id2` are found by going to the screens page on the admin dashboard at `JIRA_API_HOST/secure/admin/ViewFieldScreens.jspa` and clicking on the project `Bug Screen Scheme` and `Default Screen Scheme` links respectively.
 
-If no errors occur, at the end you will be asked to associate manually the created custom fields with the relevant screens which looks something like this:
+You will be taken to the page whose url `JIRA_API_HOST/secure/admin/ConfigureFieldScreenScheme.jspa?id=10001` indicates the screen id, in this example `id=10001`.
+
+This scripts scans the current Jira custom fields and creates the Assembla fields `Assembla-xxx` which are missing. After that the fields are assigned to the relevant screens given by `screen_id1` and `screen_id2`.
 
 ```
-IMPORTANT!
-Please go to the following custom field links:
-* 'Assembla-Id' => link?fieldId=customfield_10100
-* 'Assembla-Milestone' => link?fieldId=customfield_10101
-* 'Assembla-Status' => link?fieldId=customfield_10102
-* 'Assembla-Reporter' => link?fieldId=customfield_10103
-* 'Assembla-Assignee' => link?fieldId=customfield_10104
-* 'Assembla-Completed' => link?fieldId=customfield_10105
-* 'Assembla-CustomField' => link?fieldId=customfield_10106
-
-and associate each to the following screens (checkbox):
-* XX: Scrum|Kanban Bug Screen
-* XX: Scrum|Kanban Default Issue Screen
+POST /rest/api/2/screens/{screenId}/tabs/{tabId}/fields
+{
+  "fieldId": "summary"
+}
+def jira_add_field(screen_id, tab_id, field_id)
+  ...
+end
 ```
 
-This step is very important, so do not skip it. If for one reason or the other the script above fails, you will need to define manually the following custom fields (text field read-only):
+#### Errors
+
+This step is very important, so do NOT skip it.
+
+Otherwise the following ticket import script will fail with the error message `Field 'field-name' cannot be set. It is not on the appropriate screen, or unknown`.
+
+If for one reason or the other the script fails, you will need to define manually the following custom fields (text field read-only):
 
 * Assembla-Id
 * Assembla-Status
@@ -425,16 +427,14 @@ This step is very important, so do not skip it. If for one reason or the other t
 * Assembla-Completed
 * Assembla-(custom-field)
 
+where `Assembla-(custom-field)` is defined by `ASSEMBLA_CUSTOM_FIELD=custom-field` in the `.env` configuration file.
+
 ![](images/jira-select-field-type.png)
 
 and assign them to the following screens:
 
-* Simple Issue Tracking Create Issue
-* Simple Issue Tracking Edit/View Issue
-
-Otherwise the ticket import will fail with the error message `Field 'field-name' cannot be set. It is not on the appropriate screen, or unknown`.
-
-Here, `Assembla-(custom-field)` is defined by `ASSEMBLA_CUSTOM_FIELD=custom-field` in the `.env` configuration file.
+* Bug Screen
+* Default Issue Screen
 
 Additionally the following already existing custom fields need to be assigned the the same screens:
 
@@ -463,7 +463,7 @@ The same applies to the `Configure Screen Page` for the following additional (de
 
 ### Import tickets
 
-Alright, this is the moment we've all been waiting for. It's time to import the Assembla tickets and create the matching Jira issues.
+Alright, this is the moment we've all been waiting for! It's time to import the Assembla tickets and create the matching Jira issues. Here we go.
 
 ```
 POST /rest/api/2/issue

@@ -7,7 +7,7 @@ restart_offset = 0
 
 # If argv0 is passed use it as restart offset (e.g. earlier ended prematurely)
 unless ARGV[0].nil?
-  goodbye("Invalid arg='#{ARGV[0]}', must be one a number") unless /^\d+$/.match?(ARGV[0])
+  goodbye("Invalid arg='#{ARGV[0]}', must be a number") unless /^\d+$/.match?(ARGV[0])
   restart_offset = ARGV[0].to_i
   puts "Restart at offset: #{restart_offset}"
 end

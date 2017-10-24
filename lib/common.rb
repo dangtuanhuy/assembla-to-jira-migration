@@ -54,6 +54,7 @@ URL_JIRA_ISSUES = "#{JIRA_API_HOST}/issue"
 URL_JIRA_ISSUELINK_TYPES = "#{JIRA_API_HOST}/issueLinkType"
 URL_JIRA_ISSUELINKS = "#{JIRA_API_HOST}/issueLink"
 URL_JIRA_FILTERS = "#{JIRA_API_HOST}/filter"
+URL_JIRA_SCREENS = "#{JIRA_API_HOST}/screens"
 
 # JIRA_API_SPACE_TO_PROJECT=europeana-npc:EC,europeana-apis:EA
 JIRA_API_SPACE_TO_PROJECT = ENV['JIRA_API_SPACE_TO_PROJECT']
@@ -126,7 +127,22 @@ OUTPUT_DIR_JIRA_ATTACHMENTS = "#{OUTPUT_DIR_JIRA}/attachments"
 end
 
 # The following custom fields MUST be defined AND associated with the proper screens
-CUSTOM_FIELD_NAMES = %w(Assembla-Id Assembla-Milestone Assembla-Status Assembla-Reporter Assembla-Assignee Assembla-Completed Epic\ Name Rank Story\ Points).freeze
+CUSTOM_FIELD_NAMES = [
+  'Assembla-Id',
+  'Assembla-Milestone',
+  'Assembla-Status',
+  'Assembla-Reporter',
+  'Assembla-Assignee',
+  'Assembla-Completed',
+  'Assignee',
+  'Epic Link',
+  'Epic Name',
+  'Labels',
+  'Rank',
+  'Resolution',
+  'Sprint',
+  'Story Points'
+].freeze
 
 JIRA_AGILE_HOST = "#{JIRA_API_BASE}/#{ENV['JIRA_AGILE_HOST']}"
 URL_JIRA_BOARDS = "#{JIRA_AGILE_HOST}/board"
