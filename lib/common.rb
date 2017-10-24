@@ -479,7 +479,7 @@ def jira_get_priorities
       result.each do |r|
         r.delete_if { |k, _| k =~ /self|statuscolor|iconurl/i }
       end
-      puts "GET #{URL_JIRA_PRIORITIES} => (#{result.length})"
+      puts "GET #{URL_JIRA_PRIORITIES} => OK (#{result.length})"
     end
   rescue => e
     puts "GET #{URL_JIRA_PRIORITIES} => NOK (#{e.message})"
@@ -496,7 +496,7 @@ def jira_get_resolutions
       result.each do |r|
         r.delete_if { |k, _| k =~ /self/i }
       end
-      puts "GET #{URL_JIRA_RESOLUTIONS} => (#{result.length})"
+      puts "GET #{URL_JIRA_RESOLUTIONS} => OK (#{result.length})"
     end
   rescue => e
     puts "GET #{URL_JIRA_RESOLUTIONS} => NOK (#{e.message})"
@@ -513,7 +513,7 @@ def jira_get_roles
       result.each do |r|
         r.delete_if { |k, _| k =~ /self/i }
       end
-      puts "GET #{URL_JIRA_ROLES} => (#{result.length})"
+      puts "GET #{URL_JIRA_ROLES} => OK (#{result.length})"
     end
   rescue => e
     puts "GET #{URL_JIRA_ROLES} => NOK (#{e.message})"
@@ -530,7 +530,7 @@ def jira_get_statuses
       result.each do |r|
         r.delete_if { |k, _| k =~ /self|iconurl|statuscategory/i }
       end
-      puts "GET #{URL_JIRA_STATUSES} => (#{result.length})"
+      puts "GET #{URL_JIRA_STATUSES} => OK (#{result.length})"
     end
   rescue => e
     puts "GET #{URL_JIRA_STATUSES} => NOK (#{e.message})"
