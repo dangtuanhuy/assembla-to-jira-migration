@@ -1284,7 +1284,6 @@ With such a complicated tool, there will always be some loose ends and/or additi
 * Nice to have: Allow data dumps to restart with all newer items since last dump, rather than having to start all over again. This is already the case for attachments, but should be possible with tickets, comments, etc. [Issue 5](https://github.com/kgish/assembla-to-jira-migration/issues/5)
 * Nice to have: Assembla tickets with tag `bug` should be converted into Jira issue of type `bug`. [Issue 7](https://github.com/kgish/assembla-to-jira-migration/issues/7)
 * Wish: Allow themes to be converted into Epics (additional .env file option). Currently epics are only created for tickets with summaries that start with 'EPIC:' which in hindsight is probably not the best way of doing this. [Issue 3](https://github.com/kgish/assembla-to-jira-migration/issues/3)
-* Wish: Automatically create custom fields instead of requiring the user to do this manually (see above). [Issue 8](https://github.com/kgish/assembla-to-jira-migration/issues/8)
 * Wish: Use a user-defined Jira project template instead of requiring the user to define stuff manually. [Issue 9](https://github.com/kgish/assembla-to-jira-migration/issues/9)
 * Wish: Assign original authors as creators of tickets (this might not be possible) [Issue 10](https://github.com/kgish/assembla-to-jira-migration/issues/10)
 * Refactor: Merge the recovery script `18-jira_update_epics_nok.rb` into `18-jira_update_epics.rb` [Issue 16](https://github.com/kgish/assembla-to-jira-migration/issues/16)
