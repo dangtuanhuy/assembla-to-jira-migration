@@ -399,6 +399,8 @@ The values of `screen_id1` and `screen_id2` are found by going to the screens pa
 
 You will be taken to the page whose url `JIRA_API_HOST/secure/admin/ConfigureFieldScreenScheme.jspa?id=10001` indicates the screen id, in this example `id=10001`.
 
+![](images/jira-view-screens-id.png)
+
 This scripts scans the current Jira custom fields and creates the Assembla fields `Assembla-xxx` which are missing. After that the fields are assigned to the relevant screens given by `screen_id1` and `screen_id2`.
 
 ```
