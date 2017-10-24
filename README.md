@@ -413,10 +413,6 @@ end
 
 #### Errors
 
-This step is very important, so do NOT skip it.
-
-Otherwise the following ticket import script will fail with the error message `Field 'field-name' cannot be set. It is not on the appropriate screen, or unknown`.
-
 If for one reason or the other the script fails, you will need to define manually the following custom fields (text field read-only):
 
 * Assembla-Id
@@ -528,6 +524,8 @@ Note: it is not possible for the original reporter (creator) of the Assembla tic
 #### Errors
 
 You might receive an error about a certain issue type that cannot be found. For example `Spike`. This is because you did not create the needed issue types. Please follow instructions in the preparations section above very carefully, and then rerun the `07-jira_get_info.rb` script.
+
+Another error message is `Field 'field-name' cannot be set. It is not on the appropriate screen, or unknown`. This is because either a custom field has not been created or the cusome field has not been added to the required screen. See previous section and follow instructions carefully.
 
 ### Update ticket links
 
