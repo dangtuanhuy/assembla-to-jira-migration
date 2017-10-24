@@ -899,10 +899,10 @@ Finally, cleanup actions need to be taken to finish things off.
 * Ask users to change password, check email and create avatar.
 * Recover failed attachment uploads listed in `jira-attachments-import-nok.csv`.
 * Resolve failed external links listed as `NOK` in `jira-external-links.csv`.
-* Recover failed epic updates listed as `NOK` in `jira-external-links.csv`.
+* Recover failed epic updates listed in `jira-update-epics-nok.csv`.
 * Use label filters to move issue to correct types, e.g. `bug` might be a label.
 * Check that tickets which are spikes are NOT epics [Issue 14](https://github.com/kgish/assembla-to-jira-migration/issues/14).
-* Make backup of `data` directory for future reference.
+* Make backup of `data` directory including `.env` file for future reference.
 
 ## Checklist
 
