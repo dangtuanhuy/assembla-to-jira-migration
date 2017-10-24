@@ -135,7 +135,7 @@ Create the following new issue types:
 
 The issue type `spike` or `bug` will be defined for any tickets whose summary starts with `Spike: ` or `Bug: `.
 
-These are defined in the `.env` file, see `ASSEMBLA_TYPES_IN_SUMMARY` below.
+These are defined in the `.env` file, see `ASSEMBLA_TYPES_EXTRA` below.
 
 ![](images/jira-issue-types.png)
 
@@ -161,7 +161,7 @@ ASSEMBLA_URL_TICKETS=https://app.assembla.com/spaces/:space-name/tickets
 ASSEMBLA_SPACE=space
 ASSEMBLA_SKIP_ASSOCIATIONS=parent,child,story,subtask
 # Ticket types extracted from ticket summary, e.g. starting with 'Spike: '
-ASSEMBLA_TYPES_IN_SUMMARY=spike,bug
+ASSEMBLA_TYPES_EXTRA=spike,bug
 ASSEMBLA_CUSTOM_FIELD=field-name
 
 # --- Jira API settings --- #/

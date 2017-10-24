@@ -34,7 +34,7 @@ end
   end
   if summary.match(/^([A-Z]*):/)
     t = summary.sub(/:.*$/, '\1')
-    @extra_summary_types[t] = true if !ASSEMBLA_TYPES_IN_SUMMARY.include?(t.downcase) && @extra_summary_types[t].nil?
+    @extra_summary_types[t] = true if !ASSEMBLA_TYPES_EXTRA.include?(t.downcase) && @extra_summary_types[t].nil?
   end
 end
 

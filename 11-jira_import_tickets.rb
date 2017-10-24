@@ -126,8 +126,8 @@ def get_issue_type(ticket)
              { id: @issue_type_name_to_id['task'], name: 'task' }
            end
 
-  # Ticket type is overruled if summary begins with the type (SPIKE or BUG)
-  ASSEMBLA_TYPES_IN_SUMMARY.each do |s|
+  # Ticket type is overruled if summary begins with the type, for example SPIKE or BUG.
+  ASSEMBLA_TYPES_EXTRA.each do |s|
     # if ticket['summary'] =~ /^#{s}/i
     if /^#{s}/i.match?(ticket['summary'])
       result = { id: @issue_type_name_to_id[s], name: s }
@@ -314,39 +314,39 @@ def create_ticket_jira(ticket, counter, total)
   if ok
     if ticket['description'] != reformatted_description
       @tickets_diffs << {
-          assembla_ticket_id: ticket_id,
-          assembla_ticket_number: ticket_number,
-          jira_ticket_id: jira_ticket_id,
-          jira_ticket_key: jira_ticket_key,
-          project_id: project_id,
-          before: ticket['description'],
-          after: reformatted_description
+        assembla_ticket_id: ticket_id,
+        assembla_ticket_number: ticket_number,
+        jira_ticket_id: jira_ticket_id,
+        jira_ticket_key: jira_ticket_key,
+        project_id: project_id,
+        before: ticket['description'],
+        after: reformatted_description
       }
     end
     @assembla_number_to_jira_key[ticket_number] = jira_ticket_key
   end
 
   {
-      result: (ok ? 'OK' : 'NOK'),
-      retries: retries,
-      message: (ok ? '' : message.gsub(' | ', "\n\n")),
-      jira_ticket_id: jira_ticket_id,
-      jira_ticket_key: jira_ticket_key,
-      project_id: project_id,
-      summary: summary,
-      issue_type_id: issue_type[:id],
-      issue_type_name: issue_type[:name],
-      assignee_name: assignee_name,
-      reporter_name: reporter_name,
-      priority_name: priority_name,
-      status_name: status_name,
-      labels: labels.join('|'),
-      description: description,
-      assembla_ticket_id: ticket_id,
-      assembla_ticket_number: ticket_number,
-      custom_field: custom_field,
-      milestone_name: milestone[:name],
-      story_rank: story_rank
+    result: (ok ? 'OK' : 'NOK'),
+    retries: retries,
+    message: (ok ? '' : message.gsub(' | ', "\n\n")),
+    jira_ticket_id: jira_ticket_id,
+    jira_ticket_key: jira_ticket_key,
+    project_id: project_id,
+    summary: summary,
+    issue_type_id: issue_type[:id],
+    issue_type_name: issue_type[:name],
+    assignee_name: assignee_name,
+    reporter_name: reporter_name,
+    priority_name: priority_name,
+    status_name: status_name,
+    labels: labels.join('|'),
+    description: description,
+    assembla_ticket_id: ticket_id,
+    assembla_ticket_number: ticket_number,
+    custom_field: custom_field,
+    milestone_name: milestone[:name],
+    story_rank: story_rank
   }
 end
 
@@ -359,7 +359,7 @@ else
   if @project
     puts "Created project '#{JIRA_API_PROJECT_NAME}' id='#{@project['id']}' key='#{@project['key']}'"
   else
-    goodbye("You must first create a Jira project called '#{JIRA_API_PROJECT_NAME}' in order to continue")
+    goodbye("You must first create a Jira project called '#{JIRA_API_PROJECT_NAME}' in order to continue (see README.md)")
   end
 end
 
@@ -376,18 +376,18 @@ puts "\nUnknown user:"
 if JIRA_API_UNKNOWN_USER && JIRA_API_UNKNOWN_USER.length
   user = jira_get_user(JIRA_API_UNKNOWN_USER)
   if user
-    goodbye("Please activate Jira unknown user '#{JIRA_API_UNKNOWN_USER}'") unless user['active']
+    goodbye("Please activate Jira unknown user '#{JIRA_API_UNKNOWN_USER}' (see README.md)") unless user['active']
     puts "Found Jira unknown user '#{JIRA_API_UNKNOWN_USER}' => OK"
   else
     user = {}
     user['login'] = JIRA_API_UNKNOWN_USER
     user['name'] = JIRA_API_UNKNOWN_USER
     result = jira_create_user(user)
-    goodbye("Cannot find Jira unknown user '#{JIRA_API_UNKNOWN_USER}', make sure that has been created and enabled") unless result
+    goodbye("Cannot find Jira unknown user '#{JIRA_API_UNKNOWN_USER}', make sure that has been created and enabled (see README.md).") unless result
     puts "Created Jira unknown user '#{JIRA_API_UNKNOWN_USER}'"
   end
 else
-  goodbye("Please define 'JIRA_API_UNKNOWN_USER' in the .env file")
+  goodbye("Please define 'JIRA_API_UNKNOWN_USER' in the .env file (see README.md)")
 end
 
 # --- MILESTONES --- #
@@ -426,7 +426,7 @@ end
 end
 
 if @missing_issue_types.length.positive?
-  goodbye("Missing issue types: #{@missing_issue_types.join(',')}")
+  goodbye("Missing issue types: #{@missing_issue_types.join(',')}, please create (see README.md) and re-run jira_get_info script.")
 end
 
 # --- PRIORITIES --- #
@@ -504,7 +504,7 @@ unless missing_fields.length.zero?
   end
   len = nok.length
   unless len.zero?
-    goodbye("Custom field#{len == 1 ? '' : 's'} '#{nok.join('\',\'')}' #{len == 1 ? 'is' : 'are'} missing, please define in Jira and make sure to attach it to the appropriate screens")
+    goodbye("Custom field#{len == 1 ? '' : 's'} '#{nok.join('\',\'')}' #{len == 1 ? 'is' : 'are'} missing, please define in Jira and make sure to attach it to the appropriate screens (see README.md)")
   end
 end
 
@@ -562,7 +562,3 @@ write_csv_file(ticket_links_jira_csv, @jira_ticket_links)
 
 tickets_diffs_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets-diffs.csv"
 write_csv_file(tickets_diffs_jira_csv, @tickets_diffs)
-
-if JIRA_SERVER_TYPE == 'cloud'
-  puts 'IMPORTANT: Ranking was ignored (not supported in cloud) => fix later'
-end
