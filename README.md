@@ -525,6 +525,10 @@ Once completed, check if there are any failed ticket imports where in the `resul
 
 Note: it is not possible for the original reporter (creator) of the Assembla ticket to be able to create a new issue, this is only allowed for the admin user, e.g. `headers = JIRA_HEADERS_ADMIN`.
 
+#### Errors
+
+You might receive an error about a certain issue type that cannot be found. For example `Spike`. This is because you did not create the needed issue types. Please follow instructions in the preparations section above very carefully, and then rerun the `07-jira_get_info.rb` script.
+
 ### Update ticket links
 
 In the ticket summary and description, ticket links `#123` need to be converted to the relevant Jira issue links `PRJ-456`, which can only be done AFTER all the tickets have been imported.
@@ -822,6 +826,10 @@ $ ruby 21-jira_create_sprints.rb # => data/jira/:space/jira-create-sprints.csv
 ```
 
 The issues are redistributed to the sprints they belong to and the most recent sprint is set as the `active` sprint.
+
+#### Errors
+
+You might receive an `403 Unauthorized` error. If this is the case, go to the Jira application, login as admin and try again.
 
 ### Update board
 
@@ -1257,6 +1265,7 @@ gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, c
 ## Trouble-shooting
 
 * Ticket import error `key='issuetype', reason='The issue type selected is invalid.'`. Go to the project issue types scheme, edit and ensure that issue type is included in the list, e.g. spike.
+* Error `403 Unauthorized`. Go to the Jira application, login as admin and try again.
 * Import users to the cloud fails for some user for some mysterious reason (500 Internal Server Error). This happens sometimes, just restart the script. It should recover and continue where it last failed. If the problem keeps repeating itself, just keep on retrying the script until you make your way through the complete list.
 * A `403 Forbidden` or `401 Unauthorized` error is returned. Ensure that the Authorization header is correct. if that doesn't work, log into your Atlassian account id.atlassian.com and try changing your password. There are some known problems with a recent cloud upgrade, see [Atlassian Community Ticket](https://community.developer.atlassian.com/t/401-unauthorized/9540), and certain extra actions must be taken. If problem persists, make sure that you are physically logged in to the hosted or cloud instance.
 * Error `User cannot be assigned issues.` Activate, login as user and then deactivate.
