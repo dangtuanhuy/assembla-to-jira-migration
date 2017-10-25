@@ -374,7 +374,7 @@ end
 # Make sure that the unknown user exists and is active, otherwise try and create
 puts "\nUnknown user:"
 if JIRA_API_UNKNOWN_USER && JIRA_API_UNKNOWN_USER.length
-  user = jira_get_user(JIRA_API_UNKNOWN_USER)
+  user = jira_get_user(JIRA_API_UNKNOWN_USER, false)
   if user
     goodbye("Please activate Jira unknown user '#{JIRA_API_UNKNOWN_USER}' (see README.md)") unless user['active']
     puts "Found Jira unknown user '#{JIRA_API_UNKNOWN_USER}' => OK"

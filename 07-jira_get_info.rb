@@ -23,9 +23,9 @@ load './lib/common.rb'
     if missing.length.positive?
       puts "\nMissing issue types:"
       missing.each do |m|
-        puts "* #{m}"
+        puts "* #{m.capitalize}"
       end
-      goodbye('You MUST first create issue type(s) and assign to screens (see README.md), and then re-run this script before continuing.')
+      goodbye('You MUST first create issue type(s) and assign to screens (see README.md). Afterwards please re-run this script before continuing.')
     end
   end
 end

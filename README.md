@@ -126,14 +126,17 @@ Congratulations, you did it!
 
 You will need to go to to the Jira hosted (`jira.example.org`) or cloud (`id.atlassian.net`) instance and login as admin.
 
-Define the project in the `.env` file as `ASSEMBLA_SPACE=space-name`.
+Create the admin user as defined in the `.env` file as `JIRA_API_ADMIN_USERNAME` and ensure that this user is activated and belongs to the following groups:
+
+* site-admins
+* jira-administrators
 
 Create the following new issue types:
 
 * Spike
 * Bug (if not already present)
 
-The issue type `spike` or `bug` will be defined for any tickets whose summary starts with `Spike: ` or `Bug: `.
+Those tickets whose summary starts with `Spike: ` or `Bug: ` will acquire these issue types so it is important that they already exist.
 
 These are defined in the `.env` file, see `ASSEMBLA_TYPES_EXTRA` below.
 
@@ -209,7 +212,8 @@ Although the official Jira documentation claims that the hosted and cloud APIs a
 
 * Performance - The cloud server is MUCH slower than the hosted server, meaning that when imported long lists of tickets or whatever extreme patience is required.
 * Stability - The hosted server generally works flawlessy and completes after the first run whereas the cloud server occasionally times out or returns a server error. For example, importing attachments.
-* Users - When creating users the hosted server will automatically set activated to true, whereas the cloud server will NOT.
+* Users - When creating users the hosted server will automatically set activated to true, whereas the cloud server will NOT. In addition, the server can take too long causing the connection to timeout, meaning that you have to keep re-running the script until all of the user are created.
+* Reporter - The hosted server will allow you to set the reporter when creating issues while the cloud server will NOT.
 * Ranking - The hosted server will allow you to set the issue rank when creating issues while the cloud server will NOT.
 * Comments - The hosted server will allow original comment authors to import comments while cloud server will NOT.
 * Attachments - The cloud server is [problematic](https://community.developer.atlassian.com/t/401-unauthorized/9540), and certain extra actions must be taken.
@@ -362,6 +366,8 @@ The following user:
 * unknown.user@example.org
 
 as defined in the `.env` file as `JIRA_API_UNKNOWN_USER`.
+
+A sanity check will also be made to ensure that the admin user defined as `JIRA_API_ADMIN_USER` in the `.env` file actually exists, is activated and belongs to both the `site-admins` and the `jira-administrators` groups. Otherwise, an error message is generated explaining that this needs to be corrected.
 
 IMPORTANT: Initially the users are created with the `password` equal to their username. This is needed in order for the migration to succeed because of certain user permissions required. Do NOT change until after the migration has been completed.
 
@@ -1264,6 +1270,7 @@ gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, c
 
 ## Trouble-shooting
 
+* Strange permission errors when creating tickets, adding watchers, etc. This is more than likely because the user defined by `JIRA_API_ADMIN_USER` does not belong to the `jira-administrators` group.
 * Ticket import error `key='issuetype', reason='The issue type selected is invalid.'`. Go to the project issue types scheme, edit and ensure that issue type is included in the list, e.g. spike.
 * Error `403 Unauthorized`. Go to the Jira application, login as admin and try again.
 * Import users to the cloud fails for some user for some mysterious reason (500 Internal Server Error). This happens sometimes, just restart the script. It should recover and continue where it last failed. If the problem keeps repeating itself, just keep on retrying the script until you make your way through the complete list.

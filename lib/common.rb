@@ -379,7 +379,7 @@ end
 def jira_check_unknown_user(b)
   puts "\nUnknown user:" if b
   if JIRA_API_UNKNOWN_USER && JIRA_API_UNKNOWN_USER.length
-    user = jira_get_user(JIRA_API_UNKNOWN_USER)
+    user = jira_get_user(JIRA_API_UNKNOWN_USER, false)
     if user
       goodbye("Please activate Jira unknown user '#{JIRA_API_UNKNOWN_USER}'") unless user['active']
     else
@@ -617,7 +617,7 @@ def jira_get_fields
   begin
     response = RestClient::Request.execute(method: :get, url: URL_JIRA_FIELDS, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
-    puts "GET #{URL_JIRA_FIELDS} => (#{result.length})"
+    puts "GET #{URL_JIRA_FIELDS} => OK (#{result.length})"
   rescue => e
     puts "GET #{URL_JIRA_FIELDS} => NOK (#{e.message})"
   end
@@ -658,13 +658,14 @@ def jira_create_user(user)
   result
 end
 
-def jira_get_user(username)
+def jira_get_user(username, groups)
   result = nil
   url = "#{JIRA_API_HOST}/user?username=#{username}"
+  url += '&expand=groups' if groups
   begin
     response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
     body = JSON.parse(response.body)
-    body.delete_if { |k, _| k =~ /self|avatarurls|timezone|locale|groups|applicationroles|expand/i }
+    body.delete_if { |k, _| k =~ /self|avatarurls|timezone|locale|applicationroles|expand/i }
     puts "GET #{url} => OK (#{body.to_json})"
     result = body
   rescue => e

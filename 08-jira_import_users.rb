@@ -2,7 +2,19 @@
 
 load './lib/common.rb'
 
-SPACE_NAME = ENV['JIRA_API_PROJECT_NAME']
+# IMPORTANT: Make sure that the `JIRA_API_ADMIN_USER` exists, is activated and belongs to both
+# the `site-admins` and the `jira-administrators` groups.
+
+admin = jira_get_user(JIRA_API_ADMIN_USER, true)
+goodbye("JIRA_API_ADMIN_USER='#{JIRA_API_ADMIN_USER}' does NOT exist. Please create.") unless admin
+goodbye("JIRA_API_ADMIN_USER='#{JIRA_API_ADMIN_USER}' is NOT active. Please activate.") unless admin['active']
+puts "\nFound JIRA_API_ADMIN_USER='#{JIRA_API_ADMIN_USER}'"
+
+groups = %w(site-admins jira-administrators)
+groups.each do |group|
+  next if admin['groups']['items'].detect { |item| item['name'] == group}
+  goodbye("Admin user MUST belong to the following groups: [#{groups.join(',')}]. Please add user '#{admin['name']}' to these groups.")
+end
 
 @jira_users = []
 
@@ -16,7 +28,7 @@ users.each do |user|
   username = user['login']
   username.sub!(/@.*$/, '')
   next if count == '0'
-  u1 = jira_get_user(username)
+  u1 = jira_get_user(username, false)
   if u1
     # User exists so add to list
     @jira_users << u1
