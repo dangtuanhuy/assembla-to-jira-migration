@@ -537,7 +537,7 @@ Note: it is not possible for the original reporter (creator) of the Assembla tic
 
 You might receive an error about a certain issue type that cannot be found. For example `Spike`. This is because you did not create the needed issue types. Please follow instructions in the preparations section above very carefully, and then rerun the `07-jira_get_info.rb` script.
 
-Another error message is `Field 'field-name' cannot be set. It is not on the appropriate screen, or unknown`. This is because either a custom field has not been created or the cusome field has not been added to the required screen. See previous section and follow instructions carefully.
+Another error message is `Field 'field-name' cannot be set. It is not on the appropriate screen, or unknown`. This is because either a custom field has not been created or the custom field has not been added to the required screen. See previous section and follow instructions carefully.
 
 ### Update ticket links
 
@@ -797,7 +797,7 @@ The results are saved in the `jira-update-epics.csv` output file.
 
 Check this output file for the epics that resulted in errors, e.g. result `NOK`. The `message` field will give you the error that the server returned, so that you can hopefully fix this manually. For example, `Issue 'EC-71' is an epic and therefore cannot be associated to another epic` is a common message.
 
-If errors occur, e.g. `Issue 'EC-71' is an epic and therefore cannot be associated to another epic`, you should run the following recory script which will attempt to fix most of the problems:
+If errors occur, e.g. `Issue 'EC-71' is an epic and therefore cannot be associated to another epic`, you should run the following recovery script which will attempt to fix most of the problems:
 
 ```
 $ ruby 19-jira_update_epics_nok.rb
@@ -810,7 +810,7 @@ The results are saved in the `jira-update-epics_nok.csv` output file, a result o
 Only needed for the Jira server type is `cloud`. Since this was not possible during the ticket creation, now is the time to rank the imported issues using the original Assembla values.
 
 ```
-$ ruby 20-jira_rank_tikets.rb
+$ ruby 20-jira_rank_tickets.rb
 ```
 
 ## Scrum Board
