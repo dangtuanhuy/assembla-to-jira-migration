@@ -4,43 +4,47 @@ A collection of advanced tooling which provides seamless data migration from [As
 
 ![](images/assembla-to-jira.png)
 
-This is by far the best migration toolset around. Here are the reasons why this version beats out all others hands down:
+This is by far the best Assembla to Jira migration toolset around. Here are some of the reasons why this toolset beats out all others hands down:
 
-* Fully automated with minimal manual actions.
+* Fully automated requiring minimal manual actions.
 * Configuration file with various options.
 * Import users (names, emails, roles and permissions).
 * Import tickets, comments, attachments and relationships.
 * Retain ticket status, labels, ranking and custom fields.
 * Link back to original Assembla tickets for reference.
 * Save relevant Assembla context in user-defined fields.
-* Insert embedded image thumbnails in descriptions and comments.
-* Convert markdown and urls.
-* Retain watchers of tickets.
+* Embed image thumbnails in descriptions and comments.
+* Convert markdown, urls and links.
+* Retain watchers of tickets for notifications.
 * Create scrum or kanban board with workflow.
-* Map Assembla milestones to Jira sprints.
+* Map the Assembla milestones to Jira sprints.
 * Populate the backlog, future and current sprints.
 * Assign stories to epics.
 * Resolve cross linking between external projects.
-* Take into account the API differences between hosted and cloud.
+* Account for the API differences between hosted and cloud.
 * Tons of great documentation and trouble-shooting guide.
 
-Need help? Look [here](https://github.com/kgish/assembla-to-jira-migration#support).
+If you need extra help just look [here](https://github.com/kgish/assembla-to-jira-migration#support).
 
 ## Introduction
 
-Have you ever wanted to use Jira instead of Assembla, but were afraid that the switch to Jira was too risky? Are you worried that business-critical data in Assembla will get corrupted or even lost during the conversion?
+Have you ever wanted to use Jira instead of Assembla, but were afraid that the switch to Jira was too risky?
 
-Jira already offers a number of standard add-ons to make certain migrations easier. Unfortunately, it does not offer a tool for migrating Assembla (bummer).
+Are you worried that your business-critical data in Assembla will get corrupted or even lost during the conversion?
 
-However, **you are now in luck!** By using the Assembla-to-Jira migration tools, it should be very easy to export all of the relevant Assembla data and import most (if not all) of it into a Jira project without loss or corruption of data.
+Jira already offers a number of standard add-ons to make certain migrations easier. Unfortunately, it does not yet offer a tool for migrating from Assembla (bummer).
 
-By making use of the [Assembla API](http://api-docs.assembla.cc/content/api_reference.html) and the [Jira API](https://docs.atlassian.com/jira/REST/cloud/), both environments are hooked up in order to make all necessary data transformations run smoothly and automatically.
+However, **you are now in luck!** By using this Assembla-to-Jira migration toolset, it is very easy to export all of the relevant Assembla data and import most (if not all) of it into a Jira project without loss or corruption of data.
 
-Most of the actions can be done automatically via a pipeline of scripts. Just define the required parameters in the `.env` configuration file, and you are ready to go.
+By using the [Assembla API](http://api-docs.assembla.cc/content/api_reference.html) and the [Jira API](https://docs.atlassian.com/jira/REST/cloud/) together, both environments are hooked up in order to make all necessary data transformations run smoothly and automatically.
 
-Some manual actions are required since the Jira API does not support all of the required data transformations. But these actions are few and clearly documented below. It is very important NOT to skip these manual actions because a successful migration depends on them being done.
+Most of the actions are done automatically via a pipeline of scripts. Just define the required parameters in the `.env` configuration file, and you are ready to go.
 
-It is best to start with a fresh installation, e.g. one in which the desired project has not yet been created and no users present. Otherwise, unexpected problems might occur. A quick scan is made to detect if a given project already exists. If not then the new project is created for you, as well as all of the Assembla users who have not yet been created.
+Some manual actions are required since the Jira API does not support all of the required data transformations, however these actions are few and clearly documented below. It is very important NOT to skip these manual actions because a successful migration depends on them being done properly at the right time.
+
+While not required, it is still best to start with a fresh installation, e.g. one in which the desired project has not yet been created and none of the project users are present yet. Otherwise, unexpected problems might occur.
+
+At the beginning of the migration, a quick scan is made to detect if a given project already exists. If not then the new project is created for you, as well as all of the Assembla users who have not yet been created.
 
 Although the official Atlassian documentation states that the Jira API for hosted server is nearly identical to the cloud server, there are some subtle, tricky differences that can bite you when you least expect.
 

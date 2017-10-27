@@ -10,7 +10,7 @@ goodbye("JIRA_API_ADMIN_USER='#{JIRA_API_ADMIN_USER}' does NOT exist. Please cre
 goodbye("JIRA_API_ADMIN_USER='#{JIRA_API_ADMIN_USER}' is NOT active. Please activate.") unless admin['active']
 puts "\nFound JIRA_API_ADMIN_USER='#{JIRA_API_ADMIN_USER}'"
 
-groups = %w(site-admins jira-administrators)
+groups = JIRA_SERVER_TYPE == 'hosted' ? %w(jira-administrators) : %w(jira-administrators site-admins)
 groups.each do |group|
   next if admin['groups']['items'].detect { |item| item['name'] == group}
   goodbye("Admin user MUST belong to the following groups: [#{groups.join(',')}]. Please add user '#{admin['name']}' to these groups.")
