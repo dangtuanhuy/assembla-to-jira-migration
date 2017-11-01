@@ -3,7 +3,7 @@
 load './lib/common.rb'
 load './lib/users-assembla.rb'
 
-@projects_csv = csv_to_array("#{output_dir_jira(JIRA_API_PROJECT_NAME)}/jira-projects.csv")
+@projects_csv = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-projects.csv")
 
 @projects = []
 
@@ -16,10 +16,8 @@ JIRA_API_SPACE_TO_PROJECT.split(',').each do |item|
   goodbye("Cannot find project with key=#{key}, item=#{item}, JIRA_API_SPACE_TO_PROJECT=#{JIRA_API_SPACE_TO_PROJECT}") unless project
   project_name = project['name']
 
-  output_dir = output_dir_jira(project_name)
-
-  tickets = csv_to_array("#{output_dir}/jira-tickets.csv")
-  comments = csv_to_array("#{output_dir}/jira-comments.csv")
+  tickets = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-tickets.csv")
+  comments = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-comments.csv")
 
   ticket_a_nr_to_j_key = {}
   tickets.each do |ticket|
@@ -35,7 +33,7 @@ JIRA_API_SPACE_TO_PROJECT.split(',').each do |item|
     space: space,
     key: key,
     name: project_name,
-    output_dir: output_dir,
+    output_dir: OUTPUT_DIR_JIRA,
     ticket_a_nr_to_j_key: ticket_a_nr_to_j_key,
     comment_a_id_to_j_id: comment_a_id_to_j_id
   }
