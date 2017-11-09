@@ -5,7 +5,7 @@ load './lib/common.rb'
 MILESTONE_PLANNER_TYPES = %w(none backlog current unknown).freeze
 
 # --- Assembla --- #
-assembla_milestones_csv = "#{OUTPUT_DIR_ASSEMBLA}/milestones.csv"
+assembla_milestones_csv = "#{OUTPUT_DIR_ASSEMBLA}/milestones-all.csv"
 @milestones_assembla = csv_to_array(assembla_milestones_csv)
 
 puts "\nTotal milestones: #{@milestones_assembla.length}"

@@ -244,7 +244,7 @@ The output files are located in the directory `data/assembla/:space/` as follows
 
 ```
 $ ruby 01-assembla_export_space.rb # => space_tools.csv, users.csv, user_roles.csv tags.csv \
-    milestones.csv, tickets-statuses.csv, tickets-custom-fields.csv, documents.csv, \
+    milestones-all.csv, tickets-statuses.csv, tickets-custom-fields.csv, documents.csv, \
     wiki_pages.csv, tickets.csv
 $ ruby 02-assembla_export_tickets.rb [type] # => ticket-comments.csv, ticket-attachments.csv, \
     ticket-tags.csv, ticket-associations.csv
@@ -962,7 +962,7 @@ As mentioned previously, during each step of the migration pipeline, the script 
 In the `data/assembla/:space` directory:
 
 * documents.csv
-* milestones.csv
+* milestones-all.csv
 * report-tickets.csv
 * report-users.csv
 * spaces.csv

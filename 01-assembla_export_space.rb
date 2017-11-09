@@ -16,8 +16,8 @@ ITEMS = [
   { name: 'tags' },
   # user-tags.csv
   # id,name,space_id,state,created_at,updated_at,color
-  { name: 'milestones' },
-  # milestones.csv
+  { name: 'milestones/all', q: 'per_page=10' },
+  # milestones-all.csv
   # id,start_date,due_date,budget,title,user_id,created_at,created_by,space_id,description,is_completed,completed_date,
   # updated_at,updated_by,release_level,release_notes,planner_type,pretty_release_level
   { name: 'tickets/statuses' },

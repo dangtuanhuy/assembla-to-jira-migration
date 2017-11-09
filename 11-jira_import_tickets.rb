@@ -6,7 +6,7 @@ load './lib/users-assembla.rb'
 # --- ASSEMBLA Tickets --- #
 
 tickets_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
-milestones_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/milestones.csv"
+milestones_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/milestones-all.csv"
 tags_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-tags.csv"
 associations_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-associations.csv"
 
