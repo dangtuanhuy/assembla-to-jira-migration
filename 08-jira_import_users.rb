@@ -44,5 +44,5 @@ write_csv_file(jira_users_csv, @jira_users)
 inactive_users = @jira_users.reject { |user| user['active'] }
 
 unless inactive_users.length.zero?
-  puts "IMPORTANT: The following users MUST to be activated before you continue: #{inactive_users.map { |user| user['name'] }.join(', ')}"
+  puts "\nIMPORTANT: The following users MUST to be activated before you continue: #{inactive_users.map { |user| user['name'] }.join(', ')}"
 end

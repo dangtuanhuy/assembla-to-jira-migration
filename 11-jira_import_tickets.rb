@@ -171,7 +171,7 @@ def create_ticket_jira(ticket, counter, total)
   labels = get_labels(ticket)
 
   custom_fields = JSON.parse(ticket['custom_fields'].gsub('=>',':'))
-  custom_field = custom_fields[ASSEMBLA_CUSTOM_FIELD]
+  custom_field = ASSEMBLA_CUSTOM_FIELD.empty? ? nil : custom_fields[ASSEMBLA_CUSTOM_FIELD]
 
   milestone = get_milestone(ticket)
 
@@ -479,7 +479,7 @@ end
 
 @all_custom_field_names = CUSTOM_FIELD_NAMES.dup
 
-@all_custom_field_names << "Assembla-#{ASSEMBLA_CUSTOM_FIELD}" unless ASSEMBLA_CUSTOM_FIELD&.empty?
+@all_custom_field_names << "Assembla-#{ASSEMBLA_CUSTOM_FIELD}" unless ASSEMBLA_CUSTOM_FIELD.empty?
 
 missing_fields = []
 @all_custom_field_names.each do |name|

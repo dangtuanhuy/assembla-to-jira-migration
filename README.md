@@ -373,7 +373,9 @@ as defined in the `.env` file as `JIRA_API_UNKNOWN_USER`.
 
 A sanity check will also be made to ensure that the admin user defined as `JIRA_API_ADMIN_USER` in the `.env` file actually exists, is activated and belongs to both the `site-admins` and the `jira-administrators` groups. Otherwise, an error message is generated explaining that this needs to be corrected.
 
-IMPORTANT: Initially the users are created with the `password` equal to their username. This is needed in order for the migration to succeed because of certain user permissions required. Do NOT change until after the migration has been completed.
+NOTE: Initially the users are created with the `password` equal to their username. This is needed in order for the migration to succeed because of certain user permissions required. Do NOT change until after the migration has been completed.
+
+IMPORTANT: At the end of the import you may be given a warning that certain users need to activate before continuing. Do NOT forget to do this as later actions requiring these users may fail.
 
 ### Download attachments
 
@@ -913,6 +915,8 @@ Finally, cleanup actions need to be taken to finish things off.
 * Use label filters to move issue to correct types, e.g. `bug` might be a label.
 * Check that tickets which are spikes are NOT epics [Issue 14](https://github.com/kgish/assembla-to-jira-migration/issues/14).
 * Make backup of `data` directory including `.env` file for future reference.
+
+You should also double check that the all of the Assembla-status were converted properly to the correct Jira status. If that is not the case, then you can make changes in bulk. For instance, filter on issues where Assembla-Status is `closed` and Jira status is NOT `closed` and by selecting all you can convert them to the closed status in one go.
 
 ## Checklist
 

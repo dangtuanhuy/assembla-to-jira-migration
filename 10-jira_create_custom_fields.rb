@@ -82,7 +82,7 @@ goodbye("Invalid ARGV2='#{ARGV[1]}', must be a number") unless /^\d+$/.match?(AR
 @customfield_id_to_name = {}
 
 @all_custom_field_names = CUSTOM_FIELD_NAMES.dup
-@all_custom_field_names << "Assembla-#{ASSEMBLA_CUSTOM_FIELD}" unless ASSEMBLA_CUSTOM_FIELD&.empty?
+@all_custom_field_names << "Assembla-#{ASSEMBLA_CUSTOM_FIELD}" unless ASSEMBLA_CUSTOM_FIELD.empty?
 
 missing_fields = []
 @all_custom_field_names.each do |name|
