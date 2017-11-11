@@ -938,10 +938,10 @@ project = PROJECT_KEY and Assembla-Type ~ Bug and issuetype != Bug ORDER BY crea
 
 Followed by move issues:
 
+![](images/jira-cleanup-transition-move.png)
+
 ![](images/jira-cleanup-transition-bug.png)
 
-
-![](images/jira-cleanup-transition-move.png)
 
 ## Checklist
 
