@@ -919,7 +919,7 @@ Finally, cleanup actions need to be taken to finish things off.
 You should also double check that the all of the `Assembla-Status` were converted properly to the correct Jira status. If that is not the case, then you can make changes in bulk. For instance, filter on issues where Assembla-Status is `closed` and Jira status is NOT `closed` and by selecting all you can convert them to `Done` in one go.
 
 ```
-project = PROJECT_KEY and Assembla-Status ~ Closed and status != Closed ORDER BY created DESC
+project = PROJECT_KEY and Assembla-Status ~ Done and status != Closed ORDER BY created DESC
 ```
 
 ![](images/jira-cleanup-not-closed.png)
@@ -931,6 +931,17 @@ Followed by transition issues to done:
 ![](images/jira-cleanup-transition-done.png)
 
 Another example might be selecting all issues with `Assembla-Type` equal to `Bug` to be converted to the Jira `Bug` issue type.
+
+```
+project = PROJECT_KEY and Assembla-Type ~ Bug and issuetype != Bug ORDER BY created DESC
+```
+
+Followed by move issues:
+
+![](images/jira-cleanup-transition-bug.png)
+
+
+![](images/jira-cleanup-transition-move.png)
 
 ## Checklist
 
