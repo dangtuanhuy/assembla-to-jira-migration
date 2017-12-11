@@ -404,7 +404,7 @@ Important: this step needs to be done before importing tickets (next section) in
 This step is very important, so do not skip it. You are now ready to create the Jira custom fields, so execute the following command:
 
 ```
-$ ruby 10-jira_create_custom_fields.rb screen_id1 screenid2
+$ ruby 10-jira_create_custom_fields.rb screen_id1 screen_id2
 ```
 
 The values of `screen_id1` and `screen_id2` are found by going to the screens page on the admin dashboard at `JIRA_API_HOST/secure/admin/ViewFieldScreens.jspa` and clicking on the project `Bug Screen Scheme` and `Default Screen Scheme` links respectively.
