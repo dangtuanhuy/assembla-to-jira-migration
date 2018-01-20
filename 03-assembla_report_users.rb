@@ -25,7 +25,7 @@ load './lib/common.rb'
 
 FILES = [
   { name: 'documents', fields: %w[created_by] },
-  { name: 'milestones', fields: %w[created_by] },
+  { name: 'milestones-all', fields: %w[created_by] },
   { name: 'ticket-attachments', fields: %w[created_by] },
   { name: 'ticket-comments', fields: %w[user_id] },
   { name: 'tickets', fields: %w[assigned_to_id reporter_id] },

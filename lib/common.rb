@@ -67,7 +67,7 @@ JIRA_API_STATUSES = ENV['JIRA_API_STATUSES']
 MAX_RETRY = 3
 
 def csv_to_array(pathname)
-  csv = CSV::parse(File.open(pathname, 'r') { |f| f.read })
+  csv = CSV::parse(File.open(pathname, 'r:iso-8859-1:utf-8') { |f| f.read })
   fields = csv.shift
   fields = fields.map { |f| f.downcase.tr(' ', '_') }
   csv.map { |record| Hash[*fields.zip(record).flatten] }
