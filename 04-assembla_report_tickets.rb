@@ -37,7 +37,7 @@ end
       report_ticket[:count] += 1
       report_ticket[file.to_sym] += 1
     else
-      goodbye("Cannot find ticket_id='#{ticket_id}' for #{file}")
+      puts("Cannot find ticket_id='#{ticket_id}' for #{file}")
     end
   end
 end

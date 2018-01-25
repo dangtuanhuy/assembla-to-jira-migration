@@ -123,7 +123,11 @@ def get_issue_type(ticket)
            when 3
              { id: @issue_type_name_to_id['epic'], name: 'epic' }
            else
+            if JIRA_ISSUE_DEFAULT_TYPE
+             { id: @issue_type_name_to_id[JIRA_ISSUE_DEFAULT_TYPE], name: JIRA_ISSUE_DEFAULT_TYPE } 
+            else
              { id: @issue_type_name_to_id['task'], name: 'task' }
+            end
            end
 
   # Ticket type is overruled if summary begins with the type, for example SPIKE or BUG.
