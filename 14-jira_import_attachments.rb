@@ -18,8 +18,6 @@ tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 
 @total_tickets = @tickets_jira.length
 
-goodbye("Invalid arg='#{ARGV[0]}', cannot be greater than the number of tickets=#{@total_tickets}") if restart_offset > @total_tickets
-
 # TODO: Move this to ./lib/tickets-assembla.rb and reuse in other scripts.
 @a_id_to_a_nr = {}
 @a_id_to_j_id = {}
@@ -36,6 +34,8 @@ downloaded_attachments_csv = "#{OUTPUT_DIR_JIRA}/jira-attachments-download.csv"
 @attachments_total = @downloaded_attachments.length
 
 puts "Total attachments: #{@attachments_total}"
+
+goodbye("Invalid arg='#{ARGV[0]}', cannot be greater than the number of attachments=#{@attachments_total}") if restart_offset > @attachments_total
 
 # IMPORTANT: Make sure that the downloads are ordered chronologically from first (oldest) to last (newest)
 @downloaded_attachments.sort! { |x, y| x['created_at'] <=> y['created_at'] }
