@@ -34,7 +34,7 @@ ITEMS = [
   # wiki-pages.csv
   # id,page_name,contents,status,version,position,wiki_format,change_comment,parent_id,space_id,user_id,created_at,
   # updated_at
-  { name: 'tickets', q: 'report=0&sort_by=number&per_page=100' }
+  { name: 'tickets', q: "report=#{ASSEMBLA_TICKET_REPORT}&sort_by=number&per_page=100" }
   # tickets.csv
   # id,number,summary,description,priority,completed_date,component_id,created_on,permission_type,importance,is_story,
   # milestone_id,notification_list,space_id,state,status,story_importance,updated_at,working_hours,estimate,

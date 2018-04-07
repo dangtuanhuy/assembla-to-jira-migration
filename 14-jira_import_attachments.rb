@@ -34,6 +34,7 @@ downloaded_attachments_csv = "#{OUTPUT_DIR_JIRA}/jira-attachments-download.csv"
 @attachments_total = @downloaded_attachments.length
 
 puts "Total attachments: #{@attachments_total}"
+goodbye("Invalid arg='#{ARGV[0]}', cannot be greater than the number of attachments=#{@attachments_total}") if restart_offset > @attachments_total
 
 goodbye("Invalid arg='#{ARGV[0]}', cannot be greater than the number of attachments=#{@attachments_total}") if restart_offset > @attachments_total
 
@@ -69,14 +70,15 @@ goodbye("Invalid arg='#{ARGV[0]}', cannot be greater than the number of attachme
   counter = index + 1
   next if counter < restart_offset
   percentage = ((counter * 100) / @attachments_total).round.to_s.rjust(3)
-  payload = { mulitpart: true, file: File.new(filepath, 'rb') }
-  base64_encoded = if JIRA_SERVER_TYPE == 'hosted'
-                     Base64.encode64(created_by + ':' + created_by)
-                   else
-                     Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
-                   end
-  headers = { 'Authorization': "Basic #{base64_encoded}", 'X-Atlassian-Token': 'no-check' }
   begin
+    payload = { mulitpart: true, file: File.new(filepath, 'rb') }
+    base64_encoded = if JIRA_SERVER_TYPE == 'hosted'
+                       Base64.encode64(created_by + ':' + created_by)
+                     else
+                       Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
+                     end
+    headers = { 'Authorization': "Basic #{base64_encoded}", 'X-Atlassian-Token': 'no-check' }
+  
     response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
     puts "#{percentage}% [#{counter}|#{@attachments_total}] POST #{url} '#{filename}' (#{content_type}) => OK"
     result = JSON.parse(response.body)

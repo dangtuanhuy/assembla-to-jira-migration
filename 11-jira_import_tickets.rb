@@ -123,7 +123,11 @@ def get_issue_type(ticket)
            when 3
              { id: @issue_type_name_to_id['epic'], name: 'epic' }
            else
+            if JIRA_ISSUE_DEFAULT_TYPE
+             { id: @issue_type_name_to_id[JIRA_ISSUE_DEFAULT_TYPE], name: JIRA_ISSUE_DEFAULT_TYPE } 
+            else
              { id: @issue_type_name_to_id['task'], name: 'task' }
+            end
            end
 
   # Ticket type is overruled if summary begins with the type, for example SPIKE or BUG.
@@ -299,7 +303,7 @@ def create_ticket_jira(ticket, counter, total)
           when /customfield_/
             key += " (#{@customfield_id_to_name[key]})"
         end
-        goodbye("POST #{URL_JIRA_ISSUES} payload='#{payload.inspect.sub(/:description=>"[^"]+",/,':description=>"...",')}' => NOK (key='#{key}', reason='#{reason}')") unless recover
+        puts "POST #{URL_JIRA_ISSUES} payload='#{payload.inspect.sub(/:description=>"[^"]+",/,':description=>"...",')}' => NOK (key='#{key}', reason='#{reason}')" unless recover
       end
     end
     retry if retries < MAX_RETRY && recover

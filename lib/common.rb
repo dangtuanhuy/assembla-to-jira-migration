@@ -22,6 +22,8 @@ ASSEMBLA_TYPES_EXTRA = (ENV['ASSEMBLA_TYPES_EXTRA'] || '').split(',')
 
 ASSEMBLA_CUSTOM_FIELD = ENV['ASSEMBLA_CUSTOM_FIELD'] || ''
 
+ASSEMBLA_TICKET_REPORT = ENV['ASSEMBLA_TICKET_REPORT'] || 0
+
 JIRA_API_BASE = ENV['JIRA_API_BASE'].freeze
 
 unless %r{^https?://}.match?(JIRA_API_BASE)
@@ -61,6 +63,8 @@ JIRA_API_SPACE_TO_PROJECT = ENV['JIRA_API_SPACE_TO_PROJECT']
 
 JIRA_API_BROWSE_ISSUE = ENV['JIRA_API_BROWSE_ISSUE'] || 'browse/[:jira-ticket-key]'
 JIRA_API_BROWSE_COMMENT = ENV['JIRA_API_BROWSE_COMMENT'] || 'browse/[:jira-ticket-key]?focusedCommentId=[:jira-comment-id]&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-[:jira-comment-id]'
+
+JIRA_ISSUE_DEFAULT_TYPE = ENV['JIRA_ISSUE_DEFAULT_TYPE'] || nil
 
 JIRA_API_STATUSES = ENV['JIRA_API_STATUSES']
 
@@ -641,19 +645,20 @@ def jira_create_user(user)
   }.to_json
   begin
     response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN, timeout: 30)
+    puts "#{response.body}"
     body = JSON.parse(response.body)
     body.delete_if { |k, _| k =~ /self|avatarurls|timezone|locale|groups|applicationroles|expand/i }
     puts "POST #{url} username='#{username}' => OK (#{body.to_json})"
     result = body
   rescue RestClient::ExceptionWithResponse => e
     if e.class == RestClient::InternalServerError
-      goodbye("POST #{url} username='#{username}' => NOK (#{e}) please retry")
+      puts "POST #{url} username='#{username}' => NOK (#{e}) please retry"
     end
     error = JSON.parse(e.response)
     message = error['errors'].map { |k, v| "#{k}: #{v}" }.join(' | ')
-    goodbye("POST #{url} username='#{username}' => NOK (#{message})")
+    puts "POST #{url} username='#{username}' => NOK (#{message})"
   rescue => e
-    goodbye("POST #{url} username='#{username}' => NOK (#{e.message})")
+    puts "POST #{url} username='#{username}' => NOK (#{e.message})"
   end
   result
 end

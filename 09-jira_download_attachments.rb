@@ -55,6 +55,9 @@ end
   assembla_ticket_id = attachment['ticket_id']
   content_type = attachment['content_type']
   counter = index + 1
+
+  percentage = ((counter * 100) / @attachments_total).round.to_s.rjust(3)
+
   filename = attachment['filename'] || 'nil.txt'
   filepath = "#{OUTPUT_DIR_JIRA_ATTACHMENTS}/#{filename}"
   nr = 0
@@ -68,16 +71,11 @@ end
     filename = "#{basename}.#{nr.to_s.rjust(3, '0')}#{extname}"
     filepath = "#{dirname}/#{filename}"
   end
-  # BUG: "http://api.assembla.com/v1/spaces/europeana-npc/documents/:id/download" should be:
-  #      "http://api.assembla.com/spaces/europeana-npc/documents/:id/download/:id
-  url.sub!(%r{v1/}, '')
-  m = %r{documents/(.*)/download}.match(url)
-  url += "/#{m[1]}"
-
-  percentage = ((counter * 100) / @attachments_total).round.to_s.rjust(3)
+  
+  puts "Downloading: #{url}"
   puts "#{percentage}% [#{counter}|#{@attachments_total}] #{created_at} #{assembla_ticket_id} '#{filename}' (#{content_type})"
   begin
-    content = RestClient::Request.execute(method: :get, url: url)
+    content = RestClient::Request.execute(method: :get, url: url, headers: ASSEMBLA_HEADERS)
     IO.binwrite(filepath, content)
     @jira_attachments << {
       created_at: created_at,
