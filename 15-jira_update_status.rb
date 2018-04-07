@@ -184,12 +184,11 @@ def jira_update_status(issue_id, status, counter)
       }
     }
   else
-    # TODO: Figure out how to deal with the other statuses: testable, blocked, ready for acceptance, etc.
-    # For now just set them to 'in progress'
+    # Handle other statuses
     payload = {
       update: {},
       transition: {
-        id: @transition_target_name_to_id['in progress'].to_i
+        id: @transition_target_name_to_id[status.downcase].to_i
       }
     }.to_json
     transition = {
@@ -198,8 +197,8 @@ def jira_update_status(issue_id, status, counter)
         name: 'to do'
       },
       to: {
-        id: @jira_status_name_to_id['in progress'],
-        name: 'in progress'
+        id: @jira_status_name_to_id[status.downcase],
+        name: status
       }
     }
   end
