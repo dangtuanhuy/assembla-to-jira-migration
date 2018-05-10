@@ -25,6 +25,10 @@ jira_tickets_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 end
 puts
 
+# The following line will select 'sprints' from the milestones for those milestones explicitly
+# containing the string 'sprint' in them. If you choose to convert all milestones into
+# sprints then replace the following line with:
+# @sprints = @milestones_assembla
 @sprints = @milestones_assembla.select { |milestone| milestone['title'] =~ /sprint/i }
 
 # Need to sort the sprints so that they appear in the correct order.
@@ -32,6 +36,7 @@ puts
 
 puts "Total sprints: #{@sprints.length}"
 
+# Important: Jira sprint names cannot be longer than 30 characters.
 @sprints.each do |sprint|
   puts "* #{sprint['title']}"
 end
@@ -118,7 +123,7 @@ end
 def jira_update_sprint_state(sprint, state)
   result = nil
   name = sprint['name']
-  start_date = sprint['startDate']
+  start_date = sprint['start_date']
   end_date = sprint['endDate']
   url = "#{URL_JIRA_SPRINTS}/#{sprint['id']}"
   payload = {
@@ -163,7 +168,7 @@ goodbye("Cannot find project with name='#{JIRA_API_PROJECT_NAME}'") unless proje
 end
 
 # First sprint should be 'active' and the other 'closed'
-jira_update_sprint_state(@jira_sprints.first, 'active')
+jira_update_sprint_state(@jira_sprints.first, 'active') if @jira_sprints.length > 0
 
 puts "\nTotal updates: #{@jira_sprints.length}"
 sprints_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-sprints.csv"

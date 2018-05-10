@@ -71,7 +71,7 @@ end
 
 @columns_missing = []
 @columns_needed.each do |column_needed|
-  @columns_missing << column_needed unless @columns_actual.detect { |column_actual| column_actual['name'].casecmp(column_needed).zero? }
+  @columns_missing << column_needed unless @columns_actual.detect { |column_actual| !column_actual['name'].nil? && column_actual['name'].casecmp(column_needed.to_s).zero? }
 end
 
 if @columns_missing.length.positive?
