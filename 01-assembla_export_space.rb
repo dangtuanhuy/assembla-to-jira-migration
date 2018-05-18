@@ -13,7 +13,7 @@ ITEMS = [
   { name: 'user_roles' },
   # user-roles.csv
   # id,user_id,space_id,role,status,invited_time,agreed_time,title,invited_by_id
-  { name: 'tags' },
+  { name: 'tags', q: 'per_page=25' },
   # user-tags.csv
   # id,name,space_id,state,created_at,updated_at,color
   { name: 'milestones/all', q: 'per_page=10' },

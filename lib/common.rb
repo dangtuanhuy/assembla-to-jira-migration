@@ -328,6 +328,7 @@ def get_space(name)
   space
 end
 
+# TODO: Similar to get_ticket_attr() in 02-assembla_export_tickets.rb (refactor)
 def get_items(items, space)
   items.each do |item|
     url = "#{ASSEMBLA_API_HOST}/spaces/#{space['id']}/#{item[:name]}"
@@ -345,7 +346,13 @@ def get_items(items, space)
         JSON.parse(response).each do |rec|
           item[:results] << rec
         end
-        per_page ? page += 1 : in_progress = false
+        if per_page
+          if count < per_page
+            page += 1
+          else
+            in_progress = false
+          end
+        end
       else
         in_progress = false
       end
