@@ -45,9 +45,10 @@ def get_ticket_attr(space_id, ticket_number, attr, per_page, opts)
   url = "#{ASSEMBLA_API_HOST}/spaces/#{space_id}/tickets/#{ticket_number}/#{attr}"
   url += "?per_page=#{per_page}" if per_page
   page = 1
-  in_progress = true
   results = []
+  in_progress = true
   while in_progress
+    in_progress = false
     full_url = url
     full_url += "&page=#{page}" if per_page
     response = http_request(full_url, opts)
@@ -56,15 +57,10 @@ def get_ticket_attr(space_id, ticket_number, attr, per_page, opts)
       JSON.parse(response.body).each do |result|
         results << result
       end
-      if per_page
-        if count < per_page
-          page += 1
-        else
-          in_progress = false
-        end
+      if per_page && count == per_page
+        page += 1
+        in_progress = true
       end
-    else
-      in_progress = false
     end
   end
   results

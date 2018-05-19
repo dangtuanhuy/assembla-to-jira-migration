@@ -124,7 +124,7 @@ def get_issue_type(ticket)
              { id: @issue_type_name_to_id['epic'], name: 'epic' }
            else
             if JIRA_ISSUE_DEFAULT_TYPE
-             { id: @issue_type_name_to_id[JIRA_ISSUE_DEFAULT_TYPE], name: JIRA_ISSUE_DEFAULT_TYPE } 
+             { id: @issue_type_name_to_id[JIRA_ISSUE_DEFAULT_TYPE], name: JIRA_ISSUE_DEFAULT_TYPE }
             else
              { id: @issue_type_name_to_id['task'], name: 'task' }
             end
@@ -410,7 +410,7 @@ end
 # --- ISSUE TYPES --- #
 
 # IMPORTANT: the sub-tasks MUST be done last in order to be able to be associated with the parent tasks/stories.
-@issue_types = %w(epic story task spike bug sub-task)
+@issue_types = %w(epic story task bug sub-task)
 
 puts "\nTotal issue types: #{@issue_types_jira.length}"
 

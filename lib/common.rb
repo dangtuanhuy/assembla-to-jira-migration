@@ -71,7 +71,7 @@ JIRA_API_STATUSES = ENV['JIRA_API_STATUSES']
 MAX_RETRY = 3
 
 def csv_to_array(pathname)
-  csv = CSV::parse(File.open(pathname, 'r:iso-8859-1:utf-8') { |f| f.read })
+  csv = CSV::parse(File.open(pathname) { |f| f.read })
   fields = csv.shift
   fields = fields.map { |f| f.downcase.tr(' ', '_') }
   csv.map { |record| Hash[*fields.zip(record).flatten] }
@@ -194,7 +194,7 @@ base64_admin = if JIRA_SERVER_TYPE == 'hosted'
 
 JIRA_HEADERS_ADMIN = {
     'Authorization': "Basic #{base64_admin}",
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json; charset=utf-8',
     'Accept': 'application/json'
 }.freeze
 
@@ -202,7 +202,7 @@ JIRA_HEADERS_ADMIN = {
 # For the cloud we use the email otherwise login
 def headers_user_login(user_login, user_email)
   return JIRA_HEADERS_ADMIN if JIRA_SERVER_TYPE == 'cloud'
-  { 'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json' }
+  { 'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json; charset=utf-8' }
 end
 
 def get_hierarchy_type(n)
@@ -332,29 +332,32 @@ end
 def get_items(items, space)
   items.each do |item|
     url = "#{ASSEMBLA_API_HOST}/spaces/#{space['id']}/#{item[:name]}"
-    url += "?#{item[:q]}" if item[:q]
-    per_page = item[:q] =~ /per_page/
+    if item[:q]
+      url += "?#{item[:q]}"
+      if item[:q] =~ /per_page=(\d+)/
+        more_pages = true
+        per_page = $1.to_i
+      else
+        more_pages = false
+      end
+    end
     page = 1
-    in_progress = true
     item[:results] = []
+    in_progress = true
     while in_progress
+      in_progress = false
       full_url = url
-      full_url += "&page=#{page}" if per_page
+      full_url += "&page=#{page}" if  more_pages
       response = http_request(full_url)
       count = get_response_count(response)
       if count.positive?
         JSON.parse(response).each do |rec|
           item[:results] << rec
         end
-        if per_page
-          if count < per_page
+        if more_pages && count == per_page
             page += 1
-          else
-            in_progress = false
-          end
+            in_progress = true
         end
-      else
-        in_progress = false
       end
     end
   end
@@ -643,12 +646,13 @@ def jira_create_user(user)
   if email.nil? || email.empty?
     email = "#{username}@#{JIRA_API_DEFAULT_EMAIL}"
   end
+  displayName = user['name']
   payload = {
     name: username,
     password: username,
     # TODO: Make the following configurable and not hard-coded.
     emailAddress: email,
-    displayName: user['name'],
+    displayName: displayName,
   }.to_json
   begin
     response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN, timeout: 30)
@@ -843,3 +847,4 @@ def rest_client_exception(e, method, url, payload = {})
   puts "#{method} #{url}#{payload.empty? ? '' : ' ' + payload.inspect} => NOK (#{message})"
   message
 end
+

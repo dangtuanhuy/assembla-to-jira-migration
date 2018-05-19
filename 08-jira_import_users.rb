@@ -18,7 +18,7 @@ end
 
 @jira_users = []
 
-users_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
+users_csv = "#{OUTPUT_DIR_ASSEMBLA}/users.csv"
 jira_users_csv = "#{OUTPUT_DIR_JIRA}/jira-users.csv"
 
 users = csv_to_array(users_csv)
