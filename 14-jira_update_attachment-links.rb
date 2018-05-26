@@ -145,17 +145,12 @@ end
   fields = issue['fields']
   description_in = fields['description']
   description_out = reformat_markdown_attachments(description_in)
-  puts "---"
-  puts description_out
-  puts "---"
 end
 
 @comments_with_links.each do |comment|
   jira_comment_id = comment[:jira_comment_id]
-  comment = jira_get_comment(jira_comment_id)
+  jira_issue_key = comment[:jira_issue_key]
+  comment = jira_get_issue_comment(jira_issue_key, jira_comment_id)
   body_in = comment['body']
   body_out = reformat_markdown_attachments(body_in)
-  puts "---"
-  puts body_out
-  puts "---"
 end
