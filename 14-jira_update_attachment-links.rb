@@ -16,6 +16,7 @@ comments_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-comments.csv"
 end
 
 # --- Filter by date if TICKET_CREATED_ON is defined --- #
+
 tickets_created_on = get_tickets_created_on
 
 if tickets_created_on
@@ -31,7 +32,7 @@ else
   puts "Comments: #{@comments_assembla.length}"
 end
 
-def markdown_attachment(attachment, attachments)
+def markdown_attachment(attachment)
   attachment = attachment[7..-3]
   f = attachment.split('|')
   assembla_attachment_id = f[0]
@@ -41,9 +42,8 @@ def markdown_attachment(attachment, attachments)
   "[#{filename}|#{url}]"
 end
 
-def reformat_markdown_attachments(content, opts = {})
+def reformat_markdown_attachments(content)
   return content if content.nil? || content.length.zero?
-  attachments = opts[:attachments]
   lines = split_into_lines(content)
   markdown = []
   lines.each do |line|
@@ -52,7 +52,7 @@ def reformat_markdown_attachments(content, opts = {})
       next
     end
     markdown << line.
-        gsub(/\[\[file:(.*?)(\|(.*?))?\]\]/i) { |attachment| markdown_attachment(attachment, attachments) }
+        gsub(/\[\[file:(.*?)(\|(.*?))?\]\]/i) { |attachment| markdown_attachment(attachment) }
   end
   markdown.join("\n")
 end
@@ -144,8 +144,18 @@ end
   issue = jira_get_issue(jira_issue_key)
   fields = issue['fields']
   description_in = fields['description']
-  opts = { attachments: @attachments_jira }
-  description_out = reformat_markdown_attachments(description_in, opts)
+  description_out = reformat_markdown_attachments(description_in)
+  puts "---"
   puts description_out
+  puts "---"
 end
 
+@comments_with_links.each do |comment|
+  jira_comment_id = comment[:jira_comment_id]
+  comment = jira_get_comment(jira_comment_id)
+  body_in = comment['body']
+  body_out = reformat_markdown_attachments(body_in)
+  puts "---"
+  puts body_out
+  puts "---"
+end
