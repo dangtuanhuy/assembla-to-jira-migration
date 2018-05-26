@@ -37,8 +37,8 @@ def markdown_attachment(attachment, attachments)
   assembla_attachment_id = f[0]
   id = @attachment_a_id_to_j_id[assembla_attachment_id]
   filename = @attachment_j_id_to_j_filename[id]
-  url = "#{JIRA_API_BASE}/secure/attachment"
-  "[#{filename}|#{url}/#{id}/#{filename}]"
+  url = URI.escape("#{JIRA_API_BASE}/secure/attachment/#{id}/#{filename}")
+  "[#{filename}|#{url}]"
 end
 
 def reformat_markdown_attachments(content, opts = {})
