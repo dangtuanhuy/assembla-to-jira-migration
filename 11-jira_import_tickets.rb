@@ -159,6 +159,7 @@ def create_ticket_jira(ticket, counter, total)
   status_name = ticket['status']
   story_rank = ticket['importance']
   story_points = ticket['story_importance']
+  estimate = ticket['estimate']
 
   # Prepend the description text with a link to the original assembla ticket on the first line.
   description = "Assembla ticket [##{ticket_number}|#{ENV['ASSEMBLA_URL_TICKETS']}/#{ticket_number}] | "
@@ -203,6 +204,11 @@ def create_ticket_jira(ticket, counter, total)
       "#{@customfield_name_to_id['Assembla-Completed']}": completed_date
     }
   }
+  if estimate.to_i != 0
+    payload[:fields]["#{@customfield_name_to_id['Assembla-Estimate']}".to_sym] = estimate
+    payload[:fields][:timeTracking] = {}
+    payload[:fields][:timeTracking][:originalEstimate] = estimate
+  end
 
   if custom_field
     assembla_custom_field = "Assembla-#{ASSEMBLA_CUSTOM_FIELD}"

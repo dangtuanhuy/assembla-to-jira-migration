@@ -105,7 +105,7 @@ Now that all of the Assembla data is available, we can now take this and import 
 11. Import tickets
 12. Resolve/update ticket links
 13. Import ticket comments
-14. Import ticket attachments
+14. Import ticket attachments & update links
 15. Update ticket status (resolutions)
 16. Update ticket associations
 17. Update ticket watchers
@@ -613,6 +613,28 @@ Another note: we allow the original creators of the Assembla attachments to be a
 
 When the migration is completed, one may have a look at the `jira-attachments-import-nok.csv` file and decide whether the failed attachments can be recovered.
 
+### Update attachment links
+
+Now that we have imported the attachments, we can convert the Assembla markdown format
+
+```
+[[file:attachment_id|filename]]
+```
+
+into the Jira markdown format
+
+```
+[filename|JIRA_API_BASE/secure/attachment/attachment_id/filename]
+```
+
+These markdown links can appear in both the `issue description` or in the `comment body` fields.
+
+You will now need to execute the following script:
+
+```
+$ ruby 14-jira_update_attachment_links.rb
+```
+
 ### Update ticket status
 
 Now you are ready to update the Jira tickets in line with the original Assembla state. Execute the following command:
@@ -620,6 +642,8 @@ Now you are ready to update the Jira tickets in line with the original Assembla 
 ```
 $ ruby 15-jira_update_status.rb # => data/jira/:space/jira-update-status.csv
 ```
+
+If there are any status types which are missing, the script will abort and display a list of status names that you will have to add manually to Jira.
 
 Important: the Jira API requests MUST be made with an Authorization Header constructed with the `reporter_name` (issue creator), otherwise a `403 Forbidden` error will be returned.
 
@@ -1249,6 +1273,7 @@ Wiki links
 [[url:URL|TEXT]] => [TEXT|URL]
 [[url:URL]] => [URL|URL]
 <pre><code> code-snippet </code></pre> => {code:java} code-snippet {code}
+[[file:attachment_id|filename]] => [filename|JIRA_API_BASE/secure/attachment/attachment_id/filename]
 ```
 
 ### Code blocks

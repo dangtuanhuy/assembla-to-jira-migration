@@ -99,7 +99,7 @@ def jira_update_comment_body(issue_key, comment_id, body)
   }.to_json
   begin
     RestClient::Request.execute(method: :put, url: url, payload: payload, headers: headers)
-    puts "PUT #{url} description => OK"
+    puts "PUT #{url} body => OK"
     result = true
   rescue RestClient::ExceptionWithResponse => e
     rest_client_exception(e, 'PUT', url, payload)

@@ -28,8 +28,8 @@ puts
 # The following line will select 'sprints' from the milestones for those milestones explicitly
 # containing the string 'sprint' in them. If you choose to convert all milestones into
 # sprints then replace the following line with:
-# @sprints = @milestones_assembla
-@sprints = @milestones_assembla.select { |milestone| milestone['title'] =~ /sprint/i }
+@sprints = @milestones_assembla
+# @sprints = @milestones_assembla.select { |milestone| milestone['title'] =~ /sprint/i }
 
 # Need to sort the sprints so that they appear in the correct order.
 @sprints.sort! { |x, y| y['start_date'].to_s <=> x['start_date'].to_s }

@@ -32,6 +32,47 @@ else
   puts "Comments: #{@comments_assembla.length}"
 end
 
+def jira_update_issue_description(issue_key, description, counter, total)
+  result = nil
+  url = "#{URL_JIRA_ISSUES}/#{issue_key}"
+  payload = {
+      update: {},
+      fields: {
+          description: description
+      }
+  }.to_json
+  begin
+    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN)
+    percentage = ((counter * 100) / total).round.to_s.rjust(3)
+    puts "#{percentage}% [#{counter}|#{total}] PUT #{url} description => OK"
+    result = true
+  rescue RestClient::ExceptionWithResponse => e
+    rest_client_exception(e, 'PUT', url, payload)
+  rescue => e
+    puts "PUT #{url} description => NOK (#{e.message})"
+  end
+  result
+end
+
+def jira_update_issue_comment_body(issue_key, comment_id, body, counter, total)
+  result = nil
+  url = "#{URL_JIRA_ISSUES}/#{issue_key}/comment/#{comment_id}"
+  payload = {
+      body: body
+  }.to_json
+  begin
+    RestClient::Request.execute(method: :put, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN)
+    percentage = ((counter * 100) / total).round.to_s.rjust(3)
+    puts "#{percentage}% [#{counter}|#{total}] PUT #{url} body => OK"
+    result = true
+  rescue RestClient::ExceptionWithResponse => e
+    rest_client_exception(e, 'PUT', url, payload)
+  rescue => e
+    puts "PUT #{url} description => NOK (#{e.message})"
+  end
+  result
+end
+
 def markdown_attachment(attachment)
   attachment = attachment[7..-3]
   f = attachment.split('|')
@@ -139,18 +180,30 @@ puts "\nComment attachments: #{@comments_with_links.length}"
   puts "assembla_ticket_number='#{assembla_ticket_number}', assembla_comment_id='#{assembla_comment_id}', assembla_attachment_id='#{assembla_attachment_id}', assembla_attachment_filename='#{assembla_attachment_filename}', jira_issue_key='#{jira_issue_key}', jira_comment_id='#{jira_comment_id}', jira_attachment_id='#{jira_attachment_id}', jira_attachment_filename='#{jira_attachment_filename}'"
 end
 
-@tickets_with_links.each do |ticket|
+total = @tickets_with_links.length
+@tickets_with_links.each_with_index do |ticket, index|
   jira_issue_key = ticket[:jira_issue_key]
   issue = jira_get_issue(jira_issue_key)
   fields = issue['fields']
   description_in = fields['description']
   description_out = reformat_markdown_attachments(description_in)
+  if description_out != description_in
+    jira_update_issue_description(jira_issue_key, description_out, index + 1, total)
+  else
+    puts "jira_issue_key='#{jira_issue_key}' descriptions are the same => SKIP"
+  end
 end
 
-@comments_with_links.each do |comment|
+total = @comments_with_links.length
+@comments_with_links.each_with_index do |comment, index|
   jira_comment_id = comment[:jira_comment_id]
   jira_issue_key = comment[:jira_issue_key]
   comment = jira_get_issue_comment(jira_issue_key, jira_comment_id)
   body_in = comment['body']
   body_out = reformat_markdown_attachments(body_in)
+  if body_out != body_in
+    jira_update_issue_comment_body(jira_issue_key, jira_comment_id, body_out, index + 1, total)
+  else
+    puts "jira_issue_key='#{jira_issue_key}', jira_comment_id='#{jira_comment_id}' bodies are the same => SKIP"
+  end
 end
