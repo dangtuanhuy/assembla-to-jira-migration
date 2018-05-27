@@ -14,7 +14,8 @@ This is by far the best Assembla to Jira migration toolset around. Here are some
 * Link back to original Assembla tickets for reference.
 * Save relevant Assembla context in user-defined fields.
 * Embed image thumbnails in descriptions and comments.
-* Convert markdown, urls and links.
+* Convert markdown, users, urls, attachments and other links.
+* Timetracking: estimated and remaining.
 * Retain watchers of tickets for notifications.
 * Create scrum or kanban board with workflow.
 * Map the Assembla milestones to Jira sprints.
