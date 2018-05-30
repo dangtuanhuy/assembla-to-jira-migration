@@ -14,7 +14,7 @@ ASSEMBLA_SPACE = ENV['ASSEMBLA_SPACE'].freeze
 ASSEMBLA_API_HOST = ENV['ASSEMBLA_API_HOST'].freeze
 ASSEMBLA_API_KEY = ENV['ASSEMBLA_API_KEY'].freeze
 ASSEMBLA_API_SECRET = ENV['ASSEMBLA_API_SECRET'].freeze
-ASSEMBLA_HEADERS = { 'X-Api-Key': ASSEMBLA_API_KEY, 'X-Api-Secret': ASSEMBLA_API_SECRET }.freeze
+ASSEMBLA_HEADERS = {'X-Api-Key': ASSEMBLA_API_KEY, 'X-Api-Secret': ASSEMBLA_API_SECRET}.freeze
 
 ASSEMBLA_SKIP_ASSOCIATIONS = (ENV['ASSEMBLA_SKIP_ASSOCIATIONS'] || '').split(',').push('unknown')
 
@@ -71,10 +71,10 @@ JIRA_API_STATUSES = ENV['JIRA_API_STATUSES']
 MAX_RETRY = 3
 
 def csv_to_array(pathname)
-  csv = CSV::parse(File.open(pathname) { |f| f.read })
+  csv = CSV::parse(File.open(pathname) {|f| f.read})
   fields = csv.shift
-  fields = fields.map { |f| f.downcase.tr(' ', '_') }
-  csv.map { |record| Hash[*fields.zip(record).flatten] }
+  fields = fields.map {|f| f.downcase.tr(' ', '_')}
+  csv.map {|record| Hash[*fields.zip(record).flatten]}
 end
 
 def write_csv_file(filename, results)
@@ -132,21 +132,21 @@ end
 
 # The following custom fields MUST be defined AND associated with the proper screens
 CUSTOM_FIELD_NAMES = [
-  'Assembla-Id',
-  'Assembla-Milestone',
-  'Assembla-Status',
-  'Assembla-Reporter',
-  'Assembla-Assignee',
-  'Assembla-Completed',
-  'Assembla-Estimate',
-  'Assignee',
-  'Epic Link',
-  'Epic Name',
-  'Labels',
-  'Rank',
-  'Resolution',
-  'Sprint',
-  'Story Points'
+    'Assembla-Id',
+    'Assembla-Milestone',
+    'Assembla-Status',
+    'Assembla-Reporter',
+    'Assembla-Assignee',
+    'Assembla-Completed',
+    'Assembla-Estimate', # => 0=None, 1=Small, 3=Medium, 7=Large
+    'Assignee',
+    'Epic Link',
+    'Epic Name',
+    'Labels',
+    'Rank',
+    'Resolution',
+    'Sprint',
+    'Story Points'
 ].freeze
 
 JIRA_AGILE_HOST = "#{JIRA_API_BASE}/#{ENV['JIRA_AGILE_HOST']}"
@@ -203,7 +203,7 @@ JIRA_HEADERS_ADMIN = {
 # For the cloud we use the email otherwise login
 def headers_user_login(user_login, user_email)
   return JIRA_HEADERS_ADMIN if JIRA_SERVER_TYPE == 'cloud'
-  { 'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json; charset=utf-8' }
+  {'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json; charset=utf-8'}
 end
 
 def get_hierarchy_type(n)
@@ -271,7 +271,7 @@ def date_time(dt)
 end
 
 def ticket_to_s(ticket)
-  ticket.delete_if { |k| k =~ /summary|description/ }.inspect
+  ticket.delete_if {|k| k =~ /summary|description/}.inspect
 end
 
 def build_counter(opts)
@@ -315,14 +315,14 @@ def assembla_get_spaces
   response = http_request("#{ASSEMBLA_API_HOST}/spaces")
   result = JSON.parse(response.body)
   result&.each do |r|
-    r.delete_if { |k, _| k.to_s =~ /tabs_order/i }
+    r.delete_if {|k, _| k.to_s =~ /tabs_order/i}
   end
   result
 end
 
 def get_space(name)
   spaces = csv_to_array("#{OUTPUT_DIR_ASSEMBLA}/spaces.csv")
-  space = spaces.detect { |s| s['name'] == name }
+  space = spaces.detect {|s| s['name'] == name}
   unless space
     goodbye("Couldn't find space with name = '#{name}'")
   end
@@ -348,7 +348,7 @@ def get_items(items, space)
     while in_progress
       in_progress = false
       full_url = url
-      full_url += "&page=#{page}" if  more_pages
+      full_url += "&page=#{page}" if more_pages
       response = http_request(full_url)
       count = get_response_count(response)
       if count.positive?
@@ -356,8 +356,8 @@ def get_items(items, space)
           item[:results] << rec
         end
         if more_pages && count == per_page
-            page += 1
-            in_progress = true
+          page += 1
+          in_progress = true
         end
       end
     end
@@ -370,7 +370,7 @@ def create_csv_files(space, items)
   items.each do |item|
     create_csv_file(space, item)
   end
-  puts "#{space['name']} #{items.map { |item| item[:name] }.to_json} => done!"
+  puts "#{space['name']} #{items.map {|item| item[:name]}.to_json} => done!"
 end
 
 def create_csv_file(space, item)
@@ -407,7 +407,7 @@ end
 
 def jira_build_project_key(project_name)
   # Max. length = 10
-  key = project_name.split(' ').map { |w| w[0].upcase }.join
+  key = project_name.split(' ').map {|w| w[0].upcase}.join
   key = project_name.upcase if key.length == 1
   key = key[0..9] if key.length > 10
   key
@@ -431,12 +431,12 @@ def jira_create_project(project_name, project_type)
   result = nil
   key = jira_build_project_key(project_name)
   payload = {
-    key: key,
-    name: project_name,
-    projectTypeKey: 'software',
-    description: "Description of project '#{project_name}'",
-    projectTemplateKey: "com.pyxis.greenhopper.jira:gh-#{project_type}-template",
-    lead: JIRA_API_ADMIN_USER
+      key: key,
+      name: project_name,
+      projectTypeKey: 'software',
+      description: "Description of project '#{project_name}'",
+      projectTemplateKey: "com.pyxis.greenhopper.jira:gh-#{project_type}-template",
+      lead: JIRA_API_ADMIN_USER
   }.to_json
   begin
     response = RestClient::Request.execute(method: :post, url: URL_JIRA_PROJECTS, payload: payload, headers: JIRA_HEADERS_ADMIN)
@@ -444,7 +444,7 @@ def jira_create_project(project_name, project_type)
     puts "POST #{URL_JIRA_PROJECTS} name='#{project_name}', key='#{key}' => OK"
   rescue RestClient::ExceptionWithResponse => e
     error = JSON.parse(e.response)
-    message = error['errors'].map { |k, v| "#{k}: #{v}" }.join(' | ')
+    message = error['errors'].map {|k, v| "#{k}: #{v}"}.join(' | ')
     puts "POST #{URL_JIRA_PROJECTS} name='#{project_name}', key='#{key}' => NOK (#{message})"
   rescue => e
     puts "POST #{URL_JIRA_PROJECTS} name='#{project_name}', key='#{key}' => NOK (#{e.message})"
@@ -459,7 +459,7 @@ def jira_get_projects
     result = JSON.parse(response)
     if result
       result.each do |r|
-        r.delete_if { |k, _| k.to_s =~ /expand|self|avatarurls/i }
+        r.delete_if {|k, _| k.to_s =~ /expand|self|avatarurls/i}
       end
       puts "GET #{URL_JIRA_PROJECTS} => OK (#{result.length})"
     end
@@ -474,9 +474,9 @@ def jira_get_project_by_name(name)
   begin
     response = RestClient::Request.execute(method: :get, url: URL_JIRA_PROJECTS, headers: JIRA_HEADERS_ADMIN)
     body = JSON.parse(response.body)
-    result = body.detect { |h| h['name'] == name }
+    result = body.detect {|h| h['name'] == name}
     if result
-      result.delete_if { |k, _| k =~ /expand|self|avatarurls/i }
+      result.delete_if {|k, _| k =~ /expand|self|avatarurls/i}
       puts "GET #{URL_JIRA_PROJECTS} name='#{name}' => OK"
     end
   rescue => e
@@ -492,7 +492,7 @@ def jira_get_priorities
     result = JSON.parse(response.body)
     if result
       result.each do |r|
-        r.delete_if { |k, _| k =~ /self|statuscolor|iconurl/i }
+        r.delete_if {|k, _| k =~ /self|statuscolor|iconurl/i}
       end
       puts "GET #{URL_JIRA_PRIORITIES} => OK (#{result.length})"
     end
@@ -509,7 +509,7 @@ def jira_get_resolutions
     result = JSON.parse(response.body)
     if result
       result.each do |r|
-        r.delete_if { |k, _| k =~ /self/i }
+        r.delete_if {|k, _| k =~ /self/i}
       end
       puts "GET #{URL_JIRA_RESOLUTIONS} => OK (#{result.length})"
     end
@@ -526,7 +526,7 @@ def jira_get_roles
     result = JSON.parse(response.body)
     if result
       result.each do |r|
-        r.delete_if { |k, _| k =~ /self/i }
+        r.delete_if {|k, _| k =~ /self/i}
       end
       puts "GET #{URL_JIRA_ROLES} => OK (#{result.length})"
     end
@@ -543,7 +543,7 @@ def jira_get_statuses
     result = JSON.parse(response.body)
     if result
       result.each do |r|
-        r.delete_if { |k, _| k =~ /self|iconurl|statuscategory/i }
+        r.delete_if {|k, _| k =~ /self|iconurl|statuscategory/i}
       end
       puts "GET #{URL_JIRA_STATUSES} => OK (#{result.length})"
     end
@@ -560,7 +560,7 @@ def jira_get_issue(issue_id)
     response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
     if result
-      result.delete_if { |k, _| k =~ /self|expand/i }
+      result.delete_if {|k, _| k =~ /self|expand/i}
       puts "GET #{url} => OK"
     end
   rescue RestClient::ExceptionWithResponse => e
@@ -578,7 +578,7 @@ def jira_get_issue_comment(issue_id, comment_id)
     response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
     if result
-      result.delete_if { |k, _| k =~ /self|expand/i }
+      result.delete_if {|k, _| k =~ /self|expand/i}
       puts "GET #{url} => OK"
     end
   rescue RestClient::ExceptionWithResponse => e
@@ -596,7 +596,7 @@ def jira_get_issue_types
     result = JSON.parse(response)
     if result
       result.each do |r|
-        r.delete_if { |k, _| k.to_s =~ /self|iconurl|avatarid/i }
+        r.delete_if {|k, _| k.to_s =~ /self|iconurl|avatarid/i}
       end
       puts "GET #{URL_JIRA_ISSUE_TYPES} => OK (#{result.length})"
     end
@@ -614,7 +614,7 @@ def jira_get_issuelink_types
     result = result['issueLinkTypes']
     if result
       result.each do |r|
-        r.delete_if { |k, _| k.to_s =~ /self/i }
+        r.delete_if {|k, _| k.to_s =~ /self/i}
       end
       puts "GET #{URL_JIRA_ISSUELINK_TYPES} => OK (#{result.length})"
     end
@@ -627,9 +627,9 @@ end
 def jira_create_custom_field(name, description, type)
   result = nil
   payload = {
-    name: name,
-    description: description,
-    type: type
+      name: name,
+      description: description,
+      type: type
   }.to_json
   begin
     response = RestClient::Request.execute(method: :post, url: URL_JIRA_FIELDS, payload: payload, headers: JIRA_HEADERS_ADMIN)
@@ -637,7 +637,7 @@ def jira_create_custom_field(name, description, type)
     puts "POST #{URL_JIRA_FIELDS} name='#{name}' => OK (#{result['id']})"
   rescue RestClient::ExceptionWithResponse => e
     error = JSON.parse(e.response)
-    message = error['errors'].map { |k, v| "#{k}: #{v}" }.join(' | ')
+    message = error['errors'].map {|k, v| "#{k}: #{v}"}.join(' | ')
     puts "POST #{URL_JIRA_FIELDS} name='#{name}' => NOK (#{message})"
   rescue => e
     puts "POST #{URL_JIRA_FIELDS} name='#{name}' => NOK (#{e.message})"
@@ -667,17 +667,17 @@ def jira_create_user(user)
   end
   displayName = user['name']
   payload = {
-    name: username,
-    password: username,
-    # TODO: Make the following configurable and not hard-coded.
-    emailAddress: email,
-    displayName: displayName,
+      name: username,
+      password: username,
+      # TODO: Make the following configurable and not hard-coded.
+      emailAddress: email,
+      displayName: displayName,
   }.to_json
   begin
     response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN, timeout: 30)
     puts "#{response.body}"
     body = JSON.parse(response.body)
-    body.delete_if { |k, _| k =~ /self|avatarurls|timezone|locale|groups|applicationroles|expand/i }
+    body.delete_if {|k, _| k =~ /self|avatarurls|timezone|locale|groups|applicationroles|expand/i}
     puts "POST #{url} username='#{username}' => OK (#{body.to_json})"
     result = body
   rescue RestClient::ExceptionWithResponse => e
@@ -685,7 +685,7 @@ def jira_create_user(user)
       puts "POST #{url} username='#{username}' => NOK (#{e}) please retry"
     end
     error = JSON.parse(e.response)
-    message = error['errors'].map { |k, v| "#{k}: #{v}" }.join(' | ')
+    message = error['errors'].map {|k, v| "#{k}: #{v}"}.join(' | ')
     puts "POST #{url} username='#{username}' => NOK (#{message})"
   rescue => e
     puts "POST #{url} username='#{username}' => NOK (#{e.message})"
@@ -700,7 +700,7 @@ def jira_get_user(username, groups)
   begin
     response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
     body = JSON.parse(response.body)
-    body.delete_if { |k, _| k =~ /self|avatarurls|timezone|locale|applicationroles|expand/i }
+    body.delete_if {|k, _| k =~ /self|avatarurls|timezone|locale|applicationroles|expand/i}
     puts "GET #{url} => OK (#{body.to_json})"
     result = body
   rescue => e
@@ -725,9 +725,9 @@ def jira_get_board_by_project_name(project_name)
     # is_last = body['isLast']
     values = body['values']
     if values
-      result = values.detect { |h| h['name'].match?(/^#{key}/) }
+      result = values.detect {|h| h['name'].match?(/^#{key}/)}
       if result
-        result.delete_if { |k, _| k =~ /self/i }
+        result.delete_if {|k, _| k =~ /self/i}
         puts "GET #{url} name='#{project_name}', key='#{key}' => FOUND"
       else
         puts "GET #{url} name='#{project_name}', key='#{key}' => NOT FOUND"
@@ -829,17 +829,17 @@ def reformat_markdown(content, opts = {})
       markdown << line
       next
     end
-    line.gsub!(/#(\d+)\b/) { |ticket| markdown_ticket_link(ticket, tickets, strikethru) } if tickets
+    line.gsub!(/#(\d+)\b/) {|ticket| markdown_ticket_link(ticket, tickets, strikethru)} if tickets
     markdown << line.
-                gsub(/<pre><code>/i, '{code:java}').
-                gsub(/<\/code><\/pre>/i, '{code}').
-                gsub(/\[\[url:(.*?)\|(.*?)\]\]/i, '[\2|\1]').
-                gsub(/\[\[url:(.*?)\]\]/i, '[\1|\1]').
-                gsub(/<code>(.*?)<\/code>/i, '{{\1}}').
-                gsub(/@([^@]*)@( |$)/, '{{\1}}\2').
-                gsub(/@([a-z.-_]*)/i) { |name| markdown_name(name, logins) }.
-                gsub(/\[\[user:(.*?)(\|(.*?))?\]\]/i) { |name| markdown_name(name, logins) }.
-                gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, content_type) }
+        gsub(/<pre><code>/i, '{code:java}').
+        gsub(/<\/code><\/pre>/i, '{code}').
+        gsub(/\[\[url:(.*?)\|(.*?)\]\]/i, '[\2|\1]').
+        gsub(/\[\[url:(.*?)\]\]/i, '[\1|\1]').
+        gsub(/<code>(.*?)<\/code>/i, '{{\1}}').
+        gsub(/@([^@]*)@( |$)/, '{{\1}}\2').
+        gsub(/@([a-z.-_]*)/i) {|name| markdown_name(name, logins)}.
+        gsub(/\[\[user:(.*?)(\|(.*?))?\]\]/i) {|name| markdown_name(name, logins)}.
+        gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) {|image| markdown_image(image, images, content_type)}
   end
   markdown.join("\n")
 end
@@ -849,7 +849,7 @@ def rest_client_exception(e, method, url, payload = {})
   begin
     err = JSON.parse(e.response)
     if err['errors'] && !err['errors'].empty?
-      message = err['errors'].map { |k, v| "#{k}: #{v}" }.join(' | ')
+      message = err['errors'].map {|k, v| "#{k}: #{v}"}.join(' | ')
     elsif err['errorMessages'] && !err['errorMessages'].empty?
       message = err['errorMessages'].join(' | ')
     elsif err['error']
@@ -867,3 +867,17 @@ def rest_client_exception(e, method, url, payload = {})
   message
 end
 
+def assembla_estimate_to_jira_size(estimate)
+  return case estimate.to_i
+         when 0
+           'None'
+         when 1
+           'Small'
+         when 3
+           'Medium'
+         when 7
+           'Large'
+         else
+           'None'
+         end
+end
