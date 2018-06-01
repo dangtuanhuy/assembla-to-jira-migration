@@ -137,11 +137,10 @@ end
   end
 end
 
-puts
 @screens.each do |screen|
   tab = screen[:tabs][0]
-  puts "Screen: id=#{screen[:id]} Tab: id='#{tab['id']}', name='#{tab['name']}' fields=#{tab[:fields].length}"
+  puts "\nScreen: id=#{screen[:id]} Tab: id='#{tab['id']}', name='#{tab['name']}' fields=#{tab[:fields].length}"
   tab[:fields].sort { |x, y| x['name'] <=> y['name'] }.each do |field|
-    puts "* '#{field['name']}' #{field['id']} #{field['type']}" if @all_custom_field_names.include?(field['name'])
+    puts "* id='#{field['id']}', name='#{field['name']}'" if @all_custom_field_names.include?(field['name'])
   end
 end

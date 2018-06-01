@@ -146,7 +146,8 @@ CUSTOM_FIELD_NAMES = [
     'Rank',
     'Resolution',
     'Sprint',
-    'Story Points'
+    'Story Points',
+    'Time Tracking'
 ].freeze
 
 JIRA_AGILE_HOST = "#{JIRA_API_BASE}/#{ENV['JIRA_AGILE_HOST']}"

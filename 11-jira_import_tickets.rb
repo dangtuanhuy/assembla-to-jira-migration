@@ -211,11 +211,12 @@ def create_ticket_jira(ticket, counter, total)
   jira_size = assembla_estimate_to_jira_size(estimate)
   payload[:fields]["#{@customfield_name_to_id['Assembla-Estimate']}".to_sym] = jira_size
 
-  if total_invested_hours.to_i != 0
-    payload[:fields][:timeTracking] = {}
-    payload[:fields][:timeTracking][:originalEstimate] = "#{total_invested_hours}h"
-    payload[:fields][:timeTracking][:remainingEstimate] = "#{total_working_hours}h" if total_working_hours.to_i != 0
-  end
+  # TODO
+  # if estimate.to_i != 0
+  #   payload[:fields][:timeTracking] = {}
+  #   payload[:fields][:timeTracking][:originalEstimate] = "#{estimate.to_i}h"
+  #   # payload[:fields][:timeTracking][:remainingEstimate] = "#{total_working_hours}h" if total_working_hours.to_i != 0
+  # end
 
   if custom_field
     assembla_custom_field = "Assembla-#{ASSEMBLA_CUSTOM_FIELD}"
