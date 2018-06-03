@@ -61,6 +61,13 @@ The toolset has been written with the [Ruby programming language](https://www.ru
 * [Bundler](http://bundler.io)
 * [Git](https://git-scm.com/downloads)
 
+Ensure that you have the correct version of ruby installed and set to using it for scripts.
+
+```
+$ rvm install `cat .ruby-version`
+$ rvm use `cat .ruby-version`
+```
+
 Once this has been done, you can checkout and install the toolset from the github repository.
 
 ```
@@ -185,6 +192,7 @@ JIRA_API_ADMIN_EMAIL=john.doe@example.org
 JIRA_API_UNKNOWN_USER=unknown.user
 JIRA_API_DEFAULT_EMAIL=example.org
 JIRA_API_IMAGES_THUMBNAIL=description:false,comments:true
+JIRA_API_SKIP_EMPTY_COMMENTS=true
 
 # Cross project ticket linking
 JIRA_API_SPACE_TO_PROJECT=space1-name:project1-key,space2-name:project2-name
@@ -263,6 +271,20 @@ $ ruby 02-assembla_export_tickets.rb associations # => ticket-associations.csv
 ```
 
 This allows you to recover better to the previous step in case of failure, for example near the end where you would lose all the data in the dump files.
+
+If you also want to capture the output, then you can run the above commands like this:
+
+```
+$ ruby nn-assembla_xxx.rb | tee logs/nn-assembal_xxx.log
+
+```
+
+And watch the progress as follows:
+
+```
+$ tail -f logs/nn-assembal_xxx.log
+```
+
 
 ## Import data into Jira
 
@@ -426,6 +448,12 @@ def jira_add_field(screen_id, tab_id, field_id)
 end
 ```
 
+Once all of the custom fields have been created, you want to make sure that a `free text searcher` search template is selected so that the custom field can be sorted in Jira.
+
+Go to the `Issues Custom Fields` page and click on the right of the given row to go to the `Edit Custom Fields Details`.
+
+![](images/jira-edit-custom-fields.png)
+
 #### Errors
 
 If for one reason or the other the script fails, you will need to define manually the following custom fields (text field read-only):
@@ -578,6 +606,12 @@ jira_comment_id|jira_ticket_id|assembla_comment_id|assembla_ticket_id|user_login
 ```
 
 During the conversion, any differences between the original Assembla ticket comments and the newly created Jira issue comments is recorded in the `data/jira/:space/jira-comments-diffs.csv` file. This is a good place to look so you can verify that indeed the markdown conversion produced the expected results.
+
+Since there are so many more comments than tickets, this usually takes the longest by far of all the scripts. My experience using a normal Internet connection to a Jira Cloud instance is that I can import around 60-65 comments per hour.
+
+So assuming we have 2000 tickets with on average 5 comments per ticket, there will be a total of 10,000 comments which will take about 2 hours and 45 minutes.
+
+If `JIRA_API_SKIP_EMPTY_COMMENTS` is true, then only non-empty comments will be imported, e.g. ignore Assembla history stuff. This will make the process go a bit faster, for those impatient folks in the crowd.
 
 Note: we allow the original creators of the Assembla comments to be able to create the new Jira comments, therefore retaining ownership.
 

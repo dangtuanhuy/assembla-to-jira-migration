@@ -34,7 +34,7 @@ end
 
 def jira_update_issue_description(issue_key, description, counter, total)
   result = nil
-  url = "#{URL_JIRA_ISSUES}/#{issue_key}"
+  url = "#{URL_JIRA_ISSUES}/#{issue_key}?notifyUsers=false"
   payload = {
       update: {},
       fields: {

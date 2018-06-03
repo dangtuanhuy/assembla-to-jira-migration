@@ -232,7 +232,7 @@ def jira_update_status(issue_id, status, counter)
           }
         }
       }.to_json
-      url = "#{URL_JIRA_ISSUES}/#{issue_id}"
+      url = "#{URL_JIRA_ISSUES}/#{issue_id}?notifyUsers=false"
       begin
         RestClient::Request.execute(method: :put, url: url, payload: payload, headers: headers)
       rescue RestClient::ExceptionWithResponse => e

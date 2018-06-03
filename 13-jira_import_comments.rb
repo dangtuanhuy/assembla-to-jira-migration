@@ -15,6 +15,7 @@ total_comments = @comments_assembla.length
 puts "Total comments: #{total_comments}"
 puts "Empty comments: #{@comments_assembla_empty.length}"
 puts "Remaining comments: #{@comments_assembla.length}"
+puts "Skip empty comments: #{JIRA_API_SKIP_EMPTY_COMMENTS}"
 
 # Jira tickets
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
@@ -109,6 +110,7 @@ end
 @jira_comments = []
 
 @comments_diffs = []
+@comments_skipped = []
 
 @comments_assembla.each_with_index do |comment, index|
   id = comment['id']
@@ -117,6 +119,11 @@ end
   issue_id = @assembla_id_to_jira_id[ticket_id]
   issue_key = @assembla_id_to_jira_key[ticket_id]
   user_login = @user_id_to_login[user_id]
+  body = comment['comment']
+  if JIRA_API_SKIP_EMPTY_COMMENTS && (body.nil || body.length.zero?)
+    @comments_skipped << comment
+    next
+  end
   result = jira_create_comment(issue_id, user_id, comment, index + 1)
   next unless result
   comment_id = result['id']
@@ -127,7 +134,7 @@ end
     assembla_comment_id: id,
     assembla_ticket_id: ticket_id,
     user_login: user_login,
-    body: comment['comment']
+    body: body
   }
 end
 
@@ -137,3 +144,9 @@ write_csv_file(comments_jira_csv, @jira_comments)
 
 comments_diffs_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-comments-diffs.csv"
 write_csv_file(comments_diffs_jira_csv, @comments_diffs)
+
+if JIRA_API_SKIP_EMPTY_COMMENTS && @comments_skipped.length
+  puts "Comments skipped: #{@comments_skipped.length}"
+  comments_skipped_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-comments-skipped.csv"
+  write_csv_file(comments_skipped_jira_csv, @comments_skipped)
+end

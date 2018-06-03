@@ -16,7 +16,7 @@ end
 
 def jira_update_summary_and_descr(issue_id, summary, description)
   result = nil
-  url = "#{URL_JIRA_ISSUES}/#{issue_id}"
+  url = "#{URL_JIRA_ISSUES}/#{issue_id}?notifyUsers=false"
   fields = {}
   fields[:summary] = summary if summary
   fields[:description] = description if description

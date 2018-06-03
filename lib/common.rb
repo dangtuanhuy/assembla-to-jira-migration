@@ -70,6 +70,9 @@ JIRA_API_STATUSES = ENV['JIRA_API_STATUSES']
 
 MAX_RETRY = 3
 
+# By default we skip empty comments
+JIRA_API_SKIP_EMPTY_COMMENTS = ENV['JIRA_API_SKIP_EMPTY_COMMENTS'] || true
+
 def csv_to_array(pathname)
   csv = CSV::parse(File.open(pathname) {|f| f.read})
   fields = csv.shift

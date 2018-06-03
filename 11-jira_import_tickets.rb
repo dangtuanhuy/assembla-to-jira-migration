@@ -213,6 +213,10 @@ def create_ticket_jira(ticket, counter, total)
 
   # TODO
   # if estimate.to_i != 0
+  #   payload[:fields]["#{@customfield_name_to_id['Time Tracking']}".to_sym] = estimate
+  # end
+  #
+  # if estimate.to_i != 0
   #   payload[:fields][:timeTracking] = {}
   #   payload[:fields][:timeTracking][:originalEstimate] = "#{estimate.to_i}h"
   #   # payload[:fields][:timeTracking][:remainingEstimate] = "#{total_working_hours}h" if total_working_hours.to_i != 0

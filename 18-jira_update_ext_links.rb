@@ -68,7 +68,7 @@ def jira_update_issue_description(issue_key, description)
   user_login.sub!(/@.*$/,'')
   user_email = @user_login_to_email[user_login]
   headers = headers_user_login(user_login, user_email)
-  url = "#{URL_JIRA_ISSUES}/#{issue_key}"
+  url = "#{URL_JIRA_ISSUES}/#{issue_key}?notifyUsers=false"
   payload = {
     update: {},
     fields: {
