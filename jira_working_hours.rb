@@ -42,34 +42,62 @@ puts "Done: #{done}"
 puts "Total: #{total} (#{zero + todo + ongoing + done == total ? 'OK' : 'NOK'})"
 
 puts "\nZero: #{@zero_assembla.length}"
+@zero_csv = []
 @done_assembla.each do |ticket|
-  id = ticket['id']
-  jira_key = @a_id_to_j_key[id]
-  puts "id='#{id}', jira_key='#{jira_key}'"
+  assembla_id = ticket['id']
+  jira_key = @a_id_to_j_key[assembla_id]
+  @zero_csv << {
+      assembla_id: assembla_id,
+      jira_key: jira_key
+  }
+  puts "assembla_id='#{assembla_id}', jira_key='#{jira_key}'"
 end
 
 puts "\nTodo: #{@todo_assembla.length}"
+@todo_csv = []
 @todo_assembla.each do |ticket|
-  id = ticket['id']
+  assembla_id = ticket['id']
   remaining = ticket['total_working_hours']
-  jira_key = @a_id_to_j_key[id]
-  puts "id='#{id}', remaining='#{remaining}', jira_key='#{jira_key}'"
+  jira_key = @a_id_to_j_key[assembla_id]
+  @todo_csv << {
+      assembla_id: assembla_id,
+      remaining: remaining,
+      jira_key: jira_key
+  }
+  puts "assembla_id='#{assembla_id}', remaining='#{remaining}', jira_key='#{jira_key}'"
 end
 
 puts "\nOngoing: #{@ongoing_assembla.length}"
+@ongoing_csv = []
 @ongoing_assembla.each do |ticket|
-  id = ticket['id']
+  assembla_id = ticket['id']
   worked = ticket['total_invested_hours']
   remaining = ticket['total_working_hours']
-  jira_key = @a_id_to_j_key[id]
-  puts "id='#{id}', worked='#{worked}', remaining='#{remaining}', jira_key='#{jira_key}'"
+  jira_key = @a_id_to_j_key[assembla_id]
+  @ongoing_csv << {
+      assembla_id: assembla_id,
+      worked: worked,
+      remaining: remaining,
+      jira_key: jira_key
+  }
+  puts "assembla_id='#{assembla_id}', worked='#{worked}', remaining='#{remaining}', jira_key='#{jira_key}'"
 end
 
 puts "\nDone: #{@done_assembla.length}"
+@done_csv = []
 @done_assembla.each do |ticket|
-  id = ticket['id']
+  assembla_id = ticket['id']
   worked = ticket['total_invested_hours']
-  jira_key = @a_id_to_j_key[id]
-  puts "id='#{id}', worked='#{worked}', jira_key='#{jira_key}'"
+  jira_key = @a_id_to_j_key[assembla_id]
+  @done_csv << {
+      assembla_id: assembla_id,
+      worked: worked,
+      jira_key: jira_key
+  }
+  puts "assembla_id='#{assembla_id}', worked='#{worked}', jira_key='#{jira_key}'"
 end
 
+write_csv_file("#{OUTPUT_DIR_JIRA}/jira-working-zero.csv", @zero_csv)
+write_csv_file("#{OUTPUT_DIR_JIRA}/jira-working-todo.csv", @todo_csv)
+write_csv_file("#{OUTPUT_DIR_JIRA}/jira-working-ongoing.csv", @ongoing_csv)
+write_csv_file("#{OUTPUT_DIR_JIRA}/jira-working-done.csv", @done_csv)
