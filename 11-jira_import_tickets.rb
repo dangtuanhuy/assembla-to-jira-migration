@@ -160,8 +160,8 @@ def create_ticket_jira(ticket, counter, total)
   story_rank = ticket['importance']
   story_points = ticket['story_importance']
   estimate = ticket['estimate']
-  total_invested_hours = ticket['total_invested_hours']
-  total_working_hours = ticket['total_working_hours']
+  assembla_worked = ticket['total_invested_hours']
+  assembla_remaining = ticket['total_working_hours']
 
   # Prepend the description text with a link to the original assembla ticket on the first line.
   description = "Assembla ticket [##{ticket_number}|#{ENV['ASSEMBLA_URL_TICKETS']}/#{ticket_number}] | "
@@ -211,16 +211,15 @@ def create_ticket_jira(ticket, counter, total)
   jira_size = assembla_estimate_to_jira_size(estimate)
   payload[:fields]["#{@customfield_name_to_id['Assembla-Estimate']}".to_sym] = jira_size
 
-  # TODO
-  # if estimate.to_i != 0
-  #   payload[:fields]["#{@customfield_name_to_id['Time Tracking']}".to_sym] = estimate
-  # end
-  #
-  # if estimate.to_i != 0
-  #   payload[:fields][:timeTracking] = {}
-  #   payload[:fields][:timeTracking][:originalEstimate] = "#{estimate.to_i}h"
-  #   # payload[:fields][:timeTracking][:remainingEstimate] = "#{total_working_hours}h" if total_working_hours.to_i != 0
-  # end
+  # Assembla-Worked => hrs
+  if assembla_worked.to_i != 0
+    payload[:fields]["#{@customfield_name_to_id['Assembla-Worked']}".to_sym] = assembla_worked
+  end
+
+  # Assembla-Remaining => hrs
+  if assembla_remaining.to_i != 0
+    payload[:fields]["#{@customfield_name_to_id['Assembla-Remaining']}".to_sym] = assembla_remaining
+  end
 
   if custom_field
     assembla_custom_field = "Assembla-#{ASSEMBLA_CUSTOM_FIELD}"

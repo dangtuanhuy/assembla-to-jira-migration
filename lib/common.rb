@@ -142,6 +142,8 @@ CUSTOM_FIELD_NAMES = [
     'Assembla-Assignee',
     'Assembla-Completed',
     'Assembla-Estimate', # => 0=None, 1=Small, 3=Medium, 7=Large
+    'Assembla-Worked',
+    'Assembla-Remaining',
     'Assignee',
     'Epic Link',
     'Epic Name',

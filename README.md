@@ -464,6 +464,9 @@ If for one reason or the other the script fails, you will need to define manuall
 * Assembla-Reporter
 * Assembla-Assignee
 * Assembla-Completed
+* Assembla-Estimate
+* Assembla-Worked
+* Assembla-Remaining
 * Assembla-(custom-field)
 
 where `Assembla-(custom-field)` is defined by `ASSEMBLA_CUSTOM_FIELD=custom-field` in the `.env` configuration file.
