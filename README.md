@@ -1403,6 +1403,7 @@ With such a complicated tool, there will always be some loose ends and/or additi
 
 * Must have: Update readme screenshots and relevant screen associations, e.g. only `Scrum Default Issue Screen` is required. [Issue 6](https://github.com/kgish/assembla-to-jira-migration/issues/6)
 * Bug: Ticket type 'Spike' is converted to an Epic. [Issue 14](https://github.com/kgish/assembla-to-jira-migration/issues/14)
+* Nice to have: Ignore sprints with no issues [Issue 27](https://github.com/kgish/assembla-to-jira-migration/issues/27)
 * Nice to have: Split large imports into smaller batches [Issue 26](https://github.com/kgish/assembla-to-jira-migration/issues/26)
 * Nice to have: Support multiple Assembla [custom fields](http://api-docs.assembla.cc/content/ref/ticket_custom_fields_fields.html) instead of just one. [Issue 2](https://github.com/kgish/assembla-to-jira-migration/issues/2)
 * Nice to have: Rank tickets (cloud) in batches of fifty instead of individually. [Issue 15](https://github.com/kgish/assembla-to-jira-migration/issues/15)
