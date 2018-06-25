@@ -42,10 +42,46 @@ puts "Total sprints: #{@sprints.length}"
 end
 puts
 
+# Sprint name must be shorter than 30 characters
+def get_name(name)
+  name.length > 29 ? name[0...26] + '...' : name
+end
+
+# You must specify a start date for the sprint
+def get_start_date(startDate, endDate)
+  if startDate.nil?
+    if endDate.nil?
+      y, m, d = Time.now().to_s[0...10].split('-')
+    else
+      y, m, d = endDate[0...10].split('-')
+    end
+    # 14 days before the end date or today if no start date
+    (Time.gm(y, m, d) - (14 * 24 * 60 * 60)).to_s[0...10]
+  else
+    startDate
+  end
+end
+
+# You must specify an end date for the sprint
+def get_end_date(startDate, endDate)
+  # You must specify a start date for the sprint
+  if endDate.nil?
+    if startDate.nil?
+      y, m, d = Time.now().to_s[0...10].split('-')
+    else
+      y, m, d = startDate[0...10].split('-')
+    end
+    # 14 days after the start date or today if no start date
+    (Time.gm(y, m, d) + (14 * 24 * 60 * 60)).to_s[0...10]
+  else
+    endDate
+  end
+end
+
 # GET /rest/agile/1.0/board/{boardId}/sprint
 def jira_get_sprint(board, sprint)
-  name = sprint['title']
   result = nil
+  name = get_name(sprint['title'])
   url = "#{URL_JIRA_BOARDS}/#{board['id']}/sprint"
   begin
     response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
@@ -71,12 +107,16 @@ end
 
 def jira_create_sprint(board, sprint)
   result = nil
-  name = sprint['title']
+  name = get_name(sprint['title'])
+  startDate = sprint['start_date']
+  endDate = sprint['due_date']
+  startDate = get_start_date(startDate, endDate)
+  endDate = get_end_date(startDate, endDate)
   url = URL_JIRA_SPRINTS
   payload = {
     name: name,
-    startDate: sprint['start_date'],
-    endDate: sprint['due_date'],
+    startDate: startDate,
+    endDate: endDate,
     originBoardId: board['id']
     # "goal": "sprint 1 goal"
   }.to_json
@@ -103,7 +143,7 @@ def jira_move_issues_to_sprint(sprint, tickets)
   goodbye("Cannot move issues to sprint, len=#{len} (must be less than 50") if len > 50
   result = nil
   url = "#{URL_JIRA_SPRINTS}/#{sprint['id']}/issue"
-  issues = tickets.map { |ticket| ticket['jira_ticket_key'] }
+  issues = tickets.map { |ticket| ticket['jira_ticket_key'] }.compact
   payload = {
     issues: issues
   }.to_json
@@ -122,15 +162,17 @@ end
 # PUT /rest/agile/1.0/sprint/{sprintId}
 def jira_update_sprint_state(sprint, state)
   result = nil
-  name = sprint['name']
-  start_date = sprint['start_date']
-  end_date = sprint['endDate']
+  name = get_name(sprint['name'])
+  startDate = sprint['startDate']
+  endDate = sprint['endDate']
+  startDate = get_start_date(startDate, endDate)
+  endDate = get_end_date(startDate, endDate)
   url = "#{URL_JIRA_SPRINTS}/#{sprint['id']}"
   payload = {
     name: name,
     state: state,
-    startDate: start_date,
-    endDate: end_date
+    startDate: startDate,
+    endDate: endDate
   }.to_json
   begin
     RestClient::Request.execute(method: :put, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN)

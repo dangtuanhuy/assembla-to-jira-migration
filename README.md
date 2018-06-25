@@ -913,6 +913,14 @@ $ ruby 21-jira_create_sprints.rb # => data/jira/:space/jira-create-sprints.csv
 
 The issues are redistributed to the sprints they belong to and the most recent sprint is set as the `active` sprint.
 
+If the milestone title is not less than 30 characters, then it will be truncated with an ellipsis before assigning the sprint name to it.
+
+In order to be able to create a sprint, both a start and an end date must be provided.
+
+If no start date is given, then by default a date 2 weeks previous to the end date will be used, and if there is no end date provided, then 2 weeks before the current date will be used.
+
+If no end date is given, then by default a date 2 weeks after the start date will be used, and if there is no start date provided, then 2 weeks after the current date will be used.
+
 #### Errors
 
 You might receive an `403 Unauthorized` error. If this is the case, go to the Jira application, login as admin and try again.

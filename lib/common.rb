@@ -6,6 +6,7 @@ require 'fileutils'
 require 'dotenv/load'
 require 'rest-client'
 require 'base64'
+require 'date'
 
 @debug = ENV['DEBUG'] == 'true'
 
