@@ -73,7 +73,7 @@ end
     next unless user_id.length.positive?
     watcher = @user_id_to_login[user_id]
     unless watcher
-      puts "Unknown watcher for user_id=#{user_id}, assembla_ticket_nr=#{assembla_ticket_nr}, jita_ticket_key=#{jira_ticket_key}"
+      puts "Unknown watcher for user_id=#{user_id}, assembla_ticket_nr=#{assembla_ticket_nr}, jira_ticket_key=#{jira_ticket_key}"
       next
     end
     result = jira_update_watcher(jira_ticket_id, watcher, index + 1)

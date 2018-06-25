@@ -249,6 +249,12 @@ Make sure you're using your Atlassian account email address and password for bas
 
 You can run the export in a number of stages, output files being generated at each point in the process.
 
+Make sure that you are using the correct version of ruby.
+
+```
+$ rvm use `cat .ruby-version`
+```
+
 The output files are located in the directory `data/assembla/:space/` as follows:
 
 ```
@@ -632,6 +638,12 @@ $ ruby 14-jira_import_attachments.rb [restart_offset] # => \
     data/jira/:space/jira-attachments-import-ok.csv
     data/jira/:space/jira-attachments-import-nok.csv
 ```
+
+Make sure that the admin settings for attachment size is large enough to allow all of the largest attachments to be uploaded.
+
+![](images/jira-attachment-size.png)
+
+When completed, don't forget to restore the size to the original value.
 
 Note: The Jira server sometimes has problems processing attachments too quickly and might return an error. In that case, just restart the command and pass it the offset where you want to restart from.
 
@@ -1383,6 +1395,7 @@ With such a complicated tool, there will always be some loose ends and/or additi
 
 * Must have: Update readme screenshots and relevant screen associations, e.g. only `Scrum Default Issue Screen` is required. [Issue 6](https://github.com/kgish/assembla-to-jira-migration/issues/6)
 * Bug: Ticket type 'Spike' is converted to an Epic. [Issue 14](https://github.com/kgish/assembla-to-jira-migration/issues/14)
+* Nice to have: Split large imports into smaller batches [Issue 26](https://github.com/kgish/assembla-to-jira-migration/issues/26)
 * Nice to have: Support multiple Assembla [custom fields](http://api-docs.assembla.cc/content/ref/ticket_custom_fields_fields.html) instead of just one. [Issue 2](https://github.com/kgish/assembla-to-jira-migration/issues/2)
 * Nice to have: Rank tickets (cloud) in batches of fifty instead of individually. [Issue 15](https://github.com/kgish/assembla-to-jira-migration/issues/15)
 * Nice to have: Create Jira board columns in line with the original Assembla cardwall columns (statuses = blocked, testable, ready for acceptance, in acceptance testing, ready for deploy) and populate with the relevant issues. [Issue 4](https://github.com/kgish/assembla-to-jira-migration/issues/4)

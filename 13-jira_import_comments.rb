@@ -120,7 +120,7 @@ end
   issue_key = @assembla_id_to_jira_key[ticket_id]
   user_login = @user_id_to_login[user_id]
   body = comment['comment']
-  if JIRA_API_SKIP_EMPTY_COMMENTS && (body.nil || body.length.zero?)
+  if JIRA_API_SKIP_EMPTY_COMMENTS && (body.nil? || body.length.zero?)
     @comments_skipped << comment
     next
   end
