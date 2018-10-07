@@ -281,7 +281,7 @@ This allows you to recover better to the previous step in case of failure, for e
 If you also want to capture the output, then you can run the above commands like this:
 
 ```
-$ ruby nn-assembla_xxx.rb | tee logs/nn-assembal_xxx.log
+$ ruby nn-assembla_xxx.rb | tee logs/nn-assembla_xxx.log
 
 ```
 
