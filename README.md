@@ -267,7 +267,22 @@ $ ruby 03-assembla_report_users.rb # => report-users.csv
 $ ruby 04-assembla_report_tickets.rb # => report-tickets.csv
 ```
 
-Notice that executing `02-assembla_export_tickets.rb` can be very time consuming, so you might want to break it up into smaller chunks by passing the optional `type` (comments, attachments, tags or associations) as the first argument.
+Executing `01-assembla_export_space.rb` can be very time consuming, so you might want to break it up into smaller chunks and running them in parallel, by passing the optional `type` (space_tools, users, user_roles, tags, milestones/all, tickets/statuses, tickets/custom_fields, documents, wiki_pages, tickets) as the first argument.
+
+```
+$ ruby 01-assembla_export_space.rb space_tools # => space-tools.csv
+$ ruby 01-assembla_export_space.rb users # => users.csv
+$ ruby 01-assembla_export_space.rb user_roles # => user-roles.csv
+$ ruby 01-assembla_export_space.rb tags # => ticket-tags.csv
+$ ruby 01-assembla_export_space.rb milestones/all # => milestones-all.csv
+$ ruby 01-assembla_export_space.rb ticket/statuses # => ticket-statuses.csv
+$ ruby 01-assembla_export_space.rb tickets/custom_fields # => tickets-custom-fields.csv
+$ ruby 01-assembla_export_space.rb documents # => documents.csv
+$ ruby 01-assembla_export_space.rb wiki_pages # => wiki-pages.csv
+$ ruby 01-assembla_export_space.rb tickets # => tickets.csv
+```
+
+The same applies when executing `02-assembla_export_tickets.rb`, and you can break it up into smaller chunks by passing the optional `type` (comments, attachments, tags or associations) as the first argument.
 
 ```
 $ ruby 02-assembla_export_tickets.rb comments # => ticket-comments.csv

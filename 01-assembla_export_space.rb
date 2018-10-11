@@ -2,6 +2,15 @@
 
 load './lib/common.rb'
 
+ALLOWED_ARGS = %w(space_tools users user_roles tags milestones/all tickets/statuses tickets/custom_fields documents wiki_pages tickets).freeze
+
+if ARGV[0].nil?
+  puts "Export all: #{ALLOWED_ARGS.join(', ')}"
+else
+  goodbye("Invalid arg='#{ARGV[0]}', must be one of: #{ALLOWED_ARGS.join(', ')}") unless ALLOWED_ARGS.include?(ARGV[0])
+  puts "Export only: #{ARGV[0]}"
+end
+
 ITEMS = [
   { name: 'space_tools' },
   # space-tools.csv
@@ -41,6 +50,15 @@ ITEMS = [
   # total_estimate,total_invested_hours,total_working_hours,assigned_to_id,reporter_id,custom_fields,hierarchy_type,
   # due_date,assigned_to_name,picture_url
 ].freeze
+
+if ARGV[0].nil?
+  items = ITEMS
+else
+  items = [ ITEMS.find { |item| item[:name] == ARGV[0] } ]
+end
+
+puts items.inspect
+exit
 
 write_csv_file("#{OUTPUT_DIR_ASSEMBLA}/spaces.csv", assembla_get_spaces)
 

@@ -5,7 +5,7 @@ load './lib/common.rb'
 ALLOWED_ARGS = %w(comments attachments tags associations).freeze
 
 if ARGV[0].nil?
-  puts "Export all: #{ALLOWED_ARGS.join(',')}"
+  puts "Export all: #{ALLOWED_ARGS.join(', ')}"
 else
   goodbye("Invalid arg='#{ARGV[0]}', must be one of: #{ALLOWED_ARGS.join(', ')}") unless ALLOWED_ARGS.include?(ARGV[0])
   puts "Export only: #{ARGV[0]}"
