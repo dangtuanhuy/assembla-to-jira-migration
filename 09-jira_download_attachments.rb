@@ -2,6 +2,38 @@
 
 load './lib/common.rb'
 
+
+# EXPERIMENTAL - IGNORE
+# # Arguments: offset=n count=n
+# #
+# batch = false
+# offset = -1
+# count = -1
+#
+# if ARGV[0].nil?
+#   puts "Export all attachments!"
+# else
+#   if /^offset=(\d+)$/.match(ARGV[0])
+#     offset = $1
+#   else
+#     goodbye("Invalid 1st arg='#{ARGV[0]}', must be 'offset=[0...n]'")
+#   end
+#   if ARGV[1]
+#     if /^count=([1-9]\d*)$/.match(ARGV[1])
+#       count = $1
+#     else
+#       goodbye("Invalid 2nd arg='#{ARGV[1]}', must be 'count=[1...n]'")
+#     end
+#   end
+#   batch = true
+# end
+#
+# if batch
+#   puts "offset = #{offset}"
+#   puts "count = #{count}"
+# end
+# EXPERIMENTAL - IGNORE
+
 # Assembla attachments
 users_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/users.csv"
 tickets_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
@@ -67,11 +99,11 @@ end
     extname = File.extname(filepath)
     basename = File.basename(filepath, extname)
     dirname = File.dirname(filepath)
-    basename.sub!(/\.\d{3}$/, '')
+    basename = basename.sub(/\.\d{3}$/, '')
     filename = "#{basename}.#{nr.to_s.rjust(3, '0')}#{extname}"
     filepath = "#{dirname}/#{filename}"
   end
-  
+
   puts "Downloading: #{url}"
   puts "#{percentage}% [#{counter}|#{@attachments_total}] #{created_at} #{assembla_ticket_id} '#{filename}' (#{content_type})"
   begin
