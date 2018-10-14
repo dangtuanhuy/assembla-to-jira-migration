@@ -3,6 +3,25 @@
 load './lib/common.rb'
 load './lib/users-assembla.rb'
 
+# Parameters: startAt=n maxResults=m (optional)
+
+@startAt = 1
+@maxResults = -1
+
+unless ARGV[0].nil?
+  goodbye("Invalid ARGV1='#{ARGV[0]}', must be 'startAt=number' where number > 0") unless /^startAt=([1-9]\d*)$/.match?(ARGV[0])
+  m = /^startAt=([1-9]\d*)$/.match(ARGV[0])
+  @startAt = m[1].to_i
+  unless ARGV[1].nil?
+    goodbye("Invalid ARGV2='#{ARGV[1]}', must be 'maxResults=number' where number > 0") unless /^maxResults=([1-9]\d*)$/.match?(ARGV[1])
+    m = /^maxResults=([1-9]\d*)$/.match(ARGV[1])
+    @maxResults = m[1].to_i
+  end
+end
+
+puts "startAt: #{@startAt}"
+puts "maxResults: #{@maxResults}" if @maxResults != -1
+
 # --- ASSEMBLA Tickets --- #
 
 tickets_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
@@ -39,18 +58,17 @@ end
 @custom_fields = {}
 @tickets_assembla.each do |ticket|
   c_fields = ticket['custom_fields']
-  unless c_fields&.empty?
-    fields = JSON.parse(c_fields.gsub(/=>/, ': '))
-    fields.each do |k, v|
-      @custom_fields[k] = [] unless @custom_fields[k]
-      @custom_fields[k] << v unless v&.empty? || @custom_fields[k].include?(v)
-    end
+  next if c_fields&.empty?
+  fields = JSON.parse(c_fields.gsub(/=>/, ': '))
+  fields.each do |k, v|
+    @custom_fields[k] = [] unless @custom_fields[k]
+    @custom_fields[k] << v unless v&.empty? || @custom_fields[k].include?(v)
   end
 end
 
-title_2_type = {}
+@title_to_type = {}
 @custom_fields_assembla.each do |item|
-  title_2_type[item['title']] = item['type']
+  @title_to_type[item['title']] = item['type']
 end
 
 puts "\nTotal custom fields: #{@custom_fields.keys.length}"
@@ -58,7 +76,7 @@ puts "\nTotal custom fields: #{@custom_fields.keys.length}"
 @custom_fields.keys.each do |k|
   custom_field = @custom_fields[k]
   puts "\nTotal #{k} #{custom_field.length}"
-  custom_field = title_2_type[k] == 'Numeric' ? custom_field.sort_by(&:to_f) : custom_field.sort
+  custom_field = @title_to_type[k] == 'Numeric' ? custom_field.sort_by(&:to_f) : custom_field.sort
   custom_field.each do |name|
     puts "* #{name}"
   end
@@ -151,6 +169,7 @@ def get_issue_type(ticket)
 end
 
 def create_ticket_jira(ticket, counter, total)
+
   project_id = @project['id']
   ticket_id = ticket['id']
   ticket_number = ticket['number']
@@ -185,9 +204,6 @@ def create_ticket_jira(ticket, counter, total)
   description += reformatted_description
 
   labels = get_labels(ticket)
-
-  custom_fields = JSON.parse(ticket['custom_fields'].gsub('=>', ':'))
-  custom_field = ASSEMBLA_CUSTOM_FIELD.empty? ? nil : custom_fields[ASSEMBLA_CUSTOM_FIELD]
 
   milestone = get_milestone(ticket)
 
@@ -230,10 +246,10 @@ def create_ticket_jira(ticket, counter, total)
     payload[:fields]["#{@customfield_name_to_id['Assembla-Remaining']}".to_sym] = assembla_remaining
   end
 
-  if custom_field
-    assembla_custom_field = "Assembla-#{ASSEMBLA_CUSTOM_FIELD}"
-    payload[:fields]["#{@customfield_name_to_id[assembla_custom_field]}".to_sym] = custom_field
-  end
+  # if custom_field
+  #   assembla_custom_field = "Assembla-#{ASSEMBLA_CUSTOM_FIELD}"
+  #   payload[:fields]["#{@customfield_name_to_id[assembla_custom_field]}".to_sym] = custom_field
+  # end
 
   if JIRA_SERVER_TYPE == 'hosted'
     payload[:fields]["#{@customfield_name_to_id['Rank']}".to_sym] = story_rank
@@ -249,6 +265,22 @@ def create_ticket_jira(ticket, counter, total)
   if @cannot_be_assigned_issues.include?(assignee_name)
     payload[:fields]["#{@customfield_name_to_id['Assembla-Assignee']}".to_sym] = payload[:fields][:assignee][:name]
     payload[:fields][:assignee][:name] = ''
+  end
+
+  # --- Custom fields Assembla --- #
+  custom_fields = JSON.parse(ticket['custom_fields'].gsub('=>', ':'))
+  custom_fields.each do |k, v|
+    next if v.nil? || v.length.zero?
+    type = @title_to_type[k]
+    value = type == 'Numeric' ? (v.index('.') ? v.to_f : v.to_i) : v
+    if type == 'List'
+      payload[:fields]["#{@customfield_name_to_id[k]}".to_sym] = {}
+      payload[:fields]["#{@customfield_name_to_id[k]}".to_sym][:id] = value
+    else
+      payload[:fields]["#{@customfield_name_to_id[k]}".to_sym] = value
+    end
+    # puts "#{counter}: type='#{type}', key='#{k}', value='#{v}' => '#{value}'" if type == 'Numeric'
+    # puts "#{counter}: type='#{type}', key='#{k}', value='#{value}'"
   end
 
   case issue_type[:name]
@@ -374,7 +406,7 @@ def create_ticket_jira(ticket, counter, total)
       description: description,
       assembla_ticket_id: ticket_id,
       assembla_ticket_number: ticket_number,
-      custom_field: custom_field,
+      # custom_field: custom_field,
       milestone_name: milestone[:name],
       story_rank: story_rank
   }
@@ -504,12 +536,15 @@ puts "\nJira custom Assembla fields:"
   puts "#{field['id']} '#{field['name']}'" if field['custom'] && field['name'] =~ /Assembla/
 end
 
+@all_custom_field_names = CUSTOM_FIELD_NAMES.dup
+@custom_fields_assembla.map {|field| field['title']}.each do |name|
+  @all_custom_field_names << name
+end
+
+# @all_custom_field_names << "Assembla-#{ASSEMBLA_CUSTOM_FIELD}" unless ASSEMBLA_CUSTOM_FIELD.empty?
+#
 @customfield_name_to_id = {}
 @customfield_id_to_name = {}
-
-@all_custom_field_names = CUSTOM_FIELD_NAMES.dup
-
-@all_custom_field_names << "Assembla-#{ASSEMBLA_CUSTOM_FIELD}" unless ASSEMBLA_CUSTOM_FIELD.empty?
 
 missing_fields = []
 @all_custom_field_names.each do |name|
@@ -579,8 +614,21 @@ end
 
 puts "\nReporters => OK"
 
+@completed = 0
+@skip_remaining = true
+puts "SKIP to ticket #{@startAt}" if @startAt > 1
 @tickets_assembla.each_with_index do |ticket, index|
-  @jira_issues << create_ticket_jira(ticket, index + 1, @total_tickets)
+  cnt = index + 1
+  next if @startAt > cnt
+  if @maxResults != -1 && @completed > @maxResults - 1
+    puts "SKIP remaining #{@tickets_assembla.length - (@startAt - 1 + @maxResults)} tickets" if @skip_remaining
+    @skip_remaining = false
+    next
+  end
+
+  @jira_issues << create_ticket_jira(ticket, cnt, @total_tickets)
+
+  @completed = @completed + 1
 end
 
 puts "Total tickets: #{@total_tickets}"

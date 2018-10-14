@@ -1,0 +1,1137 @@
+Server type = cloud
+startAt: 1
+Milestones: 0
+Tags: 855
+Associations: 621
+Users: 46
+Custom fields: 22
+Tickets: 556
+
+Total custom fields: 22
+
+Total Product Manager 5
+* acj-gO1iKr54kJdmr6bg7m
+* bcx6ZCBkWr57Ledmr6CpXy
+* bhyJX4y-qr5idcacwqjQYw
+* cnNKkOPyyr47FcacwqEsg8
+* ct1WHSloOr5ihcacwqjQWU
+
+Total Product Designer 4
+* b1iWJ-TFWr6ipdacwqEsg8
+* bcx6ZCBkWr57Ledmr6CpXy
+* bhyJX4y-qr5idcacwqjQYw
+* ct1WHSloOr5ihcacwqjQWU
+
+Total Dev PM 3
+* aOIcN8ti4r6jTYdmr6CpXy
+* aglkzG1Qir4QBcacwqjQXA
+* doJ-gerwWr54kPacwqEsg8
+
+Total Product Area* 9
+* Adminstrative
+* Integrations
+* Marketing
+* Obligations
+* Reporting
+* Tools/Infrastructure
+* Trends/Investors
+* Users
+* Utility Sync
+
+Total Roadmap Area 14
+* Adminstrative
+* Billing/Gatekeeping
+* Bugs
+* Custom Reports/Trends
+* Integrations
+* IoT
+* MSR Score
+* Marketing
+* Methodology
+* Reporting
+* Spaces
+* User Administration
+* User Engagement Design
+* Usync
+
+Total Champion* 16
+* acj-gO1iKr54kJdmr6bg7m
+* aglkzG1Qir4QBcacwqjQXA
+* ap86dqHtOr6k7cacwqjQYw
+* bJv4uOgXyr54oMdmr6QqzO
+* bhyJX4y-qr5idcacwqjQYw
+* bw73jwbWar6ktcdmr6CpXy
+* cDeotYgXSr6ikMdmr6bg7m
+* cerDRmgXSr6kZcacwqjQYw
+* cnNKkOPyyr47FcacwqEsg8
+* ct1WHSloOr5ihcacwqjQWU
+* d04KyC-h8r4OowacwqEsg8
+* d7fA6-pxar5Ooqdmr6bg7m
+* dBZcNcmdKr57isdmr6CpXy
+* dIV1PKko0r5RRdacwqjQYw
+* doJ-gerwWr54kPacwqEsg8
+* du4nfOYDWr5z3cacwqEsg8
+
+Total Proponent* 172
+* AAT
+* AMLI, DCT
+* AMZN
+* AMZN, BP, Sales, DB
+* ARE
+* ARE, AvalonBay
+* ARE, BPX, ULI
+* ARE, Boston , ULI
+* ARE, Clarion,Heitman, USAA, Shorenstein, Digital Realty
+* ARE, DCT, RioCann
+* ARE, PGIM, ULI--line 2
+* AVB
+* Alexandria, PGIM, Heitman, USAA + Customer Success, ULI
+* All international clients
+* All the REITs have asked for this
+* All users
+* Amazon
+* Amazon, VMWare
+* Amazon, VMWare, DB req
+* Autodesk access to BP, Harvest Properties PM
+* AvalonBay
+* AvalonBay, Jamestown,DB
+* BP
+* BP, PGIM, ULI--line 3, Disney
+* Billing, Nikk
+* Biz
+* Biz reporting
+* BlackRock, Shorenstein, DCT,ULI, AVB
+* Boston Prop
+* Boston Properties
+* CBRE, DB, Brazil
+* CBREGI
+* CBREGI, DB Europe, Prologis, LaSalle, PGIM
+* CBREGI-Europe
+* CS
+* CS, All PMs
+* CS, BP, Brenna, AMLI
+* CS, DB, many clients
+* CS, DEV, ARE, etc
+* CS, Design
+* CS, Sales
+* CS, Sales, GRESB
+* CS, Sales, PMs, Marketing
+* CS/Digital Realty
+* Clarion
+* Clarion Gables
+* Clarion, ARE
+* Clarion, Jamestown, First Washington, Growthpoint, Segro
+* Clarion, ULI-line 4, DCT
+* Client (Amazon, Clarion, Prologis) + CS reps
+* Client PMs, CS
+* DB
+* DB Europe
+* DB Europe, CBREGI
+* DB, Amazon
+* DB, CBREGI, Heitman, NBIM
+* DB, Clarion, USAA, ULI-line 8
+* DB, ULI, PLD, Shorenstein
+* DB--DB is tracking this as an action item
+* DCT
+* DCT, Alexandria, USAA
+* DCT, PLD, Shorenstein, AMLI, AvalonBay, RioCAN, ULI
+* DCT, PLD, Shorenstein, AMLI, AvalonBay, RioCan
+* DCT, PLD, Shorenstein, AMLI, uli
+* DCT, RIOCANN, ARE
+* DCT, USync Admins
+* Design, Marketing
+* Design, Sales, FE
+* Digital Realty, AvalonBay
+* Digital Realty, Realty Income, Growthpoint Prop
+* DigitalRealty
+* DivcoWest, Clarion, Jamestown, Verdani, CS reps, 
+* FE
+* Fannie Mae
+* GGP,AvalonBay, YumBrands
+* GRESB
+* Gables
+* Gresb reporters
+* Heitman
+* Heitman, CBRE GI, Cadillac
+* Heitman, National, USAA, ARE
+* Heitman, PGIM, Alexandria, Shorenstein, USAA, CBREGI, DB Europe, USync Admins, Macquarie
+* Heitman, PGIM, ULI, CBREGI, UNICO
+* International Clients
+* Intl clients / ULI
+* JPM
+* JPMC
+* Jamestown
+* Jamie, Jon, Carny, Lance, Frontend developers everywhere, Marcos
+* LaSalle
+* LaSalle (2020 K), ULI, DB, Shorenstein
+* LaSalle, GRESB, CS
+* LaSalle, Tenants
+* Lyft, VMWare, Amazon, SNI, AvalonBay, PGIM
+* MSR
+* Mallory, PMs, HHs
+* Matt
+* Measurabl
+* Measurabl, Marc
+* Mexico
+* My OCD + Lance
+* NAT
+* NAT, PGIM, DB, DivcoWest, CBRE GI; CS
+* NWU, Synergy Inv, AMLI, Piedmont
+* National, USAA, ARE, Northwestern
+* Nicole
+* Nikk
+* PG&E (via Chase)
+* PGIM
+* PGIM Singapore
+* PGIM, ARE
+* PGIM, ARE, Realty Income, Growthpoint Prop
+* PGIM, Heitman, 
+* PGIM, Prologis, Tishman, CBREGI, DB
+* PGIM, Prologis, USAA
+* Portfolio managers, Sales
+* Product
+* Prologis
+* Prologis, CBRE
+* Prologis, CS
+* Prologis, Shorenstein, BP, Clarion, 
+* Prologis, Tishman
+* Property Managers, Mallory
+* Reporting clients, CS
+* RioCAN
+* RioCan
+* Sales, CS & Accounting
+* Sales, DB
+* Shorenstein
+* Shorenstein, 2030, Stream
+* Shorenstein, CS
+* Singapore
+* TA Realty and all clients
+* Taubman, Susty Pacific, Warby Parker, Johnson Controls,Colgate-Palmolive
+* ULI
+* ULI #1 ask
+* ULI Phase III, GGP, VMWare, Lyft, Amazon, ULI, PGIM
+* ULI | Jaxon from Shorenstein | Alexandira
+* ULI, ARE
+* ULI, Amazon, DB
+* ULI, AvalonBay, Shorenstein, ARE, lasalle
+* ULI, Boston Prop
+* ULI, CS, Boston Prop, LaSalle
+* ULI, DB, CS, RioCAN
+* ULI, DB, Shorenstein
+* ULI, DCT, AVB
+* ULI, Heitman
+* ULI, Mexican REITs, CBRE GI
+* ULI, USAA
+* ULI, all clients, prob Amazon
+* ULI, shorenstein
+* USAA
+* USAA, Shorenstein
+* USAA, Shorenstein, Heitman, ARE
+* USync Admin
+* USync Admins
+* USync Admins, DCT
+* USync Admins, RioCan
+* USync Admins, anxious PMs
+* VMMare
+* VMWare
+* VMWare, AI PIN
+* VMWare, Digital Realty, GGP, Jamestown, Clarion, ULI, Shorenstein
+* VMWare, IPG
+* VMware
+* VMware, AMZN, RioCAN
+* Vmware, AvalonBay, PGIM
+* WP, VMware
+* cbre
+* pgim, nat
+* tonyrivas 
+* usaa
+
+Total Roadmap ETA 9
+* 2018
+* 2019
+* 2020+
+* Active no estimate
+* Deferred
+* Q3 2017
+* Q3-Q4 2019
+* Q4 2017
+* Wishlist
+
+Total Resource Estimate 9
+* 3
+* BE (1) XLSX (1) QA (1)
+* BE (3-5), QA (3)
+* BE (Small)
+* BE (small)
+* BE(S/M), QA
+* FE (3), BE (2), Rails (2), QA (3)
+* FE (Med), BE/Ops (Small)
+* FE(S)
+
+Total Dev Sprint 19
+* HOLD
+* July 11, 2018
+* Oct 18
+* Oct 4
+* Sep 20
+* Sep 6
+* Sprint Apr-04-2018
+* Sprint Apr-18-2018
+* Sprint Dec-06-2017
+* Sprint Dec-20-2017
+* Sprint Feb-07-2018
+* Sprint Feb-21-2018
+* Sprint Jan-10-2018
+* Sprint Jan-24-2018
+* Sprint Mar-07-2018
+* Sprint Mar-21-2018
+* Sprint May-02-2018
+* Sprint May-16-2018
+* Sprint May-30-2018
+
+Total Marketing Level 1
+* Tier 1
+
+Total WSJF - Tshirt Size 6
+* 1
+* 2
+* 3
+* 5
+* 8
+* 13
+
+Total WSJF - ROI 32
+* 1.5
+* 1.6
+* 1.8
+* 1.9
+* 2.1
+* 2.4
+* 2.6
+* 3.2
+* 3.3
+* 3.4
+* 3.6
+* 3.7
+* 4
+* 4.1
+* 4.3
+* 4.5
+* 5.1
+* 6
+* 6.3
+* 6.5
+* 6.9
+* 7.2
+* 7.7
+* 8
+* 8.1
+* 8.8
+* 10
+* 10.3
+* 11.2
+* 11.6
+* 12.4
+* 13.7
+
+Total WSJF - Client Benefit 25
+* 1
+* 1.6
+* 1.8
+* 2.4
+* 3
+* 3.2
+* 3.8
+* 4
+* 4.2
+* 4.25
+* 4.4
+* 4.8
+* 5
+* 5.2
+* 5.4
+* 5.6
+* 6.2
+* 7
+* 7.2
+* 7.6
+* 8
+* 8.4
+* 9
+* 10
+* 12
+
+Total WSJF - Internal MSR benefit 24
+* 1
+* 1.2
+* 1.5
+* 2.2
+* 2.4
+* 2.8
+* 3
+* 3.6
+* 3.8
+* 4.2
+* 4.4
+* 5.4
+* 5.8
+* 6.2
+* 6.6
+* 6.8
+* 7
+* 7.2
+* 7.4
+* 8.8
+* 9
+* 9.8
+* 11.4
+* 11.75
+
+Total WSJF - Biz Alignment 22
+* 2.2
+* 3
+* 4.6
+* 5
+* 5.4
+* 5.6
+* 6.2
+* 6.4
+* 6.6
+* 6.8
+* 7
+* 7.2
+* 7.4
+* 7.8
+* 8.4
+* 8.8
+* 9
+* 9.4
+* 9.8
+* 10
+* 12
+* 13
+
+Total WSJF - Urgency 21
+* 1.8
+* 2
+* 2.2
+* 2.4
+* 2.8
+* 3.2
+* 3.4
+* 4
+* 4.2
+* 5
+* 5.6
+* 5.8
+* 6
+* 6.8
+* 7.4
+* 8.2
+* 8.5
+* 10
+* 11
+* 11.4
+* 12
+
+Total Product Committee ROI 16
+* 4
+* 6
+* 7
+* 8
+* 9
+* 10
+* 11
+* 12
+* 13
+* 14
+* 15
+* 16
+* 17
+* 18
+* 19
+* 20
+
+Total Prod Committee Score--Urgency (1-5) 5
+* 1
+* 2
+* 3
+* 4
+* 5
+
+Total Prod Committee Score--Client Benefit (1-5) 5
+* 1
+* 2
+* 3
+* 4
+* 5
+
+Total Prod Committee Score--Internal MSR Benefit (1-5) 5
+* 1
+* 2
+* 3
+* 4
+* 5
+
+Total Prod Committee Score--Biz Alignment (1-5) 5
+* 1
+* 2
+* 3
+* 4
+* 5
+
+Attachments: 484
+
+GET https://gishtech.atlassian.net/rest/api/2/project name='Feature Requests' => OK
+Found project 'Feature Requests' id='10007' key='FR'
+
+Total users: 46
+* bhyJX4y-qr5idcacwqjQYw sondra19372
+* aglkzG1Qir4QBcacwqjQXA lance_onken
+* cnNKkOPyyr47FcacwqEsg8 briannacjackson
+* doJ-gerwWr54kPacwqEsg8 carny
+* ct1WHSloOr5ihcacwqjQWU arthurbath
+* cY6FJ8NLqr54o8acwqjQYw marites
+* acj-gO1iKr54kJdmr6bg7m noellebohlen
+* dBZcNcmdKr57isdmr6CpXy danaarnold
+* bcx6ZCBkWr57Ledmr6CpXy quintin
+* aOIcN8ti4r6jTYdmr6CpXy jordankohl
+* du4nfOYDWr5z3cacwqEsg8 MelissaBartow
+* b1iWJ-TFWr6ipdacwqEsg8 kevin.lang
+* d04KyC-h8r4OowacwqEsg8 mpellis20
+* cDeotYgXSr6ikMdmr6bg7m jmeskdale
+* bw73jwbWar6ktcdmr6CpXy nikhil_godha
+* bybv4-e6Sr5Q_dacwqjQYw tonyrivas
+* dIV1PKko0r5RRdacwqjQYw unknown-3
+* ap86dqHtOr6k7cacwqjQYw courteney.mcdonnell
+* bJv4uOgXyr54oMdmr6QqzO unknown-5
+* d7fA6-pxar5Ooqdmr6bg7m sknox
+* cerDRmgXSr6kZcacwqjQYw MSRMarc
+* aNXcIcjUar6ioEdmr6CpXy mark-s
+* b2Y_rok8qr6lmbdmr6bg7m JessicaMangona
+* cCW01iuvWr57Jddmr6CpXy unknown-2
+* bJWwEsQLar5iofacwqEsg8 jmunchhof
+* bYtHHwHUmr54kbdmr6QqzO jonclawson
+* cCFvS0IyOr5Qj7dmr6CpXy unknown-1
+* cDOWPqH0ar5OoAacwqjQXA unknown-8
+* a12wJOT2Cr6jBdacwqjQXA gcuevas
+* armPdGE6er5Qdddmr6QqzO john.schroeder
+* cvFFvQuvWr573dacwqjQXA ryan_fisher
+* duVVv0Vr4r6ikRacwqEsg8 zach.shelin
+* ckc8X0P6ir54kBacwqEsg8 unknown-4
+* cxwUm4weWr54kfacwqEsg8 unknown-6
+* cu4X-GMMyr6io7dmr6bg7m allston.fojas
+* bjJhBkOwir6l1LacwqjQYw ben.stiefel
+* d6qVDQABCr6i_ddmr6QqzO davidsruiz
+* cLd1g8IS0r6l9EacwqjQXA heatherotto
+* dj1Q8MVEer6kCHacwqjQXA kevin.phelps
+* a-BH2sx84r55fnacwqjQYw kgish
+* ctIiCm-zur55aoacwqjQXA kyle_gowen
+* aTcLAcrvGr54k9acwqjQYw Moji
+* aQlpk-qzar6ipddmr6CpXy nazafarienk
+* brQ5SYmrur6i3ddmr6QqzO nicolecarr
+* ctR6d2b3Or6j5Jdmr6QqzO willhelm_lehman
+* dio9Y01iKr54qrdmr6QqzO unknown-7
+
+Unknown user:
+GET https://gishtech.atlassian.net/rest/api/2/user?username=unknown.user => OK ({"key":"unknown.user","accountId":"557058:2362a312-3723-4b53-82fd-96e6df0af8d3","name":"unknown.user","emailAddress":"unknown.user@example.org","displayName":"unknown.user","active":true,"groups":{"size":3,"items":[]}})
+Found Jira unknown user 'unknown.user' => OK
+
+Total milestones: 0
+
+Total issue types: 5
+* 10001 story
+* 10002 task
+* 10004 bug
+* 10003 sub-task
+* 10000 epic
+
+Priorities:
+GET https://gishtech.atlassian.net/rest/api/2/priority => OK (5)
+1 Highest
+2 High
+3 Medium
+4 Low
+5 Lowest
+
+Jira fields:
+GET https://gishtech.atlassian.net/rest/api/2/field => OK (93)
+aggregateprogress 'Σ Progress'
+aggregatetimeestimate 'Σ Remaining Estimate'
+aggregatetimeoriginalestimate 'Σ Original Estimate'
+aggregatetimespent 'Σ Time Spent'
+assignee 'Assignee'
+attachment 'Attachment'
+comment 'Comment'
+components 'Component/s'
+created 'Created'
+creator 'Creator'
+description 'Description'
+duedate 'Due date'
+environment 'Environment'
+fixVersions 'Fix Version/s'
+issuekey 'Key'
+issuelinks 'Linked Issues'
+issuetype 'Issue Type'
+labels 'Labels'
+lastViewed 'Last Viewed'
+priority 'Priority'
+progress 'Progress'
+project 'Project'
+reporter 'Reporter'
+resolution 'Resolution'
+resolutiondate 'Resolved'
+security 'Security Level'
+status 'Status'
+subtasks 'Sub-tasks'
+summary 'Summary'
+thumbnail 'Images'
+timeestimate 'Remaining Estimate'
+timeoriginalestimate 'Original Estimate'
+timespent 'Time Spent'
+timetracking 'Time Tracking'
+updated 'Updated'
+versions 'Affects Version/s'
+votes 'Votes'
+watches 'Watchers'
+worklog 'Log Work'
+workratio 'Work Ratio'
+
+Jira custom fields:
+customfield_10000 'Development'
+customfield_10001 'Team'
+customfield_10004 'Organizations'
+customfield_10005 'Epic Name'
+customfield_10006 'Epic Status'
+customfield_10007 'Epic Colour'
+customfield_10008 'Epic Link'
+customfield_10009 'Parent Link'
+customfield_10010 'Sprint'
+customfield_10011 'Rank'
+customfield_10012 '[CHART] Date of First Response'
+customfield_10013 '[CHART] Time in Status'
+customfield_10049 'Approvals'
+customfield_10050 'Request Type'
+customfield_10051 'Request participants'
+customfield_10052 'Satisfaction'
+customfield_10053 'Satisfaction date'
+customfield_10054 'Story Points'
+customfield_10095 'Start date'
+customfield_10096 'Story point estimate'
+customfield_10108 'Flagged'
+customfield_10109 'Flagged'
+customfield_10110 'Product Manager'
+customfield_10111 'Product Designer'
+customfield_10112 'Product Area*'
+customfield_10113 'Roadmap Area'
+customfield_10115 'Proponent*'
+customfield_10116 'Roadmap ETA'
+customfield_10117 'Resource Estimate'
+customfield_10118 'Dev Sprint'
+customfield_10119 'Marketing Level'
+customfield_10121 'WSJF - ROI'
+customfield_10123 'WSJF - Internal MSR benefit'
+customfield_10126 'Product Committee ROI'
+customfield_10127 'Prod Committee Score--Urgency (1-5)'
+customfield_10129 'Prod Committee Score--Internal MSR Benefit (1-5)'
+customfield_10132 'WSJF - Urgency'
+customfield_10134 'WSJF - Client Benefit'
+customfield_10149 'Prod Committee Score--Client Benefit (1-5)'
+customfield_10153 'WSJF - Tshirt Size'
+customfield_10155 'Champion*'
+customfield_10156 'Dev PM'
+customfield_10158 'Prod Committee Score--Biz Alignment (1-5)'
+customfield_10159 'WSJF - Biz Alignment'
+
+Jira custom Assembla fields:
+customfield_10085 'Assembla-Id'
+customfield_10086 'Assembla-Milestone'
+customfield_10087 'Assembla-Status'
+customfield_10088 'Assembla-Reporter'
+customfield_10090 'Assembla-Completed'
+customfield_10094 'Assembla-Estimate'
+customfield_10097 'Assembla-Worked'
+customfield_10098 'Assembla-Remaining'
+customfield_10151 'Assembla-Assignee'
+
+Reporters => OK
+1: type='Numeric', key='Product Committee ROI', value='12' => '12'
+2: type='Numeric', key='Product Committee ROI', value='17' => '17'
+WARNING: Reformat markdown ticket='6294' => Cannot find
+WARNING: Reformat markdown ticket='5849' => Cannot find
+WARNING: Reformat markdown ticket='169' => Cannot find
+5: type='Numeric', key='Product Committee ROI', value='15' => '15'
+6: type='Numeric', key='Product Committee ROI', value='15' => '15'
+WARNING: Reformat markdown ticket='5703' => Cannot find
+7: type='Numeric', key='Product Committee ROI', value='14' => '14'
+WARNING: Reformat markdown ticket='129' => Cannot find
+9: type='Numeric', key='WSJF - Tshirt Size', value='3' => '3'
+9: type='Numeric', key='WSJF - ROI', value='8.1' => '8.1'
+9: type='Numeric', key='WSJF - Client Benefit', value='6.2' => '6.2'
+9: type='Numeric', key='WSJF - Internal MSR benefit', value='4.2' => '4.2'
+9: type='Numeric', key='WSJF - Biz Alignment', value='7.2' => '7.2'
+9: type='Numeric', key='WSJF - Urgency', value='6.8' => '6.8'
+9: type='Numeric', key='Product Committee ROI', value='16' => '16'
+11: type='Numeric', key='Product Committee ROI', value='8' => '8'
+12: type='Numeric', key='Product Committee ROI', value='17' => '17'
+13: type='Numeric', key='Product Committee ROI', value='15' => '15'
+14: type='Numeric', key='Product Committee ROI', value='11' => '11'
+15: type='Numeric', key='Product Committee ROI', value='11' => '11'
+16: type='Numeric', key='Product Committee ROI', value='15' => '15'
+17: type='Numeric', key='Product Committee ROI', value='15' => '15'
+18: type='Numeric', key='Product Committee ROI', value='15' => '15'
+19: type='Numeric', key='Product Committee ROI', value='15' => '15'
+20: type='Numeric', key='Product Committee ROI', value='15' => '15'
+21: type='Numeric', key='Product Committee ROI', value='15' => '15'
+22: type='Numeric', key='Product Committee ROI', value='11' => '11'
+23: type='Numeric', key='Product Committee ROI', value='20' => '20'
+24: type='Numeric', key='Product Committee ROI', value='18' => '18'
+25: type='Numeric', key='Product Committee ROI', value='20' => '20'
+26: type='Numeric', key='Product Committee ROI', value='19' => '19'
+27: type='Numeric', key='Product Committee ROI', value='17' => '17'
+28: type='Numeric', key='Product Committee ROI', value='17' => '17'
+29: type='Numeric', key='Product Committee ROI', value='16' => '16'
+WARNING: Reformat markdown ticket='5179' => Cannot find
+WARNING: Reformat markdown ticket='5086' => Cannot find
+30: type='Numeric', key='Product Committee ROI', value='17' => '17'
+WARNING: Reformat markdown name='mrisoftware.com' => NOK
+WARNING: Reformat markdown ticket='3669' => Cannot find
+31: type='Numeric', key='WSJF - Tshirt Size', value='8' => '8'
+31: type='Numeric', key='WSJF - ROI', value='1.8' => '1.8'
+31: type='Numeric', key='WSJF - Client Benefit', value='2.4' => '2.4'
+31: type='Numeric', key='WSJF - Internal MSR benefit', value='2.4' => '2.4'
+31: type='Numeric', key='WSJF - Biz Alignment', value='7.8' => '7.8'
+31: type='Numeric', key='WSJF - Urgency', value='1.8' => '1.8'
+31: type='Numeric', key='Product Committee ROI', value='12' => '12'
+32: type='Numeric', key='Product Committee ROI', value='13' => '13'
+WARNING: Reformat markdown ticket='4617' => Cannot find
+33: type='Numeric', key='Product Committee ROI', value='20' => '20'
+34: type='Numeric', key='WSJF - Tshirt Size', value='13' => '13'
+34: type='Numeric', key='WSJF - ROI', value='1.5' => '1.5'
+34: type='Numeric', key='WSJF - Client Benefit', value='4.2' => '4.2'
+34: type='Numeric', key='WSJF - Internal MSR benefit', value='3' => '3'
+34: type='Numeric', key='WSJF - Biz Alignment', value='8.4' => '8.4'
+34: type='Numeric', key='WSJF - Urgency', value='3.4' => '3.4'
+34: type='Numeric', key='Product Committee ROI', value='9' => '9'
+35: type='Numeric', key='Product Committee ROI', value='15' => '15'
+36: type='Numeric', key='Product Committee ROI', value='10' => '10'
+37: type='Numeric', key='Product Committee ROI', value='8' => '8'
+38: type='Numeric', key='Product Committee ROI', value='15' => '15'
+39: type='Numeric', key='WSJF - Tshirt Size', value='13' => '13'
+39: type='Numeric', key='WSJF - ROI', value='1.9' => '1.9'
+39: type='Numeric', key='WSJF - Client Benefit', value='7.2' => '7.2'
+39: type='Numeric', key='WSJF - Internal MSR benefit', value='6.6' => '6.6'
+39: type='Numeric', key='WSJF - Biz Alignment', value='6.4' => '6.4'
+39: type='Numeric', key='WSJF - Urgency', value='5' => '5'
+39: type='Numeric', key='Product Committee ROI', value='14' => '14'
+40: type='Numeric', key='Product Committee ROI', value='9' => '9'
+41: type='Numeric', key='Product Committee ROI', value='7' => '7'
+WARNING: Reformat markdown ticket='6119' => Cannot find
+WARNING: Reformat markdown ticket='6120' => Cannot find
+44: type='Numeric', key='Product Committee ROI', value='12' => '12'
+46: type='Numeric', key='Product Committee ROI', value='13' => '13'
+50: type='Numeric', key='Product Committee ROI', value='19' => '19'
+57: type='Numeric', key='Product Committee ROI', value='17' => '17'
+WARNING: Reformat markdown ticket='5330' => Cannot find
+WARNING: Reformat markdown ticket='5762' => Cannot find
+61: type='Numeric', key='Product Committee ROI', value='13' => '13'
+WARNING: Reformat markdown ticket='5760' => Cannot find
+67: type='Numeric', key='Product Committee ROI', value='16' => '16'
+WARNING: Reformat markdown ticket='90' => Cannot find
+WARNING: Reformat markdown ticket='6288' => Cannot find
+71: type='Numeric', key='Product Committee ROI', value='20' => '20'
+75: type='Numeric', key='Product Committee ROI', value='14' => '14'
+76: type='Numeric', key='Product Committee ROI', value='17' => '17'
+WARNING: Reformat markdown ticket='6037' => Cannot find
+77: type='Numeric', key='Product Committee ROI', value='7' => '7'
+80: type='Numeric', key='Product Committee ROI', value='12' => '12'
+WARNING: Reformat markdown ticket='5224' => Cannot find
+86: type='Numeric', key='WSJF - Tshirt Size', value='13' => '13'
+86: type='Numeric', key='WSJF - ROI', value='2.6' => '2.6'
+86: type='Numeric', key='WSJF - Client Benefit', value='10' => '10'
+86: type='Numeric', key='WSJF - Internal MSR benefit', value='8.8' => '8.8'
+86: type='Numeric', key='WSJF - Biz Alignment', value='9' => '9'
+86: type='Numeric', key='WSJF - Urgency', value='5.8' => '5.8'
+86: type='Numeric', key='Product Committee ROI', value='15' => '15'
+87: type='Numeric', key='WSJF - Tshirt Size', value='5' => '5'
+87: type='Numeric', key='WSJF - ROI', value='4' => '4'
+87: type='Numeric', key='WSJF - Client Benefit', value='3.8' => '3.8'
+87: type='Numeric', key='WSJF - Internal MSR benefit', value='7.4' => '7.4'
+87: type='Numeric', key='WSJF - Biz Alignment', value='4.6' => '4.6'
+87: type='Numeric', key='WSJF - Urgency', value='4.2' => '4.2'
+87: type='Numeric', key='Product Committee ROI', value='15' => '15'
+94: type='Numeric', key='Product Committee ROI', value='18' => '18'
+WARNING: Reformat markdown ticket='5314' => Cannot find
+WARNING: Reformat markdown ticket='5312' => Cannot find
+WARNING: Reformat markdown ticket='554' => Cannot find
+95: type='Numeric', key='WSJF - Tshirt Size', value='3' => '3'
+95: type='Numeric', key='WSJF - ROI', value='5.1' => '5.1'
+95: type='Numeric', key='WSJF - Client Benefit', value='3.8' => '3.8'
+95: type='Numeric', key='WSJF - Internal MSR benefit', value='2.2' => '2.2'
+95: type='Numeric', key='WSJF - Biz Alignment', value='7.2' => '7.2'
+95: type='Numeric', key='WSJF - Urgency', value='2' => '2'
+95: type='Numeric', key='Product Committee ROI', value='14' => '14'
+97: type='Numeric', key='Product Committee ROI', value='15' => '15'
+106: type='Numeric', key='Product Committee ROI', value='19' => '19'
+108: type='Numeric', key='Product Committee ROI', value='14' => '14'
+109: type='Numeric', key='Product Committee ROI', value='20' => '20'
+110: type='Numeric', key='Product Committee ROI', value='10' => '10'
+111: type='Numeric', key='Product Committee ROI', value='11' => '11'
+112: type='Numeric', key='WSJF - Tshirt Size', value='3' => '3'
+112: type='Numeric', key='WSJF - ROI', value='6.9' => '6.9'
+112: type='Numeric', key='WSJF - Client Benefit', value='5.2' => '5.2'
+112: type='Numeric', key='WSJF - Internal MSR benefit', value='5.4' => '5.4'
+112: type='Numeric', key='WSJF - Biz Alignment', value='6.2' => '6.2'
+112: type='Numeric', key='WSJF - Urgency', value='4' => '4'
+112: type='Numeric', key='Product Committee ROI', value='16' => '16'
+113: type='Numeric', key='Product Committee ROI', value='18' => '18'
+WARNING: Reformat markdown ticket='6057' => Cannot find
+124: type='Numeric', key='Product Committee ROI', value='12' => '12'
+WARNING: Reformat markdown ticket='5424' => Cannot find
+WARNING: Reformat markdown ticket='5985' => Cannot find
+127: type='Numeric', key='Product Committee ROI', value='13' => '13'
+134: type='Numeric', key='WSJF - Tshirt Size', value='8' => '8'
+134: type='Numeric', key='WSJF - ROI', value='3.7' => '3.7'
+134: type='Numeric', key='WSJF - Client Benefit', value='7.6' => '7.6'
+134: type='Numeric', key='WSJF - Internal MSR benefit', value='6.6' => '6.6'
+134: type='Numeric', key='WSJF - Biz Alignment', value='8.8' => '8.8'
+134: type='Numeric', key='WSJF - Urgency', value='6.8' => '6.8'
+134: type='Numeric', key='Product Committee ROI', value='14' => '14'
+WARNING: Reformat markdown ticket='5603' => Cannot find
+150: type='Numeric', key='Product Committee ROI', value='6' => '6'
+151: type='Numeric', key='WSJF - Tshirt Size', value='5' => '5'
+151: type='Numeric', key='WSJF - ROI', value='6' => '6'
+151: type='Numeric', key='WSJF - Client Benefit', value='10' => '10'
+151: type='Numeric', key='WSJF - Internal MSR benefit', value='4.2' => '4.2'
+151: type='Numeric', key='WSJF - Biz Alignment', value='9' => '9'
+151: type='Numeric', key='WSJF - Urgency', value='6.8' => '6.8'
+151: type='Numeric', key='Product Committee ROI', value='16' => '16'
+WARNING: Reformat markdown ticket='4910' => Cannot find
+WARNING: Reformat markdown ticket='32' => Cannot find
+155: type='Numeric', key='Product Committee ROI', value='16' => '16'
+157: type='Numeric', key='Product Committee ROI', value='13' => '13'
+158: type='Numeric', key='Product Committee ROI', value='19' => '19'
+160: type='Numeric', key='Product Committee ROI', value='15' => '15'
+162: type='Numeric', key='Product Committee ROI', value='12' => '12'
+163: type='Numeric', key='Product Committee ROI', value='19' => '19'
+164: type='Numeric', key='WSJF - Tshirt Size', value='8' => '8'
+164: type='Numeric', key='WSJF - ROI', value='3.6' => '3.6'
+164: type='Numeric', key='WSJF - Client Benefit', value='9' => '9'
+164: type='Numeric', key='WSJF - Internal MSR benefit', value='7' => '7'
+164: type='Numeric', key='WSJF - Biz Alignment', value='7.4' => '7.4'
+164: type='Numeric', key='WSJF - Urgency', value='5.6' => '5.6'
+164: type='Numeric', key='Product Committee ROI', value='17' => '17'
+WARNING: Reformat markdown ticket='6396' => Cannot find
+174: type='Numeric', key='Product Committee ROI', value='8' => '8'
+176: type='Numeric', key='WSJF - Tshirt Size', value='8' => '8'
+176: type='Numeric', key='WSJF - ROI', value='3.7' => '3.7'
+176: type='Numeric', key='WSJF - Client Benefit', value='7.6' => '7.6'
+176: type='Numeric', key='WSJF - Internal MSR benefit', value='6.6' => '6.6'
+176: type='Numeric', key='WSJF - Biz Alignment', value='8.8' => '8.8'
+176: type='Numeric', key='WSJF - Urgency', value='6.8' => '6.8'
+176: type='Numeric', key='Product Committee ROI', value='17' => '17'
+180: type='Numeric', key='Product Committee ROI', value='12' => '12'
+183: type='Numeric', key='Product Committee ROI', value='12' => '12'
+189: type='Numeric', key='Product Committee ROI', value='20' => '20'
+WARNING: Reformat markdown ticket='180' => Cannot find
+194: type='Numeric', key='Product Committee ROI', value='19' => '19'
+WARNING: Reformat markdown name='measurabl.com>' => NOK
+WARNING: Reformat markdown name='cadmusgroup.com>' => NOK
+WARNING: Reformat markdown ticket='1' => Cannot find
+WARNING: Reformat markdown ticket='2' => Cannot find
+WARNING: Reformat markdown ticket='3' => Cannot find
+199: type='Numeric', key='Product Committee ROI', value='20' => '20'
+WARNING: Reformat markdown ticket='4288' => Cannot find
+WARNING: Reformat markdown ticket='3413' => Cannot find
+WARNING: Reformat markdown ticket='3521' => Cannot find
+WARNING: Reformat markdown name='vmware.com>' => NOK
+205: type='Numeric', key='Product Committee ROI', value='9' => '9'
+206: type='Numeric', key='Product Committee ROI', value='9' => '9'
+212: type='Numeric', key='Product Committee ROI', value='20' => '20'
+WARNING: Reformat markdown ticket='6752' => Cannot find
+217: type='Numeric', key='WSJF - Tshirt Size', value='5' => '5'
+217: type='Numeric', key='WSJF - ROI', value='6.3' => '6.3'
+217: type='Numeric', key='WSJF - Client Benefit', value='5.6' => '5.6'
+217: type='Numeric', key='WSJF - Internal MSR benefit', value='6.8' => '6.8'
+217: type='Numeric', key='WSJF - Biz Alignment', value='9' => '9'
+217: type='Numeric', key='WSJF - Urgency', value='10' => '10'
+217: type='Numeric', key='Product Committee ROI', value='17' => '17'
+218: type='Numeric', key='Product Committee ROI', value='13' => '13'
+219: type='Numeric', key='Product Committee ROI', value='6' => '6'
+222: type='Numeric', key='WSJF - Tshirt Size', value='8' => '8'
+222: type='Numeric', key='WSJF - ROI', value='4.5' => '4.5'
+222: type='Numeric', key='WSJF - Client Benefit', value='6.2' => '6.2'
+222: type='Numeric', key='WSJF - Internal MSR benefit', value='9.8' => '9.8'
+222: type='Numeric', key='WSJF - Biz Alignment', value='10' => '10'
+222: type='Numeric', key='WSJF - Urgency', value='10' => '10'
+222: type='Numeric', key='Product Committee ROI', value='16' => '16'
+WARNING: Reformat markdown ticket='6843' => Cannot find
+227: type='Numeric', key='Product Committee ROI', value='17' => '17'
+229: type='Numeric', key='WSJF - Tshirt Size', value='5' => '5'
+229: type='Numeric', key='WSJF - ROI', value='4.3' => '4.3'
+229: type='Numeric', key='WSJF - Client Benefit', value='4.4' => '4.4'
+229: type='Numeric', key='WSJF - Internal MSR benefit', value='6.2' => '6.2'
+229: type='Numeric', key='WSJF - Biz Alignment', value='8.8' => '8.8'
+229: type='Numeric', key='WSJF - Urgency', value='2.2' => '2.2'
+229: type='Numeric', key='Product Committee ROI', value='14' => '14'
+240: type='Numeric', key='Product Committee ROI', value='12' => '12'
+WARNING: Reformat markdown ticket='4' => Cannot find
+WARNING: Reformat markdown ticket='5' => Cannot find
+WARNING: Reformat markdown ticket='6' => Cannot find
+242: type='Numeric', key='Product Committee ROI', value='13' => '13'
+WARNING: Reformat markdown ticket='6966' => Cannot find
+245: type='Numeric', key='Product Committee ROI', value='9' => '9'
+WARNING: Reformat markdown name='wiredscore.com>' => NOK
+WARNING: Reformat markdown name='measurabl.com' => NOK
+250: type='Numeric', key='Product Committee ROI', value='4' => '4'
+251: type='Numeric', key='WSJF - Tshirt Size', value='2' => '2'
+251: type='Numeric', key='WSJF - ROI', value='10.3' => '10.3'
+251: type='Numeric', key='WSJF - Client Benefit', value='4.8' => '4.8'
+251: type='Numeric', key='WSJF - Internal MSR benefit', value='3' => '3'
+251: type='Numeric', key='WSJF - Biz Alignment', value='7.8' => '7.8'
+251: type='Numeric', key='WSJF - Urgency', value='5' => '5'
+251: type='Numeric', key='Product Committee ROI', value='14' => '14'
+252: type='Numeric', key='WSJF - Tshirt Size', value='2' => '2'
+252: type='Numeric', key='WSJF - ROI', value='6.5' => '6.5'
+252: type='Numeric', key='WSJF - Client Benefit', value='1.6' => '1.6'
+252: type='Numeric', key='WSJF - Internal MSR benefit', value='2.8' => '2.8'
+252: type='Numeric', key='WSJF - Biz Alignment', value='6.8' => '6.8'
+252: type='Numeric', key='WSJF - Urgency', value='1.8' => '1.8'
+252: type='Numeric', key='Product Committee ROI', value='14' => '14'
+WARNING: Reformat markdown name='ee.doe.gov>' => NOK
+WARNING: Reformat markdown name='pnnl.gov>' => NOK
+WARNING: Reformat markdown name='pnnl.gov' => NOK
+WARNING: Reformat markdown name='pnnl.gov<mailto:BuildingID' => NOK
+WARNING: Reformat markdown ticket='296' => Cannot find
+258: type='Numeric', key='Product Committee ROI', value='15' => '15'
+260: type='Numeric', key='Product Committee ROI', value='8' => '8'
+262: type='Numeric', key='Product Committee ROI', value='15' => '15'
+263: type='Numeric', key='Product Committee ROI', value='10' => '10'
+265: type='Numeric', key='Product Committee ROI', value='12' => '12'
+266: type='Numeric', key='Product Committee ROI', value='13' => '13'
+268: type='Numeric', key='Product Committee ROI', value='15' => '15'
+269: type='Numeric', key='Product Committee ROI', value='17' => '17'
+270: type='Numeric', key='Product Committee ROI', value='8' => '8'
+272: type='Numeric', key='Product Committee ROI', value='20' => '20'
+WARNING: Reformat markdown ticket='236' => Cannot find
+WARNING: Reformat markdown ticket='3281' => Cannot find
+WARNING: Reformat markdown ticket='4007' => Cannot find
+WARNING: Reformat markdown ticket='5172' => Cannot find
+282: type='Numeric', key='Product Committee ROI', value='14' => '14'
+286: type='Numeric', key='Product Committee ROI', value='8' => '8'
+287: type='Numeric', key='Product Committee ROI', value='15' => '15'
+289: type='Numeric', key='Product Committee ROI', value='11' => '11'
+WARNING: Reformat markdown ticket='199' => Cannot find
+298: type='Numeric', key='Product Committee ROI', value='18' => '18'
+WARNING: Reformat markdown ticket='7205' => Cannot find
+301: type='Numeric', key='Product Committee ROI', value='20' => '20'
+302: type='Numeric', key='Product Committee ROI', value='20' => '20'
+303: type='Numeric', key='Product Committee ROI', value='20' => '20'
+304: type='Numeric', key='Product Committee ROI', value='20' => '20'
+305: type='Numeric', key='Product Committee ROI', value='20' => '20'
+309: type='Numeric', key='Product Committee ROI', value='7' => '7'
+315: type='Numeric', key='Product Committee ROI', value='20' => '20'
+WARNING: Reformat markdown ticket='326' => Cannot find
+321: type='Numeric', key='Product Committee ROI', value='20' => '20'
+322: type='Numeric', key='Product Committee ROI', value='20' => '20'
+325: type='Numeric', key='Product Committee ROI', value='20' => '20'
+WARNING: Reformat markdown ticket='537' => Cannot find
+329: type='Numeric', key='Product Committee ROI', value='8' => '8'
+334: type='Numeric', key='WSJF - Tshirt Size', value='5' => '5'
+334: type='Numeric', key='WSJF - ROI', value='4.1' => '4.1'
+334: type='Numeric', key='WSJF - Client Benefit', value='1' => '1'
+334: type='Numeric', key='WSJF - Internal MSR benefit', value='2.8' => '2.8'
+334: type='Numeric', key='WSJF - Biz Alignment', value='5.4' => '5.4'
+334: type='Numeric', key='WSJF - Urgency', value='11.4' => '11.4'
+334: type='Numeric', key='Product Committee ROI', value='11' => '11'
+335: type='Numeric', key='Product Committee ROI', value='10' => '10'
+WARNING: Reformat markdown ticket='361' => Cannot find
+339: type='Numeric', key='Product Committee ROI', value='18' => '18'
+WARNING: Reformat markdown ticket='27' => Cannot find
+341: type='Numeric', key='Product Committee ROI', value='18' => '18'
+342: type='Numeric', key='Product Committee ROI', value='20' => '20'
+343: type='Numeric', key='Product Committee ROI', value='20' => '20'
+WARNING: Reformat markdown ticket='44' => Cannot find
+348: type='Numeric', key='WSJF - Tshirt Size', value='5' => '5'
+348: type='Numeric', key='WSJF - ROI', value='3.3' => '3.3'
+348: type='Numeric', key='WSJF - Client Benefit', value='4' => '4'
+348: type='Numeric', key='WSJF - Internal MSR benefit', value='3' => '3'
+348: type='Numeric', key='WSJF - Biz Alignment', value='6.6' => '6.6'
+348: type='Numeric', key='WSJF - Urgency', value='2.8' => '2.8'
+348: type='Numeric', key='Product Committee ROI', value='13' => '13'
+352: type='Numeric', key='Product Committee ROI', value='20' => '20'
+354: type='Numeric', key='Product Committee ROI', value='16' => '16'
+359: type='Numeric', key='Product Committee ROI', value='19' => '19'
+361: type='Numeric', key='Product Committee ROI', value='20' => '20'
+371: type='Numeric', key='WSJF - Tshirt Size', value='3' => '3'
+371: type='Numeric', key='WSJF - ROI', value='6.3' => '6.3'
+371: type='Numeric', key='WSJF - Client Benefit', value='5.4' => '5.4'
+371: type='Numeric', key='WSJF - Internal MSR benefit', value='3.6' => '3.6'
+371: type='Numeric', key='WSJF - Biz Alignment', value='7.8' => '7.8'
+371: type='Numeric', key='WSJF - Urgency', value='2' => '2'
+372: type='Numeric', key='Product Committee ROI', value='10' => '10'
+379: type='Numeric', key='Product Committee ROI', value='17' => '17'
+382: type='Numeric', key='WSJF - Tshirt Size', value='5' => '5'
+382: type='Numeric', key='WSJF - ROI', value='4' => '4'
+382: type='Numeric', key='WSJF - Client Benefit', value='5.2' => '5.2'
+382: type='Numeric', key='WSJF - Internal MSR benefit', value='6.2' => '6.2'
+382: type='Numeric', key='WSJF - Biz Alignment', value='6.4' => '6.4'
+382: type='Numeric', key='WSJF - Urgency', value='2.4' => '2.4'
+382: type='Numeric', key='Product Committee ROI', value='15' => '15'
+383: type='Numeric', key='WSJF - Tshirt Size', value='5' => '5'
+383: type='Numeric', key='WSJF - ROI', value='7.7' => '7.7'
+383: type='Numeric', key='WSJF - Client Benefit', value='10' => '10'
+383: type='Numeric', key='WSJF - Internal MSR benefit', value='9' => '9'
+383: type='Numeric', key='WSJF - Biz Alignment', value='12' => '12'
+383: type='Numeric', key='WSJF - Urgency', value='7.4' => '7.4'
+383: type='Numeric', key='Product Committee ROI', value='17' => '17'
+WARNING: Reformat markdown ticket='7628' => Cannot find
+388: type='Numeric', key='Product Committee ROI', value='12' => '12'
+389: type='Numeric', key='WSJF - Tshirt Size', value='2' => '2'
+389: type='Numeric', key='WSJF - ROI', value='13.7' => '13.7'
+389: type='Numeric', key='WSJF - Client Benefit', value='8.4' => '8.4'
+389: type='Numeric', key='WSJF - Internal MSR benefit', value='5.8' => '5.8'
+389: type='Numeric', key='WSJF - Biz Alignment', value='9.8' => '9.8'
+389: type='Numeric', key='WSJF - Urgency', value='3.4' => '3.4'
+392: type='Numeric', key='Product Committee ROI', value='10' => '10'
+WARNING: Reformat markdown ticket='5874' => Cannot find
+WARNING: Reformat markdown ticket='7667' => Cannot find
+WARNING: Reformat markdown ticket='7668' => Cannot find
+394: type='Numeric', key='Product Committee ROI', value='20' => '20'
+401: type='Numeric', key='Product Committee ROI', value='7' => '7'
+402: type='Numeric', key='Product Committee ROI', value='20' => '20'
+WARNING: Reformat markdown ticket='417' => Cannot find
+408: type='Numeric', key='Product Committee ROI', value='13' => '13'
+409: type='Numeric', key='Product Committee ROI', value='8' => '8'
+412: type='Numeric', key='WSJF - Tshirt Size', value='2' => '2'
+412: type='Numeric', key='WSJF - ROI', value='12.4' => '12.4'
+412: type='Numeric', key='WSJF - Client Benefit', value='6.2' => '6.2'
+412: type='Numeric', key='WSJF - Internal MSR benefit', value='6.2' => '6.2'
+412: type='Numeric', key='WSJF - Biz Alignment', value='6.8' => '6.8'
+412: type='Numeric', key='WSJF - Urgency', value='5.6' => '5.6'
+412: type='Numeric', key='Product Committee ROI', value='18' => '18'
+415: type='Numeric', key='Product Committee ROI', value='10' => '10'
+419: type='Numeric', key='WSJF - Tshirt Size', value='1' => '1'
+419: type='Numeric', key='WSJF - ROI', value='11.6' => '11.6'
+419: type='Numeric', key='WSJF - Client Benefit', value='3.2' => '3.2'
+419: type='Numeric', key='WSJF - Internal MSR benefit', value='1.2' => '1.2'
+419: type='Numeric', key='WSJF - Biz Alignment', value='5' => '5'
+419: type='Numeric', key='WSJF - Urgency', value='2.2' => '2.2'
+421: type='Numeric', key='WSJF - Tshirt Size', value='5' => '5'
+421: type='Numeric', key='WSJF - ROI', value='8.8' => '8.8'
+421: type='Numeric', key='WSJF - Client Benefit', value='12' => '12'
+421: type='Numeric', key='WSJF - Internal MSR benefit', value='7.2' => '7.2'
+421: type='Numeric', key='WSJF - Biz Alignment', value='13' => '13'
+421: type='Numeric', key='WSJF - Urgency', value='12' => '12'
+421: type='Numeric', key='Product Committee ROI', value='17' => '17'
+422: type='Numeric', key='WSJF - Tshirt Size', value='13' => '13'
+422: type='Numeric', key='WSJF - ROI', value='2.1' => '2.1'
+422: type='Numeric', key='WSJF - Client Benefit', value='8' => '8'
+422: type='Numeric', key='WSJF - Internal MSR benefit', value='4.4' => '4.4'
+422: type='Numeric', key='WSJF - Biz Alignment', value='10' => '10'
+422: type='Numeric', key='WSJF - Urgency', value='5.6' => '5.6'
+422: type='Numeric', key='Product Committee ROI', value='17' => '17'
+423: type='Numeric', key='Product Committee ROI', value='17' => '17'
+425: type='Numeric', key='Product Committee ROI', value='11' => '11'
+430: type='Numeric', key='Product Committee ROI', value='11' => '11'
+WARNING: Reformat markdown ticket='35' => Cannot find
+434: type='Numeric', key='Product Committee ROI', value='11' => '11'
+WARNING: Reformat markdown ticket='7986' => Cannot find
+WARNING: Reformat markdown ticket='7990' => Cannot find
+WARNING: Reformat markdown ticket='7991' => Cannot find
+439: type='Numeric', key='Product Committee ROI', value='16' => '16'
+WARNING: Reformat markdown ticket='8041' => Cannot find
+443: type='Numeric', key='Product Committee ROI', value='7' => '7'
+446: type='Numeric', key='Product Committee ROI', value='19' => '19'
+447: type='Numeric', key='Product Committee ROI', value='19' => '19'
+448: type='Numeric', key='Product Committee ROI', value='19' => '19'
+449: type='Numeric', key='Product Committee ROI', value='19' => '19'
+450: type='Numeric', key='WSJF - Tshirt Size', value='2' => '2'
+450: type='Numeric', key='WSJF - ROI', value='3.4' => '3.4'
+450: type='Numeric', key='WSJF - Client Benefit', value='1.8' => '1.8'
+450: type='Numeric', key='WSJF - Internal MSR benefit', value='1' => '1'
+450: type='Numeric', key='WSJF - Biz Alignment', value='2.2' => '2.2'
+450: type='Numeric', key='WSJF - Urgency', value='1.8' => '1.8'
+450: type='Numeric', key='Product Committee ROI', value='19' => '19'
+455: type='Numeric', key='WSJF - Tshirt Size', value='3' => '3'
+455: type='Numeric', key='WSJF - ROI', value='3.2' => '3.2'
+455: type='Numeric', key='WSJF - Client Benefit', value='3' => '3'
+455: type='Numeric', key='WSJF - Internal MSR benefit', value='1.5' => '1.5'
+455: type='Numeric', key='WSJF - Biz Alignment', value='3' => '3'
+455: type='Numeric', key='WSJF - Urgency', value='2' => '2'
+458: type='Numeric', key='Product Committee ROI', value='13' => '13'
+459: type='Numeric', key='Product Committee ROI', value='12' => '12'
+460: type='Numeric', key='WSJF - Tshirt Size', value='13' => '13'
+460: type='Numeric', key='WSJF - ROI', value='2.4' => '2.4'
+460: type='Numeric', key='WSJF - Client Benefit', value='10' => '10'
+460: type='Numeric', key='WSJF - Internal MSR benefit', value='4.4' => '4.4'
+460: type='Numeric', key='WSJF - Biz Alignment', value='13' => '13'
+460: type='Numeric', key='WSJF - Urgency', value='4' => '4'
+460: type='Numeric', key='Product Committee ROI', value='17' => '17'
+461: type='Numeric', key='Product Committee ROI', value='17' => '17'
+WARNING: Reformat markdown ticket='454' => Cannot find
+464: type='Numeric', key='Product Committee ROI', value='13' => '13'
+482: type='Numeric', key='Product Committee ROI', value='14' => '14'
+483: type='Numeric', key='WSJF - Tshirt Size', value='2' => '2'
+483: type='Numeric', key='WSJF - ROI', value='8' => '8'
+483: type='Numeric', key='WSJF - Client Benefit', value='5.2' => '5.2'
+483: type='Numeric', key='WSJF - Internal MSR benefit', value='2.4' => '2.4'
+483: type='Numeric', key='WSJF - Biz Alignment', value='6.2' => '6.2'
+483: type='Numeric', key='WSJF - Urgency', value='2.2' => '2.2'
+483: type='Numeric', key='Product Committee ROI', value='14' => '14'
+485: type='Numeric', key='Product Committee ROI', value='20' => '20'
+488: type='Numeric', key='WSJF - Tshirt Size', value='13' => '13'
+488: type='Numeric', key='WSJF - ROI', value='1.6' => '1.6'
+488: type='Numeric', key='WSJF - Client Benefit', value='6.2' => '6.2'
+488: type='Numeric', key='WSJF - Internal MSR benefit', value='3.8' => '3.8'
+488: type='Numeric', key='WSJF - Biz Alignment', value='7' => '7'
+488: type='Numeric', key='WSJF - Urgency', value='3.2' => '3.2'
+491: type='Numeric', key='WSJF - Tshirt Size', value='3' => '3'
+491: type='Numeric', key='WSJF - ROI', value='6.9' => '6.9'
+491: type='Numeric', key='WSJF - Client Benefit', value='5' => '5'
+491: type='Numeric', key='WSJF - Internal MSR benefit', value='2.8' => '2.8'
+491: type='Numeric', key='WSJF - Biz Alignment', value='6.8' => '6.8'
+491: type='Numeric', key='WSJF - Urgency', value='6' => '6'
+WARNING: Reformat markdown ticket='4816' => Cannot find
+WARNING: Reformat markdown ticket='152' => Cannot find
+WARNING: Reformat markdown ticket='91' => Cannot find
+WARNING: Reformat markdown ticket='394' => Cannot find
+WARNING: Reformat markdown ticket='444' => Cannot find
+WARNING: Reformat markdown ticket='423' => Cannot find
+WARNING: Reformat markdown ticket='98' => Cannot find
+WARNING: Reformat markdown ticket='523' => Cannot find
+WARNING: Reformat markdown ticket='432' => Cannot find
+504: type='Numeric', key='WSJF - Tshirt Size', value='3' => '3'
+504: type='Numeric', key='WSJF - ROI', value='10' => '10'
+504: type='Numeric', key='WSJF - Client Benefit', value='4.4' => '4.4'
+504: type='Numeric', key='WSJF - Internal MSR benefit', value='9' => '9'
+504: type='Numeric', key='WSJF - Biz Alignment', value='5.6' => '5.6'
+504: type='Numeric', key='WSJF - Urgency', value='11' => '11'
+504: type='Numeric', key='Product Committee ROI', value='17' => '17'
+510: type='Numeric', key='WSJF - Tshirt Size', value='5' => '5'
+510: type='Numeric', key='WSJF - ROI', value='6.3' => '6.3'
+510: type='Numeric', key='WSJF - Client Benefit', value='5.6' => '5.6'
+510: type='Numeric', key='WSJF - Internal MSR benefit', value='6.8' => '6.8'
+510: type='Numeric', key='WSJF - Biz Alignment', value='9' => '9'
+510: type='Numeric', key='WSJF - Urgency', value='10' => '10'
+510: type='Numeric', key='Product Committee ROI', value='17' => '17'
+512: type='Numeric', key='WSJF - Tshirt Size', value='5' => '5'
+512: type='Numeric', key='WSJF - ROI', value='7.2' => '7.2'
+512: type='Numeric', key='WSJF - Client Benefit', value='7' => '7'
+512: type='Numeric', key='WSJF - Internal MSR benefit', value='11.4' => '11.4'
+512: type='Numeric', key='WSJF - Biz Alignment', value='9.4' => '9.4'
+512: type='Numeric', key='WSJF - Urgency', value='8.2' => '8.2'
+516: type='Numeric', key='WSJF - Tshirt Size', value='3' => '3'
+516: type='Numeric', key='WSJF - ROI', value='11.2' => '11.2'
+516: type='Numeric', key='WSJF - Client Benefit', value='4.25' => '4.25'
+516: type='Numeric', key='WSJF - Internal MSR benefit', value='11.75' => '11.75'
+516: type='Numeric', key='WSJF - Biz Alignment', value='9' => '9'
+516: type='Numeric', key='WSJF - Urgency', value='8.5' => '8.5'
+WARNING: Reformat markdown name='asiamalls.com' => NOK
+WARNING: Reformat markdown ticket='93' => Cannot find
+WARNING: Reformat markdown ticket='335' => Cannot find
+WARNING: Reformat markdown ticket='536' => Cannot find
+WARNING: Reformat markdown ticket='197' => Cannot find
+WARNING: Reformat markdown ticket='7268' => Cannot find
+Total tickets: 556
+data/jira/feature-requests-gishtech-atlassian-net-443/jira-tickets.csv

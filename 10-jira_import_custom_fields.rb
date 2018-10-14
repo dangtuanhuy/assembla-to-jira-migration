@@ -27,7 +27,7 @@ load './lib/common.rb'
 #   result
 # end
 
-@assembla_2_jira_custom = [
+@assembla_to_jira_custom = [
   {
     name: 'List',
     jira_plugin: 'com.atlassian.jira.plugin.system.customfieldtypes:select',
@@ -51,7 +51,7 @@ load './lib/common.rb'
   }
 ]
 
-@custom_plugin_names = @assembla_2_jira_custom.map { |f| f[:jira_plugin] }
+@custom_plugin_names = @assembla_to_jira_custom.map { |f| f[:jira_plugin] }
 @customfield_name_to_id = {}
 @customfield_id_to_name = {}
 
@@ -103,7 +103,7 @@ todo_team_list = []
 missing_fields.each do |field|
   name = field['title']
   description = "Custom field '#{name}'"
-  item = @assembla_2_jira_custom.find { |item| item[:name] == field['type']}
+  item = @assembla_to_jira_custom.find { |item| item[:name] == field['type']}
   jira_plugin = item[:jira_plugin]
   searcherKey = item[:searcherKey]
   custom_field = jira_create_custom_field(name, description, jira_plugin, searcherKey)

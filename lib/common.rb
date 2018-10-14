@@ -21,7 +21,7 @@ ASSEMBLA_SKIP_ASSOCIATIONS = (ENV['ASSEMBLA_SKIP_ASSOCIATIONS'] || '').split(','
 
 ASSEMBLA_TYPES_EXTRA = (ENV['ASSEMBLA_TYPES_EXTRA'] || '').split(',')
 
-ASSEMBLA_CUSTOM_FIELD = ENV['ASSEMBLA_CUSTOM_FIELD'] || ''
+# ASSEMBLA_CUSTOM_FIELD = ENV['ASSEMBLA_CUSTOM_FIELD'] || ''
 
 ASSEMBLA_TICKET_REPORT = ENV['ASSEMBLA_TICKET_REPORT'] || 0
 
@@ -711,6 +711,25 @@ def jira_get_user(username, groups)
     body.delete_if {|k, _| k =~ /self|avatarurls|timezone|locale|applicationroles|expand/i}
     puts "GET #{url} => OK (#{body.to_json})"
     result = body
+  rescue => e
+    if e.class == RestClient::NotFound && JSON.parse(e.response)['errorMessages'][0] =~ /does not exist/
+      puts "GET #{url} => NOK (does not exist)"
+    else
+      goodbye("GET #{url} => NOK (#{e.message})")
+    end
+  end
+  result
+end
+
+def jira_get_group(group)
+  result = nil
+  url = "#{JIRA_API_HOST}/group/member?groupname=#{group}&startAt=0&maxResults=1000"
+  begin
+    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
+    body = JSON.parse(response.body)
+    result = body.values[5]
+    puts "GET #{url}  => OK (#{result.length})"
+    result
   rescue => e
     if e.class == RestClient::NotFound && JSON.parse(e.response)['errorMessages'][0] =~ /does not exist/
       puts "GET #{url} => NOK (does not exist)"
