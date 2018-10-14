@@ -631,23 +631,24 @@ def jira_get_issuelink_types
   result
 end
 
-def jira_create_custom_field(name, description, type)
+def jira_create_custom_field(name, description, type, searcherKey)
   result = nil
   payload = {
       name: name,
       description: description,
-      type: type
+      type: type,
+      searcherKey: searcherKey
   }.to_json
   begin
     response = RestClient::Request.execute(method: :post, url: URL_JIRA_FIELDS, payload: payload, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
-    puts "POST #{URL_JIRA_FIELDS} name='#{name}' => OK (#{result['id']})"
+    puts "POST #{URL_JIRA_FIELDS} name='#{name}' description='#{description}' type='#{type}' searcherKey='#{searcherKey}' => OK (#{result['id']})"
   rescue RestClient::ExceptionWithResponse => e
     error = JSON.parse(e.response)
     message = error['errors'].map {|k, v| "#{k}: #{v}"}.join(' | ')
-    puts "POST #{URL_JIRA_FIELDS} name='#{name}' => NOK (#{message})"
+    puts "POST #{URL_JIRA_FIELDS} name='#{name}' description='#{description}' type='#{type}' searcherKey='#{searcherKey}' => NOK (#{message})"
   rescue => e
-    puts "POST #{URL_JIRA_FIELDS} name='#{name}' => NOK (#{e.message})"
+    puts "POST #{URL_JIRA_FIELDS} name='#{name}' description='#{description}' type='#{type}' searcherKey='#{searcherKey}' => NOK (#{e.message})"
   end
   result
 end

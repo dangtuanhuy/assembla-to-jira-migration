@@ -3,14 +3,55 @@
 
 load './lib/common.rb'
 
+# TODO
+# def jira_create_custom_field_option(field_key, id, value)
+#   result = nil
+#   # $(app-key)__$(field-key)
+#   payload = {
+#       id: id,
+#       value: value
+#   }.to_json
+#   url = "#{URL_JIRA_FIELDS}/#{field_key}/option/#{id}"
+#   begin
+#     response = RestClient::Request.execute(method: :put, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN)
+#     result = JSON.parse(response.body)
+#     puts "POST #{url} payload='#{payload}' => OK (#{result['id']})"
+#   rescue RestClient::ExceptionWithResponse => e
+#     puts e.inspect
+#     error = JSON.parse(e.response)
+#     message = error['errors'].map {|k, v| "#{k}: #{v}"}.join(' | ')
+#     puts "POST #{url} payload='#{payload}' => NOK (#{message})"
+#   rescue => e
+#     puts "POST #{url} payload='#{payload}' => NOK (#{e.message})"
+#   end
+#   result
+# end
+
 @assembla_2_jira_custom = [
-    { title: 'List', custom: 'com.atlassian.jira.plugin.system.customfieldtypes:select', options: true },
-    { title: 'Team List', custom: 'com.atlassian.teams:rm-teams-custom-field-team', options: false },
-    { title: 'Numeric', custom: 'com.atlassian.jira.plugin.system.customfieldtypes:float', options: false },
-    { title: 'Text', custom: 'com.atlassian.jira.plugin.system.customfieldtypes:textfield', options: false },
+  {
+    name: 'List',
+    jira_plugin: 'com.atlassian.jira.plugin.system.customfieldtypes:select',
+    searcherKey: 'com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher'
+  },
+  {
+    name: 'Team List',
+    jira_plugin: 'com.atlassian.teams:rm-teams-custom-field-team',
+    # TODO
+    searcherKey: ''
+  },
+  {
+    name: 'Numeric',
+    jira_plugin: 'com.atlassian.jira.plugin.system.customfieldtypes:float',
+    searcherKey: 'com.atlassian.jira.plugin.system.customfieldtypes:exactnumber'
+  },
+  {
+    name: 'Text',
+    jira_plugin: 'com.atlassian.jira.plugin.system.customfieldtypes:textfield',
+    searcherKey: 'com.atlassian.jira.plugin.system.customfieldtypes:textsearcher'
+  }
 ]
 
-@custom_plugin_names = @assembla_2_jira_custom.map { |f| f[:custom] }
+@custom_plugin_names = @assembla_2_jira_custom.map { |f| f[:jira_plugin] }
 @customfield_name_to_id = {}
 @customfield_id_to_name = {}
 
@@ -47,54 +88,65 @@ end
 if missing_fields.length.nonzero?
   puts "\nMissing Assembla custom fields:"
   missing_fields.each do |field|
-    puts  "* #{field['title']}"
+    puts "* #{field['title']}"
   end
 else
   puts "\nThere are no missing Assembla custom fields, so exit."
   exit
 end
 
-# --- Jira Custom fields --- #
-
-@custom_fields_jira = jira_get_fields
-@custom_field_names_jira = @custom_fields_jira.map { |field| field['title']}
-
-@custom_field_names.each do |field|
-  missing_field_names
-end
-
-@custom_fields_assembla.each do | field |
-  type = field['type']
-  title = field['title']
-  list_options = type == 'List' ? JSON.parse(field['list_options']) : nil
-  @list << {type: type, title: title, options: list_options}
-end
-
-@list.each do | item |
-  options = item[:options].nil? ? nil : item[:options].to_s
-  puts "Type: #{item[:type]}, Title: #{item[:title]} #{options}"
-end
-
-# --- JIRA custom fields --- #
-@fields_jira = jira_get_fields
-
-puts "\nJira custom fields:"
-
-@fields_jira.sort_by { |k| k['id'] }.each do |field|
-  # puts "#{field['id']} '#{field['name']}'" if field['custom'] && field['name'] !~ /Assembla/
-  puts field.inspect if field['custom'] && /^my/.match(field['name'])
-end
+puts ""
 
 nok = []
-missing_fields.each do |name|
+todo_list = []
+todo_team_list = []
+missing_fields.each do |field|
+  name = field['title']
   description = "Custom field '#{name}'"
-  custom_field = jira_create_custom_field(name, description, 'com.atlassian.jira.plugin.system.customfieldtypes:readonlyfield')
-  unless custom_field
+  item = @assembla_2_jira_custom.find { |item| item[:name] == field['type']}
+  jira_plugin = item[:jira_plugin]
+  searcherKey = item[:searcherKey]
+  custom_field = jira_create_custom_field(name, description, jira_plugin, searcherKey)
+  if custom_field
+    if item[:name] == 'List'
+      # TODO
+      # field_key = custom_field['key']
+      # options = JSON.parse(field['list_options'])
+      # options.each_with_index do |value, id|
+      #   puts "jira_create_custom_field_option(field_key='#{field_key}', id='#{id + 1}', value='#{value}')"
+      #   result = jira_create_custom_field_option(field_key, id + 1, value)
+      # end
+      todo_list << field
+    elsif item[:name] == 'Team List'
+      todo_team_list << field
+    end
+  else
     nok << name
   end
 end
+
 len = nok.length
 unless len.zero?
-  goodbye("Custom field#{len == 1 ? '' : 's'} '#{nok.join('\',\'')}' #{len == 1 ? 'is' : 'are'} missing, please define in Jira and make sure to attach it to the appropriate screens (see README.md)")
+  puts "\nCustom field#{len == 1 ? '' : 's'} '#{nok.join('\',\'')}' #{len == 1 ? 'is' : 'are'} missing, please define in Jira and make sure to attach it to the appropriate screens (see README.md)\n\n"
 end
 
+unless missing_fields.length.zero?
+  puts "\nIMPORTANT: the following custom JIRA fields MUST be linked to the Scrum Default and Scrum Bug screens."
+  missing_fields.each do |f|
+    puts "* #{f['title']} => type='#{f['type']}'"
+  end
+end
+
+unless todo_list.length.zero?
+  puts "\nIMPORTANT: The following custom JIRA fields are LISTS and you MUST configure them and add the given options."
+  todo_list.each do |f|
+    puts "* #{f['title']} => #{f['list_options']}"
+  end
+end
+
+unless todo_team_list.length.zero?
+  puts "\nIMPORTANT: the following custom JIRA fields are TEAM LISTS and you MUST edit them and select 'Team Link Searcher' as the search template"
+  todo_team_list.each do |f|
+    puts "* #{f['title']}"
+  end
+end

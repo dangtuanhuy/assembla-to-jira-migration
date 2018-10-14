@@ -100,7 +100,9 @@ unless missing_fields.length.zero?
   nok = []
   missing_fields.each do |name|
     description = "Custom field '#{name}'"
-    custom_field = jira_create_custom_field(name, description, 'com.atlassian.jira.plugin.system.customfieldtypes:readonlyfield')
+    custom_field = jira_create_custom_field(name, description,
+                                            'com.atlassian.jira.plugin.system.customfieldtypes:readonlyfield',
+                                            'com.atlassian.jira.plugin.system.customfieldtypes:textsearcher')
     unless custom_field
       nok << name
     end
