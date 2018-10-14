@@ -4,17 +4,18 @@ load './lib/common.rb'
 
 # IMPORTANT: Make sure that the `JIRA_API_ADMIN_USER` exists, is activated and belongs to both
 # the `site-admins` and the `jira-administrators` groups.
-
-# admin = jira_get_user(JIRA_API_ADMIN_USER, true)
-# goodbye("JIRA_API_ADMIN_USER='#{JIRA_API_ADMIN_USER}' does NOT exist. Please create.") unless admin
-# goodbye("JIRA_API_ADMIN_USER='#{JIRA_API_ADMIN_USER}' is NOT active. Please activate.") unless admin['active']
-# puts "\nFound JIRA_API_ADMIN_USER='#{JIRA_API_ADMIN_USER}'"
 #
-# groups = JIRA_SERVER_TYPE == 'hosted' ? %w(jira-administrators) : %w(jira-administrators site-admins)
-# groups.each do |group|
-#   next if admin['groups']['items'].detect { |item| item['name'] == group}
-#   goodbye("Admin user MUST belong to the following groups: [#{groups.join(',')}]. Please add user '#{admin['name']}' to these groups.")
-# end
+@jira_administrators = jira_get_group('jira-administrators')
+admin_administrator = @jira_administrators.detect{|user| user['emailAddress'] == JIRA_API_ADMIN_EMAIL}
+
+@jira_site_admins = jira_get_group('site-admins')
+admin_site_admin = @jira_site_admins.detect{|user| user['emailAddress'] == JIRA_API_ADMIN_EMAIL}
+
+@jira_core_users = jira_get_group('jira-core-users')
+
+goodbye("Admin user with JIRA_API_ADMIN_EMAIL='#{JIRA_API_ADMIN_EMAIL}' does NOT exist or does NOT belong to both the 'jira-administrators' and the 'site-admins' groups.") unless admin_site_admin && admin_administrator
+
+goodbye("Admin user with JIRA_API_ADMIN_EMAIL='#{JIRA_API_ADMIN_EMAIL}' is NOT active, please activate user.") unless admin_site_admin['active'] && admin_administrator['active']
 
 @jira_users = []
 
