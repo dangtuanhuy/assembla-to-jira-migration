@@ -9,11 +9,13 @@ tickets_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
 milestones_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/milestones-all.csv"
 tags_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-tags.csv"
 associations_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-associations.csv"
+custom_fields_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets-custom-fields.csv"
 
 @tickets_assembla = csv_to_array(tickets_assembla_csv)
 @milestones_assembla = csv_to_array(milestones_assembla_csv)
 @tags_assembla = csv_to_array(tags_assembla_csv)
 @associations_assembla = csv_to_array(associations_assembla_csv)
+@custom_fields_assembla = csv_to_array(custom_fields_assembla_csv)
 
 # --- Filter by date if TICKET_CREATED_ON is defined --- #
 tickets_created_on = get_tickets_created_on
@@ -22,6 +24,7 @@ puts "Milestones: #{@milestones_assembla.length}"
 puts "Tags: #{@tags_assembla.length}"
 puts "Associations: #{@associations_assembla.length}"
 puts "Users: #{@users_assembla.length}"
+puts "Custom fields: #{@custom_fields_assembla.length}"
 
 if tickets_created_on
   puts "Filter newer than: #{tickets_created_on}"
@@ -45,12 +48,18 @@ end
   end
 end
 
+title_2_type = {}
+@custom_fields_assembla.each do |item|
+  title_2_type[item['title']] = item['type']
+end
+
 puts "\nTotal custom fields: #{@custom_fields.keys.length}"
 
 @custom_fields.keys.each do |k|
   custom_field = @custom_fields[k]
   puts "\nTotal #{k} #{custom_field.length}"
-  custom_field.sort.each do |name|
+  custom_field = title_2_type[k] == 'Numeric' ? custom_field.sort_by(&:to_f) : custom_field.sort
+  custom_field.each do |name|
     puts "* #{name}"
   end
 end
