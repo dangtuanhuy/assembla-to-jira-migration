@@ -40,6 +40,7 @@ result = jira_get_issue_createmeta(project['key'], 'Story')
 # ]
 
 def jira_get_list_option_id(name, value)
+  init(false) if @lists.length.zero?
   result = nil
   list = @lists.find {|l| l[:name] == name}
   if list
@@ -52,6 +53,7 @@ def jira_get_list_option_id(name, value)
 end
 
 def jira_get_list_option_value(name, id)
+  init(false) if @lists.length.zero?
   result = nil
   list = @lists.find {|l| l[:name] == name}
   if list
@@ -70,11 +72,10 @@ def init(b)
     name = h['name']
     found = @custom_fields_assembla.detect {|f| f['title'] == name}
     next unless found && found['type'] == 'List'
-    puts '---' unless b
     list = {id: custom_field, name: name, options: []}
-    puts "#{custom_field} => #{name}" unless b
+    puts "#{custom_field} => '#{name}'" unless b
     h['allowedValues'].each do |v|
-      puts "id: #{v['id']} => value: #{v['value']}" unless b
+      puts "id: #{v['id']} => value: '#{v['value']}'" unless b
       list[:options] << {id: v['id'], value: v['value']}
       if b
         id = jira_get_list_option_id(name, v['value'])
@@ -89,7 +90,8 @@ def init(b)
         end
       end
     end
-    puts '---' unless b
+    next if b
+    puts '---'
     @lists << list
   end
 end
