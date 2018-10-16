@@ -2,6 +2,7 @@
 
 load './lib/common.rb'
 load './lib/users-assembla.rb'
+load './lib/custom-fields.rb'
 
 # Parameters: startAt=n maxResults=m (optional)
 
@@ -28,13 +29,11 @@ tickets_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
 milestones_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/milestones-all.csv"
 tags_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-tags.csv"
 associations_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-associations.csv"
-custom_fields_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets-custom-fields.csv"
 
 @tickets_assembla = csv_to_array(tickets_assembla_csv)
 @milestones_assembla = csv_to_array(milestones_assembla_csv)
 @tags_assembla = csv_to_array(tags_assembla_csv)
 @associations_assembla = csv_to_array(associations_assembla_csv)
-@custom_fields_assembla = csv_to_array(custom_fields_assembla_csv)
 
 # --- Filter by date if TICKET_CREATED_ON is defined --- #
 tickets_created_on = get_tickets_created_on
@@ -43,7 +42,6 @@ puts "Milestones: #{@milestones_assembla.length}"
 puts "Tags: #{@tags_assembla.length}"
 puts "Associations: #{@associations_assembla.length}"
 puts "Users: #{@users_assembla.length}"
-puts "Custom fields: #{@custom_fields_assembla.length}"
 
 if tickets_created_on
   puts "Filter newer than: #{tickets_created_on}"
@@ -52,34 +50,6 @@ if tickets_created_on
   puts "Tickets: #{tickets_initial} => #{@tickets_assembla.length} ∆#{tickets_initial - @tickets_assembla.length}"
 else
   puts "Tickets: #{@tickets_assembla.length}"
-end
-
-# Custom fields
-@custom_fields = {}
-@tickets_assembla.each do |ticket|
-  c_fields = ticket['custom_fields']
-  next if c_fields&.empty?
-  fields = JSON.parse(c_fields.gsub(/=>/, ': '))
-  fields.each do |k, v|
-    @custom_fields[k] = [] unless @custom_fields[k]
-    @custom_fields[k] << v unless v&.empty? || @custom_fields[k].include?(v)
-  end
-end
-
-@title_to_type = {}
-@custom_fields_assembla.each do |item|
-  @title_to_type[item['title']] = item['type']
-end
-
-puts "\nTotal custom fields: #{@custom_fields.keys.length}"
-
-@custom_fields.keys.each do |k|
-  custom_field = @custom_fields[k]
-  puts "\nTotal #{k} #{custom_field.length}"
-  custom_field = @title_to_type[k] == 'Numeric' ? custom_field.sort_by(&:to_f) : custom_field.sort
-  custom_field.each do |name|
-    puts "* #{name}"
-  end
 end
 
 # --- JIRA Tickets --- #
@@ -173,7 +143,7 @@ def create_ticket_jira(ticket, counter, total)
   project_id = @project['id']
   ticket_id = ticket['id']
   ticket_number = ticket['number']
-  summary = reformat_markdown(ticket['summary'], logins: @list_of_logins, images: @list_of_images, content_type: 'summary', tickets: @assembla_number_to_jira_key)
+  summary = reformat_markdown(ticket['summary'], logins: @list_of_user_logins, images: @list_of_images, content_type: 'summary', tickets: @assembla_number_to_jira_key)
   created_on = ticket['created_on']
   completed_date = date_format_yyyy_mm_dd(ticket['completed_date'])
   reporter_id = ticket['reporter_id']
@@ -200,7 +170,7 @@ def create_ticket_jira(ticket, counter, total)
                 end
   description += "Author #{author_name} | "
   description += "Created on #{date_time(created_on)}\n\n"
-  reformatted_description = "#{reformat_markdown(ticket['description'], logins: @list_of_logins, images: @list_of_images, content_type: 'description', tickets: @assembla_number_to_jira_key)}"
+  reformatted_description = "#{reformat_markdown(ticket['description'], logins: @list_of_user_logins, images: @list_of_images, content_type: 'description', tickets: @assembla_number_to_jira_key)}"
   description += reformatted_description
 
   labels = get_labels(ticket)
@@ -271,16 +241,21 @@ def create_ticket_jira(ticket, counter, total)
   custom_fields = JSON.parse(ticket['custom_fields'].gsub('=>', ':'))
   custom_fields.each do |k, v|
     next if v.nil? || v.length.zero?
-    type = @title_to_type[k]
+    type = @custom_title_to_type[k]
     value = type == 'Numeric' ? (v.index('.') ? v.to_f : v.to_i) : v
     if type == 'List'
-      payload[:fields]["#{@customfield_name_to_id[k]}".to_sym] = {}
-      payload[:fields]["#{@customfield_name_to_id[k]}".to_sym][:id] = value
+      id = jira_get_list_option_id(k, v)
+      if id
+        payload[:fields]["#{@customfield_name_to_id[k]}".to_sym] = {}
+        payload[:fields]["#{@customfield_name_to_id[k]}".to_sym][:id] = id
+      else
+        puts "WARNING: Unknown custom field title='#{k}', value='#{value}' => SKIP"
+        next
+      end
     else
       payload[:fields]["#{@customfield_name_to_id[k]}".to_sym] = value
     end
-    # puts "#{counter}: type='#{type}', key='#{k}', value='#{v}' => '#{value}'" if type == 'Numeric'
-    # puts "#{counter}: type='#{type}', key='#{k}', value='#{value}'"
+      # puts "#{counter}: type='#{type}', key='#{k}', value='#{value}'"
   end
 
   case issue_type[:name]
