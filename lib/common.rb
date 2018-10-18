@@ -39,6 +39,7 @@ JIRA_API_DEFAULT_EMAIL = (ENV['JIRA_API_DEFAULT_EMAIL'] || 'example.org').gsub(/
 JIRA_API_UNKNOWN_USER = ENV['JIRA_API_UNKNOWN_USER'].freeze
 
 JIRA_API_IMAGES_THUMBNAIL = (ENV['JIRA_API_IMAGES_THUMBNAIL'] || 'description:false,comments:true').freeze
+JIRA_API_USER_GROUPS = (ENV['JIRA_API_USER_GROUPS'] || 'jira-administrators,jira-core-users,site-admins,jira-software-users').freeze
 
 JIRA_API_PROJECT_NAME = ENV['JIRA_API_PROJECT_NAME'].freeze
 
