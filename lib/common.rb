@@ -669,7 +669,7 @@ end
 def jira_create_user(user)
   result = nil
   url = "#{JIRA_API_HOST}/user"
-  username = user['login']
+  username = user['login'].sub(/@.*$/, '')
   email = user['email']
   if email.nil? || email.empty?
     email = "#{username}@#{JIRA_API_DEFAULT_EMAIL}"
@@ -680,11 +680,10 @@ def jira_create_user(user)
       password: username,
       # TODO: Make the following configurable and not hard-coded.
       emailAddress: email,
-      displayName: displayName,
+      displayName: displayName
   }.to_json
   begin
     response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN, timeout: 30)
-    puts "#{response.body}"
     body = JSON.parse(response.body)
     body.delete_if {|k, _| k =~ /self|avatarurls|timezone|locale|groups|applicationroles|expand/i}
     puts "POST #{url} username='#{username}' => OK (#{body.to_json})"
@@ -694,10 +693,14 @@ def jira_create_user(user)
       puts "POST #{url} username='#{username}' => NOK (#{e}) please retry"
     end
     error = JSON.parse(e.response)
-    message = error['errors'].map {|k, v| "#{k}: #{v}"}.join(' | ')
+    if error['errorMessages']
+      message = error['errorMessages'].join(' | ')
+    else
+      message = error['errors'].map {|k, v| "#{k}: #{v}"}.join(' | ')
+    end
     puts "POST #{url} username='#{username}' => NOK (#{message})"
   rescue => e
-    puts "POST #{url} username='#{username}' => NOK (#{e.message})"
+    puts "POST #{url} username='#{username}' => NOK (#{e})"
   end
   result
 end

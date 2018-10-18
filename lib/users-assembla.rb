@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
-users_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
+# Assembla users which have been exported into the users.csv file.
+# id,login,name,picture,email,organization,phone
+@users_assembla = []
+
+users_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/users.csv"
 @users_assembla = csv_to_array(users_assembla_csv)
 goodbye('Cannot get users!') unless @users_assembla.length.nonzero?
 
