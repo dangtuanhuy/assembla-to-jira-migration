@@ -37,9 +37,13 @@ def create_user_index(user)
   id = user['id']
   login = user['login']
   name = user['name']
+  picture = user['picture']
+  email = user['email']
+  organization = user['organization']
+  phone = user['phone']
 
   unless @users_index[user['id']].nil?
-    puts "create_user_index(id=#{id},login=#{login},name='#{name}' => OK (already exists)"
+    puts "create_user_index(id='#{id}',login='#{login}',name='#{name}',email='#{email}' => OK (already exists)"
     return
   end
 
@@ -58,8 +62,13 @@ def create_user_index(user)
   user_index['count'] = 0
   user_index['login'] = login
   user_index['name'] = name
+  user_index['picture'] = picture
+  user_index['email'] = email
+  user_index['organization'] = organization
+  user_index['phone'] = phone
+
   @users_index[id] = user_index
-  puts "create_user_index(id=#{id},login=#{login},name='#{name}' => OK"
+  puts "create_user_index(id='#{id}',login='#{login}',name='#{name}',email='#{email}' => OK"
 
   user_index
 end

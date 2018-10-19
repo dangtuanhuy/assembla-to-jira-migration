@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 load './lib/common.rb'
-load './lib/users-assembla.rb'
 load './lib/custom-fields.rb'
 
 # Parameters: startAt=n maxResults=m (optional)
@@ -20,7 +19,7 @@ unless ARGV[0].nil?
   end
 end
 
-puts "startAt: #{@startAt}"
+puts "\nstartAt: #{@startAt}"
 puts "maxResults: #{@maxResults}" if @maxResults != -1
 
 # --- ASSEMBLA Tickets --- #
@@ -38,25 +37,26 @@ associations_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-associations.csv"
 # --- Filter by date if TICKET_CREATED_ON is defined --- #
 tickets_created_on = get_tickets_created_on
 
-puts "Milestones: #{@milestones_assembla.length}"
+puts "\nMilestones: #{@milestones_assembla.length}"
 puts "Tags: #{@tags_assembla.length}"
 puts "Associations: #{@associations_assembla.length}"
-puts "Users: #{@users_assembla.length}"
 
 if tickets_created_on
-  puts "Filter newer than: #{tickets_created_on}"
+  puts "\nFilter newer than: #{tickets_created_on}"
   tickets_initial = @tickets_assembla.length
   @tickets_assembla.select! {|item| item_newer_than?(item, tickets_created_on)}
   puts "Tickets: #{tickets_initial} => #{@tickets_assembla.length} ∆#{tickets_initial - @tickets_assembla.length}"
 else
-  puts "Tickets: #{@tickets_assembla.length}"
+  puts "\nTickets: #{@tickets_assembla.length}"
 end
 
 # --- JIRA Tickets --- #
 
+users_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-users.csv"
 issue_types_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-issue-types.csv"
 attachments_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-attachments-download.csv"
 
+@jira_users = csv_to_array(users_jira_csv)
 @issue_types_jira = csv_to_array(issue_types_jira_csv)
 @attachments_jira = csv_to_array(attachments_jira_csv)
 
@@ -78,6 +78,10 @@ puts
 
 def jira_get_field_by_name(name)
   @fields_jira.find {|field| field['name'] == name}
+end
+
+def assembla_id_to_jira_user(assembla_id)
+  @jira_users.find { |user| user['assemblaid'] == assembla_id }
 end
 
 # 0 - Parent (ticket2 is parent of ticket1 and ticket1 is child of ticket2)
@@ -402,10 +406,11 @@ end
 
 # --- USERS --- #
 
-puts "\nTotal users: #{@user_id_to_login.length}"
-
-@user_id_to_login.each do |k, v|
-  puts "* #{k} #{v}"
+puts "\nTotal users: #{@jira_users.length}"
+puts '  assemblaId              accountId                 name/key'
+puts '  ----------              ---------                 --------'
+@jira_users.each do |user|
+  puts "* #{user['assemblaid']}  #{user['accountid']}  #{user['name']}"
 end
 
 # Make sure that the unknown user exists and is active, otherwise try and create
@@ -567,14 +572,11 @@ end
 @tickets_assembla.each do |ticket|
   ticket_id = ticket['id']
   reporter_id = ticket['reporter_id']
-  reporter_name = @user_id_to_login[reporter_id]
-  reporter_email = @user_id_to_email[reporter_id]
-  unless reporter_name && reporter_name.length.positive? && reporter_email && reporter_email.length.positive?
+  jira_user = assembla_id_to_jira_user(reporter_id)
+  unless jira_user
     @invalid_reporters << {
         ticket_id: ticket_id,
-        reporter_id: reporter_id,
-        reporter_name: reporter_name,
-        reporter_email: reporter_email
+        reporter_id: reporter_id
     }
   end
 end
@@ -582,7 +584,7 @@ end
 if @invalid_reporters.length.positive?
   puts "\nInvalid reporters: #{@invalid_reporters.length}"
   @invalid_reporters.each do |reporter|
-    puts "ticket_id='#{reporter[:ticket_id]}' reporter: id='#{reporter[:reporter_id]}', name='#{reporter[:reporter_name]}', email='#{reporter[:reporter_email]}'"
+    puts "ticket_id='#{reporter[:ticket_id]}' reporter: id='#{reporter[:reporter_id]}'"
   end
   goodbye('Please fix before continuing')
 end

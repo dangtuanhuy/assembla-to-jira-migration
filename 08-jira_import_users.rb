@@ -4,9 +4,6 @@ load './lib/common.rb'
 
 load './lib/users-jira.rb'
 
-load './lib/users-assembla.rb'
-# @users_assembla => id,login,name,picture,email,organization,phone
-
 # IMPORTANT: Make sure that the `JIRA_API_ADMIN_USER` exists, is activated and belongs to both
 # the `site-admins` and the `jira-administrators` groups.
 #
@@ -20,6 +17,11 @@ goodbye("Admin user with JIRA_API_ADMIN_EMAIL='#{JIRA_API_ADMIN_EMAIL}' does NOT
 
 goodbye("Admin user with JIRA_API_ADMIN_EMAIL='#{JIRA_API_ADMIN_EMAIL}' is NOT active, please activate user.") unless admin_site_admin['active'] && admin_administrator['active']
 
+# @user_assembla => count,id,login,name,picture,email,organization,phone,...
+users_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
+@users_assembla = csv_to_array(users_assembla_csv)
+goodbye('Cannot get users!') unless @users_assembla.length.nonzero?
+
 # name,key,accountId,emailAddress,displayName,active
 @existing_users_jira = jira_get_users
 
@@ -32,15 +34,19 @@ goodbye("Admin user with JIRA_API_ADMIN_EMAIL='#{JIRA_API_ADMIN_EMAIL}' is NOT a
 # name     => displayName
 
 @users_assembla.each do |user|
+  if user['count'].to_i.zero?
+    puts "username='#{username}' zero count => SKIP"
+    next
+  end
   username = user['login'].sub(/@.*$/, '')
   u1 = jira_get_user_by_username(@existing_users_jira, username)
   if u1
     # User exists so add to list
-    puts "username='#{username}' found"
+    puts "username='#{username}' already exists => SKIP"
     @users_jira << { 'assemblaId': user['id'] }.merge(u1)
   else
     # User does not exist so create if possible and add to list
-    puts "username='#{username}' not found"
+    puts "username='#{username}' not found => CREATE"
     u2 = jira_create_user(user)
     if u2
       @users_jira << { 'assemblaId': user['id'] }.merge(u2)

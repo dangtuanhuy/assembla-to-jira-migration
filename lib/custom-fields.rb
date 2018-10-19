@@ -68,7 +68,7 @@ def init(b)
     found = @custom_fields_assembla.detect {|f| f['title'] == name}
     next unless found && found['type'] == 'List'
     list = {id: custom_field, name: name, options: []}
-    puts "#{custom_field} => '#{name}'" unless b
+    puts "\n#{custom_field} => '#{name}'" unless b
     h['allowedValues'].each do |v|
       puts "id: #{v['id']} => value: '#{v['value']}'" unless b
       list[:options] << {id: v['id'], value: v['value']}
@@ -80,14 +80,12 @@ def init(b)
         end
         value = jira_get_list_option_value(name, v['id'])
         if value != v['value']
-          puts "TEST value => NOK"
+          puts "\nTEST value => NOK"
           exit
         end
       end
     end
-    next if b
-    puts '---'
-    @createmeta_lookup << list
+    @createmeta_lookup << list unless b
   end
 end
 
