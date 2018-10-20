@@ -5,8 +5,25 @@ load './lib/users-assembla.rb'
 
 @assembla_status_to_jira = {}
 JIRA_API_STATUSES.split(',').each do |status|
-  from, to = status.split(':')
-  @assembla_status_to_jira[from.downcase] = to || from
+  if status.index(':')
+    m = /^(.*):(.*)$/.match(status.downcase)
+    from = m[1]
+    to = m[2]
+    @assembla_status_to_jira[from.downcase] = to
+  else
+    @assembla_status_to_jira[status.downcase] = status
+  end
+end
+
+puts "\nAssembla status => Jira status"
+@assembla_status_to_jira.keys.each do |key|
+  puts "* #{key} => #{@assembla_status_to_jira[key]}"
+end
+
+def jira_get_status_from_assembla(assembla_status)
+  jira_status = @assembla_status_to_jira[assembla_status.downcase]
+  goodbye("Cannot find jira_status from assembla_status='#{assembla_status}'") unless jira_status
+  jira_status
 end
 
 # Assembla tickets
@@ -43,11 +60,11 @@ puts "\nTotal Assembla tickets: #{@total_assembla_tickets}"
 
 puts "\nAssembla ticket statuses:"
 @assembla_statuses.keys.each do |key|
-  puts "* #{key}: #{@assembla_statuses[key]}"
+  puts "* #{key} => #{@assembla_statuses[key]}"
 end
 
 if @extra_summary_types.length.positive?
-  puts "\nExtra statuses detected in the summary (ignored): #{@extra_summary_types.length}"
+  puts "\nExtra (possible) statuses detected in the summary (ignored): #{@extra_summary_types.length}"
   @extra_summary_types.keys.sort.each do |type|
     puts "* #{type}"
   end
@@ -67,6 +84,8 @@ if @missing_statuses.length.positive?
   end
   goodbye("Update JIRA_API_STATUSES in .env file and create JIRA statuses if needed")
 end
+
+puts
 puts "Sanity check => OK"
 
 # Jira tickets
@@ -82,14 +101,20 @@ tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 puts "\nJira ticket resolutions:"
 @resolutions_jira.each do |resolution|
   @jira_resolution_name_to_id[resolution['name'].downcase] = resolution['id']
-  puts "* #{resolution['id']}: #{resolution['name']}"
+  puts "* id='#{resolution['id']}' name='#{resolution['name']}'"
 end
 
 @jira_status_name_to_id = {}
 puts "\nJira ticket statuses:"
 @statuses_jira.each do |status|
   @jira_status_name_to_id[status['name'].downcase] = status['id']
-  puts "* #{status['id']}: #{status['name']}"
+  puts "* id='#{status['id']}' name='#{status['name']}'"
+end
+
+def jira_get_status_id(name)
+  id = @jira_status_name_to_id[name]
+  goodbye("Cannot get status id from name='#{name}'") unless id
+  id
 end
 
 # Convert assembla_ticket_id to jira_ticket
@@ -135,70 +160,71 @@ def jira_get_transitions(issue_id)
 end
 
 # POST /rest/api/2/issue/{issueIdOrKey}/transitions
-def jira_update_status(issue_id, status, counter)
-  if status.casecmp('done').zero? || status.casecmp('invalid').zero?
+def jira_update_status(issue_id, assembla_status, counter)
+  if assembla_status.casecmp('done').zero? || assembla_status.casecmp('invalid').zero?
     payload = {
       update: {},
       transition: {
-        id: @transition_target_name_to_id['done'].to_i
+        id: jira_get_transition_target_id('done')
       }
     }.to_json
     transition = {
       from: {
-        id: @jira_status_name_to_id['to do'],
+        id: jira_get_status_id('to do'),
         name: 'to do'
       },
       to: {
-        id: @jira_status_name_to_id['done'],
+        id: jira_get_status_id('done'),
         name: 'done'
       }
     }
-  elsif status.casecmp('new').zero?
+  elsif assembla_status.casecmp('new').zero?
     # Do nothing
     transition = {
       from: {
-        id: @jira_status_name_to_id['to do'],
+        id: jira_get_status_id('to do'),
         name: 'to do'
       },
       to: {
-        id: @jira_status_name_to_id['to do'],
+        id: jira_get_status_id('to do'),
         name: 'to do'
       }
     }
     return { transition: transition }
-  elsif status.casecmp('in progress').zero?
+  elsif assembla_status.casecmp('in progress').zero?
     payload = {
       update: {},
       transition: {
-        id: @transition_target_name_to_id['in progress'].to_i
+        id: jira_get_transition_target_id('in progress')
       }
     }.to_json
     transition = {
       from: {
-        id: @jira_status_name_to_id['to do'],
+        id: jira_get_status_id('to do'),
         name: 'to do'
       },
       to: {
-        id: @jira_status_name_to_id['in progress'],
+        id: jira_get_status_id('in progress'),
         name: 'in progress'
       }
     }
   else
     # Handle other statuses
+    jira_status = jira_get_status_from_assembla(assembla_status)
     payload = {
       update: {},
       transition: {
-        id: @transition_target_name_to_id[status.downcase].to_i
+        id: jira_get_transition_target_id(jira_status)
       }
     }.to_json
     transition = {
       from: {
-        id: @jira_status_name_to_id['to do'],
+        id: jira_get_status_id('to do'),
         name: 'to do'
       },
       to: {
-        id: @jira_status_name_to_id[status.downcase],
-        name: status
+        id: jira_get_status_id(jira_status),
+        name: jira_status
       }
     }
   end
@@ -209,8 +235,17 @@ def jira_update_status(issue_id, status, counter)
   user_email = @user_login_to_email[user_login]
   headers = headers_user_login(user_login, user_email)
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/transitions"
+
+  percentage = ((counter * 100) / @total_assembla_tickets).round.to_s.rjust(3)
+  # By default all created issues start with a status of 'To Do', so if the transition
+  # is to 'To Do' we just skip it.
+  #
+  if transition[:to][:name].casecmp('to do').zero?
+    puts "#{percentage}% [#{counter}|#{@total_assembla_tickets}] transition 'To Do' => SKIP"
+    return { transition: transition }
+  end
+
   begin
-    percentage = ((counter * 100) / @total_assembla_tickets).round.to_s.rjust(3)
     RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
     puts "#{percentage}% [#{counter}|#{@total_assembla_tickets}] POST #{url} '#{transition[:from][:name]}' to '#{transition[:to][:name]}' => OK"
     result = { transition: transition }
@@ -221,8 +256,8 @@ def jira_update_status(issue_id, status, counter)
   end
   if result
     # If the issue has been closed (done) we set the resolution to the appropriate value
-    if status.casecmp('done').zero? || status.casecmp('invalid').zero?
-      resolution_name = status.casecmp('invalid').zero? ? "Won't do" : 'Done'
+    if assembla_status.casecmp('done').zero? || assembla_status.casecmp('invalid').zero?
+      resolution_name = assembla_status.casecmp('invalid').zero? ? "Won't do" : 'Done'
       resolution_id = @jira_resolution_name_to_id[resolution_name.downcase].to_i
       payload = {
         update: {},
@@ -257,6 +292,12 @@ goodbye("No transitions available, first_id='#{first_id}', issue_id=#{issue_id}"
 @transition_target_name_to_id = {}
 @transitions.each do |transition|
   @transition_target_name_to_id[transition['to']['name'].downcase] = transition['id'].to_i
+end
+
+def jira_get_transition_target_id(name)
+  id = @transition_target_name_to_id[name.downcase]
+  goodbye("Cannot get transition target id from name='#{name}'") unless id
+  id
 end
 
 @jira_updates_tickets = []

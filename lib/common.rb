@@ -187,7 +187,7 @@ def jira_get_server_type
   serverinfo = csv_to_array(serverinfo_csv)[0]
   server_type = serverinfo['deploymenttype'].downcase
   server_type = 'hosted' if server_type == 'server'
-  puts "Server type = #{server_type}"
+  puts "\nServer type = #{server_type}"
   server_type
 end
 
