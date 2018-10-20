@@ -56,6 +56,7 @@ users_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-users.csv"
 issue_types_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-issue-types.csv"
 attachments_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-attachments-download.csv"
 
+# @jira_users => assemblaid,key,accountid,name,emailaddress,displayaame,active (downcase)
 @jira_users = csv_to_array(users_jira_csv)
 @issue_types_jira = csv_to_array(issue_types_jira_csv)
 @attachments_jira = csv_to_array(attachments_jira_csv)
@@ -65,7 +66,13 @@ attachments_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-attachments-download.csv"
   @list_of_images[attachment['assembla_attachment_id']] = attachment['filename']
 end
 
+@list_of_user_logins = {}
+@jira_users.each do |user|
+  @list_of_user_logins[user['name']] = true
+end
+
 puts "\nAttachments: #{@attachments_jira.length}"
+puts "Portfolio plugin not installed => skip all custom fields of type 'Team List'" unless JIRA_API_PORTFOLIO_PLUGIN
 puts
 
 @fields_jira = []
@@ -81,7 +88,9 @@ def jira_get_field_by_name(name)
 end
 
 def assembla_id_to_jira_user(assembla_id)
-  @jira_users.find { |user| user['assemblaid'] == assembla_id }
+  user = @jira_users.find { |user| user['assemblaid'] == assembla_id }
+  goodbye("Cannot find jira user for assembla_id='#{assembla_id}'") unless user
+  user
 end
 
 # 0 - Parent (ticket2 is parent of ticket1 and ticket1 is child of ticket2)
@@ -153,10 +162,14 @@ def create_ticket_jira(ticket, counter, total)
   reporter_id = ticket['reporter_id']
   assigned_to_id = ticket['assigned_to_id']
   priority = ticket['priority']
-  reporter_name = @user_id_to_login[reporter_id]
-  reporter_name.sub!(/@.*$/, '')
-  reporter_email = @user_id_to_email[reporter_id]
-  assignee_name = @user_id_to_login[assigned_to_id]
+  reporter = assembla_id_to_jira_user(reporter_id)
+  reporter_name = reporter['name']
+  if assigned_to_id
+    assignee = assembla_id_to_jira_user(assigned_to_id)
+    assignee_name = assignee['name']
+  else
+    assignee_name = nil
+  end
   priority_name = @priority_id_to_name[priority]
   status_name = ticket['status']
   story_rank = ticket['importance']
@@ -220,11 +233,6 @@ def create_ticket_jira(ticket, counter, total)
     payload[:fields]["#{@customfield_name_to_id['Assembla-Remaining']}".to_sym] = assembla_remaining
   end
 
-  # if custom_field
-  #   assembla_custom_field = "Assembla-#{ASSEMBLA_CUSTOM_FIELD}"
-  #   payload[:fields]["#{@customfield_name_to_id[assembla_custom_field]}".to_sym] = custom_field
-  # end
-
   if JIRA_SERVER_TYPE == 'hosted'
     payload[:fields]["#{@customfield_name_to_id['Rank']}".to_sym] = story_rank
   end
@@ -246,6 +254,8 @@ def create_ticket_jira(ticket, counter, total)
   custom_fields.each do |k, v|
     next if v.nil? || v.length.zero?
     type = @custom_title_to_type[k]
+    # Skip teams if portfolio plugin is not installed.
+    next if type == 'Team List' && !JIRA_API_PORTFOLIO_PLUGIN
     value = type == 'Numeric' ? (v.index('.') ? v.to_f : v.to_i) : v
     if type == 'List'
       id = jira_get_list_option_id(k, v)
@@ -289,6 +299,8 @@ def create_ticket_jira(ticket, counter, total)
     # Check for unresolved ticket links that have to be resolved later.
     summary_ticket_links = !/#\d+/.match(summary).nil?
     description_ticket_links = !/#\d+/.match(reformatted_description).nil?
+    # puts "summary_ticket_links='#{summary_ticket_links}'" if summary_ticket_links
+    # puts "description_ticket_links='#{description_ticket_links}'" if description_ticket_links
     if summary_ticket_links || description_ticket_links
       @jira_ticket_links << {
           jira_ticket_key: jira_ticket_key,

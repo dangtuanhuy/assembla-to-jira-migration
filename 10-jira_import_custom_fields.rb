@@ -69,7 +69,7 @@ end
 puts "\nFound the following Jira custom fields:\n\n"
 
 @custom_fields_jira.each do |field|
-  puts  "* #{field['name']}"
+  puts "* #{field['name']}"
 end
 
 missing_fields = []
