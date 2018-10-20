@@ -37,7 +37,8 @@ associations_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-associations.csv"
 # --- Filter by date if TICKET_CREATED_ON is defined --- #
 tickets_created_on = get_tickets_created_on
 
-puts "\nMilestones: #{@milestones_assembla.length}"
+@nr_milestones = @milestones_assembla.length
+puts "\nMilestones: #{@nr_milestones}"
 puts "Tags: #{@tags_assembla.length}"
 puts "Associations: #{@associations_assembla.length}"
 
@@ -214,7 +215,7 @@ def create_ticket_jira(ticket, counter, total)
 
           "#{@customfield_name_to_id['Assembla-Id']}": ticket_number,
           "#{@customfield_name_to_id['Assembla-Status']}": status_name,
-          "#{@customfield_name_to_id['Assembla-Milestone']}": milestone[:name],
+          "#{@customfield_name_to_id['Assembla-Milestone']}": @nr_milestones.nonzero? ? milestone[:name] : nil,
           "#{@customfield_name_to_id['Assembla-Completed']}": completed_date
       }
   }
@@ -397,8 +398,7 @@ def create_ticket_jira(ticket, counter, total)
       description: description,
       assembla_ticket_id: ticket_id,
       assembla_ticket_number: ticket_number,
-      # custom_field: custom_field,
-      milestone_name: milestone[:name],
+      milestone_name: @nr_milestones ? milestone[:name] : '',
       story_rank: story_rank
   }
 end

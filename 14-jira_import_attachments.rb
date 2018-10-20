@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 load './lib/common.rb'
-load './lib/users-assembla.rb'
 
 restart_offset = 0
 
@@ -59,7 +58,6 @@ goodbye("Invalid arg='#{ARGV[0]}', cannot be greater than the number of attachme
   message = ''
   if created_by && created_by.length.positive?
     created_by.sub!(/@.*$/, '')
-    # email = @user_login_to_email[created_by]
   else
     created_by = JIRA_API_ADMIN_USER
     # email = JIRA_API_ADMIN_EMAIL

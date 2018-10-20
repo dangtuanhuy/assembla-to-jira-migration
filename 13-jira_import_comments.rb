@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 load './lib/common.rb'
-load './lib/users-assembla.rb'
 
 # Assembla comments
+# id,comment,user_id,created_on,updated_at,ticket_changes,user_name,user_avatar_url,ticket_id,ticket_number
 comments_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-comments.csv"
 @comments_assembla = csv_to_array(comments_assembla_csv)
 total_comments = @comments_assembla.length
@@ -17,7 +17,28 @@ puts "Empty comments: #{@comments_assembla_empty.length}"
 puts "Remaining comments: #{@comments_assembla.length}"
 puts "Skip empty comments: #{JIRA_API_SKIP_EMPTY_COMMENTS}"
 
+# Jira users
+# assemblaid,key,accountid,name,emailaddress,displayname,active
+users_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-users.csv"
+@users_jira = csv_to_array(users_jira_csv)
+
+@user_id_to_login = {}
+@user_id_to_email = {}
+@list_of_user_logins = {}
+@users_jira.each do |user|
+  id = user['assemblaid']
+  login = user['name'].sub(/@.*$/, '')
+  email = user['emailaddress']
+  if email.nil? || email.empty?
+    email = "#{login}@#{JIRA_API_DEFAULT_EMAIL}"
+  end
+  @user_id_to_login[id] = login
+  @user_id_to_email[id] = email
+  @list_of_user_logins[login] = true
+end
+
 # Jira tickets
+# result,retries,message,jira_ticket_id,jira_ticket_key,project_id,summary,issue_type_id,issue_type_name,assignee_name,reporter_name,priority_name,status_name,labels,description,assembla_ticket_id,assembla_ticket_number,milestone_name,story_rank
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @tickets_jira = csv_to_array(tickets_jira_csv)
 
