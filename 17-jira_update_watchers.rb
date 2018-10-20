@@ -39,6 +39,8 @@ end
 
 # Move to common.rb -- end
 
+@watchers_not_found = []
+
 # POST /rest/api/2/issue/{issueIdOrKey}/watchers
 def jira_update_watcher(issue_id, watcher, counter)
   result = nil
@@ -54,7 +56,10 @@ def jira_update_watcher(issue_id, watcher, counter)
     puts "#{percentage}% [#{counter}|#{@total_assembla_tickets}] POST #{url} '#{watcher}' => OK"
     result = true
   rescue RestClient::ExceptionWithResponse => e
-    rest_client_exception(e, 'POST', url, payload)
+    message = rest_client_exception(e, 'POST', url, payload)
+    if /404/.match(message)
+      @watchers_not_found << watcher
+    end
   rescue => e
     puts "#{percentage}% [#{counter}|#{@total_assembla_tickets}] POST #{url} #{watcher} => NOK (#{e.message})"
   end
@@ -70,15 +75,22 @@ end
   jira_ticket_id = @a_id_to_j_id[assembla_ticket_id]
   jira_ticket_key = @a_nr_to_j_key[assembla_ticket_nr]
   assembla_ticket_watchers.split(',').each do |user_id|
+    not_found = false
+    result = nil?
     next unless user_id.length.positive?
     watcher = @user_id_to_login[user_id]
     unless watcher
       puts "Unknown watcher for user_id=#{user_id}, assembla_ticket_nr=#{assembla_ticket_nr}, jira_ticket_key=#{jira_ticket_key}"
       next
     end
-    result = jira_update_watcher(jira_ticket_id, watcher, index + 1)
+    if @watchers_not_found.index(watcher)
+      not_found = true
+      puts "Watcher='#{watcher}' previous (404 Not Found) => SKIP"
+    else
+      result = jira_update_watcher(jira_ticket_id, watcher, index + 1)
+    end
     @jira_updates_tickets << {
-      result: result.nil? ? 'NOK' : 'OK',
+      result: result.nil? ? "NOK#{ not_found ? '(404 Not Found)': '' }" : 'OK',
       assembla_ticket_id: assembla_ticket_id,
       assembla_ticket_number: assembla_ticket_nr,
       jira_ticket_id: jira_ticket_id,

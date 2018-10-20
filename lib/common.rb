@@ -893,6 +893,8 @@ def rest_client_exception(e, method, url, payload = {})
       end
     elsif err['status-code']
       message = "Status code: #{err['status-code']}"
+    else
+      message = e.to_s
     end
   rescue
     message = e.to_s
