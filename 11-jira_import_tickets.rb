@@ -73,7 +73,6 @@ end
 end
 
 puts "\nAttachments: #{@attachments_jira.length}"
-puts "Portfolio plugin not installed => skip all custom fields of type 'Team List'" unless JIRA_API_PORTFOLIO_PLUGIN
 puts
 
 @fields_jira = []
@@ -255,8 +254,6 @@ def create_ticket_jira(ticket, counter, total)
   custom_fields.each do |k, v|
     next if v.nil? || v.length.zero?
     type = @custom_title_to_type[k]
-    # Skip teams if portfolio plugin is not installed.
-    next if type == 'Team List' && !JIRA_API_PORTFOLIO_PLUGIN
     value = type == 'Numeric' ? (v.index('.') ? v.to_f : v.to_i) : v
     if type == 'List'
       id = jira_get_list_option_id(k, v)
@@ -267,6 +264,8 @@ def create_ticket_jira(ticket, counter, total)
         puts "WARNING: Unknown custom field title='#{k}', value='#{value}' => SKIP"
         next
       end
+    elsif type = 'Team List'
+    #   TODO: do something
     else
       payload[:fields]["#{@customfield_name_to_id[k]}".to_sym] = value
     end

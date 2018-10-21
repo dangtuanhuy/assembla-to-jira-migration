@@ -75,9 +75,6 @@ MAX_RETRY = 3
 # By default we skip empty comments
 JIRA_API_SKIP_EMPTY_COMMENTS = ENV['JIRA_API_SKIP_EMPTY_COMMENTS'] || true
 
-# By default the Portfolio Plugin is assumed not to be installed
-JIRA_API_PORTFOLIO_PLUGIN = ENV['JIRA_API_PORTFOLIO_PLUGIN'] || false
-
 def csv_to_array(pathname)
   csv = CSV::parse(File.open(pathname) {|f| f.read})
   fields = csv.shift

@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-# require 'json'
 
 load './lib/common.rb'
 
@@ -35,9 +34,8 @@ load './lib/common.rb'
   },
   {
     name: 'Team List',
-    jira_plugin: 'com.atlassian.teams:rm-teams-custom-field-team',
-    # TODO
-    searcherKey: ''
+    jira_plugin: 'userpicker',
+    searcherKey: 'userpickergroupsearcher'
   },
   {
     name: 'Numeric',
@@ -75,7 +73,7 @@ end
 missing_fields = []
 @custom_fields_assembla.each do |field_assembla|
   name = field_assembla['title']
-  field = @custom_fields_jira.detect {|field_jira| field_jira['name'] == name}
+  field = @custom_fields_jira.detect { |field_jira| field_jira['name'] == name }
   if field
     id = field['id']
     @customfield_name_to_id[name] = id
@@ -95,31 +93,26 @@ else
   exit
 end
 
-puts ""
+puts
 
 nok = []
 todo_list = []
-todo_team_list = []
 missing_fields.each do |field|
   name = field['title']
   description = "Custom field '#{name}'"
-  item = @assembla_to_jira_custom.find { |item| item[:name] == field['type']}
+  item = @assembla_to_jira_custom.detect { |f| f[:name] == f['type'] }
   jira_plugin = item[:jira_plugin]
-  searcherKey = item[:searcherKey]
-  custom_field = jira_create_custom_field(name, description, jira_plugin, searcherKey)
+  searcher_key = item[:searcherKey]
+  custom_field = jira_create_custom_field(name, description, jira_plugin, searcher_key)
   if custom_field
-    if item[:name] == 'List'
-      # TODO
-      # field_key = custom_field['key']
-      # options = JSON.parse(field['list_options'])
-      # options.each_with_index do |value, id|
-      #   puts "jira_create_custom_field_option(field_key='#{field_key}', id='#{id + 1}', value='#{value}')"
-      #   result = jira_create_custom_field_option(field_key, id + 1, value)
-      # end
-      todo_list << field
-    elsif item[:name] == 'Team List'
-      todo_team_list << field
-    end
+    todo_list << field if item[:name] == 'List'
+    # TODO
+    # field_key = custom_field['key']
+    # options = JSON.parse(field['list_options'])
+    # options.each_with_index do |value, id|
+    #   puts "jira_create_custom_field_option(field_key='#{field_key}', id='#{id + 1}', value='#{value}')"
+    #   result = jira_create_custom_field_option(field_key, id + 1, value)
+    # end
   else
     nok << name
   end
@@ -141,12 +134,5 @@ unless todo_list.length.zero?
   puts "\nIMPORTANT: The following custom JIRA fields are LISTS and you MUST configure them and add the given options."
   todo_list.each do |f|
     puts "* #{f['title']} => #{f['list_options']}"
-  end
-end
-
-unless todo_team_list.length.zero?
-  puts "\nIMPORTANT: the following custom JIRA fields are TEAM LISTS and you MUST edit them and select 'Team Link Searcher' as the search template"
-  todo_team_list.each do |f|
-    puts "* #{f['title']}"
   end
 end
