@@ -265,7 +265,13 @@ def create_ticket_jira(ticket, counter, total)
         next
       end
     elsif type = 'Team List'
-    #   TODO: do something
+      user = @assembla_id_to_jira_user[value]
+      if user.nil?
+        puts "WARNING: Unknown user='#{value}' for 'Team List' field title='#{k}' => SKIP"
+      else
+        payload[:fields]["#{@customfield_name_to_id[k]}".to_sym] = {}
+        payload[:fields]["#{@customfield_name_to_id[k]}".to_sym][:name] = user['name']
+      end
     else
       payload[:fields]["#{@customfield_name_to_id[k]}".to_sym] = value
     end
