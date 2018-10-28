@@ -53,7 +53,8 @@ end
 
 if JIRA_SERVER_TYPE == 'cloud'
   # Ensure that all of the comment authors belong to the 'jira-administrators' group and that they
-  # are all also activated.
+  # are all also activated. This is required in order to be able to assign the original Assembla
+  # comment author to the newly created Jira comment.
   jira_admin_users = jira_get_group('jira-administrators')
   jira_all_users = jira_get_users
   assembla_comments_user_ids = @comments_assembla.map { |comment| comment['user_id']}.uniq
