@@ -99,8 +99,10 @@ nok = []
 todo_list = []
 missing_fields.each do |field|
   name = field['title']
+  type = field['type']
   description = "Custom field '#{name}'"
-  item = @assembla_to_jira_custom.detect { |f| f[:name] == f['type'] }
+  item = @assembla_to_jira_custom.detect { |f| f[:name] == type }
+  goodbye("Cannot convert Assembla type to Jira custom") unless item
   jira_plugin = item[:jira_plugin]
   searcher_key = item[:searcherKey]
   custom_field = jira_create_custom_field(name, description, jira_plugin, searcher_key)

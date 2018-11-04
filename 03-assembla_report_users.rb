@@ -97,6 +97,7 @@ FILES.each do |file|
         h['id'] = user_id
         h['login'] = "unknown-#{@num_unknowns}"
         h['name'] = "Unknown ##{@num_unknowns}"
+        h['email'] = "unknown-#{@num_unknowns}@#{JIRA_API_DEFAULT_EMAIL}"
         user_index = create_user_index(h)
       end
       user_index['count'] += 1

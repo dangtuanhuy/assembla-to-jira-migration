@@ -39,14 +39,20 @@ goodbye('Cannot get users!') unless @users_assembla.length.nonzero?
     next
   end
   username = user['login'].sub(/@.*$/, '')
-  u1 = jira_get_user_by_username(@existing_users_jira, username)
+  email = user['email']
+  if email.nil? || email.length.zero?
+    puts "username='#{username}' does NOT have a valid email => SKIP"
+    next
+  end
+  # u1 = jira_get_user_by_username(@existing_users_jira, username)
+  u1 = jira_get_user_by_email(@existing_users_jira, email)
   if u1
     # User exists so add to list
-    puts "username='#{username}' already exists => SKIP"
+    puts "username='#{username}', email='#{email}' already exists => SKIP"
     @users_jira << { 'assemblaId': user['id'] }.merge(u1)
   else
     # User does not exist so create if possible and add to list
-    puts "username='#{username}' not found => CREATE"
+    puts "username='#{username}', email='#{email}' not found => CREATE"
     u2 = jira_create_user(user)
     if u2
       @users_jira << { 'assemblaId': user['id'] }.merge(u2)
