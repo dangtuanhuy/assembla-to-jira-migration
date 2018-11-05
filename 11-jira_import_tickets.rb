@@ -87,9 +87,11 @@ def jira_get_field_by_name(name)
   @fields_jira.find {|field| field['name'] == name}
 end
 
-def assembla_id_to_jira_user(assembla_id)
-  user = @jira_users.find { |user| user['assemblaid'] == assembla_id }
-  goodbye("Cannot find jira user for assembla_id='#{assembla_id}'") unless user
+def assembla_id_to_jira_user(assembla_id, b = false)
+  user = @jira_users.find { |u| u['assemblaid'] == assembla_id }
+  unless user
+    goodbye("Cannot find jira user for assembla_id='#{assembla_id}'") unless b
+  end
   user
 end
 
@@ -264,13 +266,12 @@ def create_ticket_jira(ticket, counter, total)
         puts "WARNING: Unknown custom field title='#{k}', value='#{value}' => SKIP"
         next
       end
-    elsif type = 'Team List'
-      user = @assembla_id_to_jira_user[value]
+    elsif type == 'Team List'
+      user = assembla_id_to_jira_user(value, true)
       if user.nil?
         puts "WARNING: Unknown user='#{value}' for 'Team List' field title='#{k}' => SKIP"
       else
-        payload[:fields]["#{@customfield_name_to_id[k]}".to_sym] = {}
-        payload[:fields]["#{@customfield_name_to_id[k]}".to_sym][:name] = user['name']
+        payload[:fields]["#{@customfield_name_to_id[k]}".to_sym] = user['name']
       end
     else
       payload[:fields]["#{@customfield_name_to_id[k]}".to_sym] = value
@@ -286,8 +287,10 @@ def create_ticket_jira(ticket, counter, total)
     payload[:fields]["#{@customfield_name_to_id['Story Points']}".to_sym] = story_points.to_i
   when 'sub-task'
     parent_issue = get_parent_issue(ticket)
-    payload[:fields][:parent] = {}
-    payload[:fields][:parent][:id] = parent_issue ? parent_issue[:jira_ticket_id] : nil
+    unless parent_issue.nil?
+      payload[:fields][:parent] = {}
+      payload[:fields][:parent][:id] = parent_issue
+    end
   end
 
   jira_ticket_id = nil
@@ -589,7 +592,7 @@ end
 @tickets_assembla.each do |ticket|
   ticket_id = ticket['id']
   reporter_id = ticket['reporter_id']
-  jira_user = assembla_id_to_jira_user(reporter_id)
+  jira_user = assembla_id_to_jira_user(reporter_id, true)
   unless jira_user
     @invalid_reporters << {
         ticket_id: ticket_id,

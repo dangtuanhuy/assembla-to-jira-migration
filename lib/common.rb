@@ -399,6 +399,7 @@ def get_output_dirname(space, dir = nil)
   dirname
 end
 
+# TODO: not used so remove.
 def jira_check_unknown_user(b)
   puts "\nUnknown user:" if b
   if JIRA_API_UNKNOWN_USER && JIRA_API_UNKNOWN_USER.length

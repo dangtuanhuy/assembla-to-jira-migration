@@ -3,11 +3,11 @@
 JIRA_API_USER_ATTRIBUTES = %w{name key accountId emailAddress displayName active}.freeze
 
 def jira_get_user_by_username(users_jira, username)
-  return users_jira.find {|user| user['name'] == username}
+  return users_jira.detect { |user| user['name'] == username }
 end
 
 def jira_get_user_by_email(users_jira, emailAddress)
-  return users_jira.find {|user| user['emailAddress'] == emailAddress}
+  return users_jira.detect { |user| user['emailAddress'].casecmp(emailAddress) == 0 }
 end
 
 def jira_get_group(group_name)
