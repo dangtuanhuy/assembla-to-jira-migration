@@ -158,9 +158,9 @@ def create_ticket_jira(ticket, counter, total)
   reporter_id = ticket['reporter_id']
   assigned_to_id = ticket['assigned_to_id']
   priority = ticket['priority']
-  reporter_name = @assembla_login_to_jira_name[reporter_id]
+  reporter_name = @assembla_id_to_jira_name[reporter_id]
   if assigned_to_id
-    assignee_name = @assembla_login_to_jira_name[assigned_to_id]
+    assignee_name = @assembla_id_to_jira_name[assigned_to_id]
   else
     assignee_name = nil
   end
@@ -259,7 +259,7 @@ def create_ticket_jira(ticket, counter, total)
         next
       end
     elsif type == 'Team List'
-      user_name = @assembla_login_to_jira_name[value]
+      user_name = @assembla_id_to_jira_name[value]
       if user_name.nil?
         puts "WARNING: Unknown user='#{value}' for 'Team List' field title='#{k}' => SKIP"
       else
