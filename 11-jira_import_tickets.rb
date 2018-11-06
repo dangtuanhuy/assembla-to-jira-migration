@@ -68,8 +68,10 @@ attachments_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-attachments-download.csv"
 end
 
 @assembla_login_to_jira_name = {}
+@assembla_id_to_jira_name = {}
 @jira_users.each do |user|
   @assembla_login_to_jira_name[user['assemblalogin']] = user['name']
+  @assembla_id_to_jira_name[user['assemblaid']] = user['name']
 end
 
 puts "\nAttachments: #{@attachments_jira.length}"
@@ -582,7 +584,7 @@ end
 @tickets_assembla.each do |ticket|
   ticket_id = ticket['id']
   reporter_id = ticket['reporter_id']
-  jira_name = @assembla_login_to_jira_name[reporter_id]
+  jira_name = @assembla_id_to_jira_name[reporter_id]
   unless jira_name
     @invalid_reporters << {
         ticket_id: ticket_id,
