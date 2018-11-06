@@ -18,14 +18,13 @@ puts "Empty comments: #{@comments_assembla_empty.length}"
 puts "Remaining comments: #{@comments_assembla.length}"
 puts "Skip empty comments: #{JIRA_API_SKIP_EMPTY_COMMENTS}"
 
-# Jira users
-# assemblaid,key,accountid,name,emailaddress,displayname,active
+# @users_jira => assemblaid,assemblaloginkey,accountid,name,emailaddress,displayname,active
 users_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-users.csv"
 @users_jira = csv_to_array(users_jira_csv)
 
 @user_id_to_login = {}
 @user_id_to_email = {}
-@list_of_user_logins = {}
+@assembla_login_to_jira_name = {}
 @users_jira.each do |user|
   id = user['assemblaid']
   login = user['name'].sub(/@.*$/, '')
@@ -35,7 +34,7 @@ users_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-users.csv"
   end
   @user_id_to_login[id] = login
   @user_id_to_email[id] = email
-  @list_of_user_logins[login] = true
+  @assembla_login_to_jira_name[user['assemblalogin']] = user['name']
 end
 
 # Jira tickets
@@ -119,7 +118,7 @@ def jira_create_comment(issue_id, user_id, comment, counter)
   user_login.sub!(/@.*$/, '')
   user_email = @user_id_to_email[user_id]
   headers = headers_user_login_comment(user_login, user_email)
-  reformatted_body = reformat_markdown(comment['comment'], logins: @list_of_user_logins,
+  reformatted_body = reformat_markdown(comment['comment'], logins: @assembla_login_to_jira_name,
                                                            images: @list_of_images, content_type: 'comments', strikethru: true)
   body = "Created on #{date_time(comment['created_on'])}\n\n#{reformatted_body}"
   # if JIRA_SERVER_TYPE == 'cloud'

@@ -49,17 +49,18 @@ goodbye('Cannot get users!') unless @users_assembla.length.nonzero?
   if u1
     # User exists so add to list
     puts "username='#{username}', email='#{email}' already exists => SKIP"
-    @users_jira << { 'assemblaId': user['id'] }.merge(u1)
+    @users_jira << { 'assemblaId': user['id'], 'assemblaLogin': user['login'] }.merge(u1)
   else
     # User does not exist so create if possible and add to list
     puts "username='#{username}', email='#{email}' not found => CREATE"
     u2 = jira_create_user(user)
     if u2
-      @users_jira << { 'assemblaId': user['id'] }.merge(u2)
+      @users_jira << { 'assemblaId': user['id'], 'assemblaLogin': user['login'] }.merge(u2)
     end
   end
 end
 
+# jira-users.csv => assemblaid,assemblaloginkey,accountid,name,emailaddress,displayname,active
 jira_users_csv = "#{OUTPUT_DIR_JIRA}/jira-users.csv"
 write_csv_file(jira_users_csv, @users_jira)
 

@@ -795,6 +795,10 @@ end
 
 def markdown_name(name, logins)
   if name[0] == '@'
+    # Regex isn't perfect, catch email addresses and names that
+    # begin with a digit, just in case.
+    return name unless /@[^.]+\.[^>]+>/.match(name).nil?
+    return name unless /\d/.match(name[1]).nil?
     name = name[1..-1].sub(/@.*$/, '').strip
   elsif name[0..6] == '[[user:'
     name = name[7..-3].gsub(/\|.*$/, '').strip
@@ -802,9 +806,9 @@ def markdown_name(name, logins)
     goodbye("markdown_name(name='#{name}') has unknown format")
   end
   return @cache_markdown_names[name] if @cache_markdown_names[name]
-  ok = logins[name]
-  result = ok ? "[~#{name}]" : "@#{name}"
-  warning "Reformat markdown name='#{name}' => #{ok ? '' : 'N'}OK" unless ok
+  jira_name = logins[name]
+  result = jira_name ? "[~#{jira_name}]" : "@#{name}"
+  warning "Reformat markdown name='#{name}' => Cannot find" unless jira_name
   @cache_markdown_names[name] = result
 end
 
@@ -842,7 +846,7 @@ def markdown_image(image, images, content_type)
     result = "!#{name}#{@content_types_thumbnail[content_type] ? '|thumbnail' : ''}!"
   else
     result = image
-    warning "Reformat markdown image='#{image}', id='#{id}', text='#{text}' => NOK"
+    warning "Reformat markdown image='#{image}', id='#{id}', text='#{text}' => Cannot find"
   end
   result
 end
