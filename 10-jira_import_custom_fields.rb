@@ -34,8 +34,8 @@ load './lib/common.rb'
   },
   {
     name: 'Team List',
-    jira_plugin: 'userpicker',
-    searcherKey: 'userpickergroupsearcher'
+    jira_plugin: 'com.atlassian.jira.plugin.system.customfieldtypes:userpicker',
+    searcherKey: 'com.atlassian.jira.plugin.system.customfieldtypes:userpickergroupsearcher'
   },
   {
     name: 'Numeric',

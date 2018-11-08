@@ -2,6 +2,7 @@
 
 load './lib/common.rb'
 load './lib/custom-fields.rb'
+load './lib/users-jira.rb'
 
 # Parameters: startAt=n maxResults=m (optional)
 
@@ -79,8 +80,19 @@ puts
 
 @fields_jira = []
 
-@is_not_a_user = []
-@cannot_be_assigned_issues = []
+@is_not_a_user = [nil, '']
+@cannot_be_assigned_issues = [nil, '']
+
+# Create a list of users who are inactive.
+@inactive_jira_users = []
+jira_get_users.each do |user|
+  @inactive_jira_users << user['name'] unless user['active']
+end
+
+puts "Inactive Jira users: #{@inactive_jira_users.length}"
+@inactive_jira_users.each do |name|
+  puts "* #{name}"
+end
 
 # This is populated as the tickets are created.
 @assembla_number_to_jira_key = {}
@@ -174,7 +186,7 @@ def create_ticket_jira(ticket, counter, total)
 
   # Prepend the description text with a link to the original assembla ticket on the first line.
   description = "Assembla ticket [##{ticket_number}|#{ENV['ASSEMBLA_URL_TICKETS']}/#{ticket_number}] | "
-  author_name = if reporter_name.nil? || reporter_name.length.zero? || @is_not_a_user.include?(reporter_name)
+  author_name = if @is_not_a_user.include?(reporter_name)
                   'unknown'
                 else
                   "[~#{reporter_name}]"
@@ -232,18 +244,38 @@ def create_ticket_jira(ticket, counter, total)
   end
 
   # Reporter is required
-  if reporter_name.nil? || reporter_name.length.zero? || @is_not_a_user.include?(reporter_name)
+  if @is_not_a_user.include?(reporter_name)
+    warning("Reporter name='#{reporter_name}' is not a user => reset to '#{JIRA_API_UNKNOWN_USER}'")
     payload[:fields]["#{@customfield_name_to_id['Assembla-Reporter']}".to_sym] = payload[:fields][:reporter][:name]
     payload[:fields][:reporter][:name] = JIRA_API_UNKNOWN_USER
-    reporter_name = JIRA_API_UNKNOWN_USER
+  elsif @inactive_jira_users.include?(reporter_name)
+    warning("Reporter name='#{reporter_name}' is inactive => reset to '#{JIRA_API_UNKNOWN_USER}'")
+    payload[:fields]["#{@customfield_name_to_id['Assembla-Reporter']}".to_sym] = payload[:fields][:reporter][:name]
+    payload[:fields][:reporter][:name] = JIRA_API_UNKNOWN_USER
   end
 
+  # Verify assignee
   if @cannot_be_assigned_issues.include?(assignee_name)
+    warning("Assignee name='#{assignee_name}' cannot be assigned issues => remove")
+    payload[:fields]["#{@customfield_name_to_id['Assembla-Assignee']}".to_sym] = payload[:fields][:assignee][:name]
+    payload[:fields][:assignee][:name] = ''
+  elsif @inactive_jira_users.include?(assignee_name)
+    warning("Assignee name='#{assignee_name}' is inactive => remove")
     payload[:fields]["#{@customfield_name_to_id['Assembla-Assignee']}".to_sym] = payload[:fields][:assignee][:name]
     payload[:fields][:assignee][:name] = ''
   end
 
   # --- Custom fields Assembla --- #
+  #
+  # "customfield_10184": { // LIST
+  #   "value": "three"
+  # },
+  # "customfield_10185": "dummy text", // TEXT
+  # "customfield_10186": 22.5, // NUMBER
+  # "customfield_10175": { // TEAM LIST
+  #   "name": "lance1"
+  # }
+  #
   custom_fields = JSON.parse(ticket['custom_fields'].gsub('=>', ':'))
   custom_fields.each do |k, v|
     next if v.nil? || v.length.zero?
@@ -255,15 +287,18 @@ def create_ticket_jira(ticket, counter, total)
         payload[:fields]["#{@customfield_name_to_id[k]}".to_sym] = {}
         payload[:fields]["#{@customfield_name_to_id[k]}".to_sym][:id] = id
       else
-        puts "WARNING: Unknown custom field title='#{k}', value='#{value}' => SKIP"
+        warning("Unknown custom field title='#{k}', value='#{value}' => SKIP")
         next
       end
     elsif type == 'Team List'
       user_name = @assembla_id_to_jira_name[value]
       if user_name.nil?
-        puts "WARNING: Unknown user='#{value}' for 'Team List' field title='#{k}' => SKIP"
+        warning("Unknown assembla user='#{value}' for 'Team List' field title='#{k}' => SKIP")
+      elsif @inactive_jira_users.include?(user_name)
+        warning("Inactive jira user='#{user_name}' for 'Team List' field title='#{k}' => SKIP")
       else
-        payload[:fields]["#{@customfield_name_to_id[k]}".to_sym] = user_name
+        payload[:fields]["#{@customfield_name_to_id[k]}".to_sym] = {}
+        payload[:fields]["#{@customfield_name_to_id[k]}".to_sym][:name] = user_name
       end
     else
       payload[:fields]["#{@customfield_name_to_id[k]}".to_sym] = value

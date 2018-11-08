@@ -8,6 +8,13 @@ require 'rest-client'
 require 'base64'
 require 'date'
 
+version = File.read(".ruby-version")
+unless RUBY_VERSION == version
+  puts "Ruby version = '#{version}' is required, run the following command first:"
+  puts "rvm use #{version}"
+  exit
+end
+
 @debug = ENV['DEBUG'] == 'true'
 
 ASSEMBLA_SPACE = ENV['ASSEMBLA_SPACE'].freeze
@@ -647,7 +654,7 @@ def jira_create_custom_field(name, description, type, searcherKey)
     puts "POST #{URL_JIRA_FIELDS} name='#{name}' description='#{description}' type='#{type}' searcherKey='#{searcherKey}' => OK (#{result['id']})"
   rescue RestClient::ExceptionWithResponse => e
     error = JSON.parse(e.response)
-    message = error['errors'].map {|k, v| "#{k}: #{v}"}.join(' | ')
+    message = error['errorMessages'].join(' | ')
     puts "POST #{URL_JIRA_FIELDS} name='#{name}' description='#{description}' type='#{type}' searcherKey='#{searcherKey}' => NOK (#{message})"
   rescue => e
     puts "POST #{URL_JIRA_FIELDS} name='#{name}' description='#{description}' type='#{type}' searcherKey='#{searcherKey}' => NOK (#{e.message})"
@@ -873,7 +880,7 @@ def reformat_markdown(content, opts = {})
         gsub(/\[\[url:(.*?)\]\]/i, '[\1|\1]').
         gsub(/<code>(.*?)<\/code>/i, '{{\1}}').
         gsub(/@([^@]*)@( |$)/, '{{\1}}\2').
-        gsub(/@([a-z.-_]*)/i) {|name| markdown_name(name, logins)}.
+        gsub(/@([a-z._-]*)/i) {|name| markdown_name(name, logins)}.
         gsub(/\[\[user:(.*?)(\|(.*?))?\]\]/i) {|name| markdown_name(name, logins)}.
         gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) {|image| markdown_image(image, images, content_type)}
   end
