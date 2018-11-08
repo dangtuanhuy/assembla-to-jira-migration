@@ -245,22 +245,22 @@ def create_ticket_jira(ticket, counter, total)
 
   # Reporter is required
   if @is_not_a_user.include?(reporter_name)
-    warning("Reporter name='#{reporter_name}' is not a user => reset to '#{JIRA_API_UNKNOWN_USER}'")
+    warning("Reporter name='#{reporter_name}' is not a user => RESET '#{JIRA_API_UNKNOWN_USER}'")
     payload[:fields]["#{@customfield_name_to_id['Assembla-Reporter']}".to_sym] = payload[:fields][:reporter][:name]
     payload[:fields][:reporter][:name] = JIRA_API_UNKNOWN_USER
   elsif @inactive_jira_users.include?(reporter_name)
-    warning("Reporter name='#{reporter_name}' is inactive => reset to '#{JIRA_API_UNKNOWN_USER}'")
+    warning("Reporter name='#{reporter_name}' is inactive => RESET '#{JIRA_API_UNKNOWN_USER}'")
     payload[:fields]["#{@customfield_name_to_id['Assembla-Reporter']}".to_sym] = payload[:fields][:reporter][:name]
     payload[:fields][:reporter][:name] = JIRA_API_UNKNOWN_USER
   end
 
   # Verify assignee
   if @cannot_be_assigned_issues.include?(assignee_name)
-    warning("Assignee name='#{assignee_name}' cannot be assigned issues => remove")
+    warning("Assignee name='#{assignee_name}' cannot be assigned issues => REMOVE")
     payload[:fields]["#{@customfield_name_to_id['Assembla-Assignee']}".to_sym] = payload[:fields][:assignee][:name]
     payload[:fields][:assignee][:name] = ''
   elsif @inactive_jira_users.include?(assignee_name)
-    warning("Assignee name='#{assignee_name}' is inactive => remove")
+    warning("Assignee name='#{assignee_name}' is inactive => REMOVE")
     payload[:fields]["#{@customfield_name_to_id['Assembla-Assignee']}".to_sym] = payload[:fields][:assignee][:name]
     payload[:fields][:assignee][:name] = ''
   end

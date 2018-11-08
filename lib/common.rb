@@ -385,7 +385,7 @@ def create_csv_files(space, items)
   items.each do |item|
     create_csv_file(space, item)
   end
-  puts "#{space['name']} #{items.map {|item| item[:name]}.to_json} => done!"
+  puts "#{space['name']} #{items.map {|item| item[:name]}.to_json} => DONE"
 end
 
 def create_csv_file(space, item)
@@ -815,7 +815,7 @@ def markdown_name(name, logins)
   return @cache_markdown_names[name] if @cache_markdown_names[name]
   jira_name = logins[name]
   result = jira_name ? "[~#{jira_name}]" : "@#{name}"
-  warning "Reformat markdown name='#{name}' => Cannot find" unless jira_name
+  warning "Reformat markdown name='#{name}' => NOT FOUND" unless jira_name
   @cache_markdown_names[name] = result
 end
 
@@ -833,7 +833,7 @@ def markdown_ticket_link(ticket, tickets, strikethru = false)
     if strikethru
       result = "-#{result}-"
     end
-    warning "Reformat markdown ticket='#{ticket_number}' => Cannot find"
+    warning "Reformat markdown ticket='#{ticket_number}' => NOT FOUND"
   end
   @cache_markdown_ticket_links[ticket_number] = result
 end
@@ -853,7 +853,7 @@ def markdown_image(image, images, content_type)
     result = "!#{name}#{@content_types_thumbnail[content_type] ? '|thumbnail' : ''}!"
   else
     result = image
-    warning "Reformat markdown image='#{image}', id='#{id}', text='#{text}' => Cannot find"
+    warning "Reformat markdown image='#{image}', id='#{id}', text='#{text}' => NOT FOUND"
   end
   result
 end
