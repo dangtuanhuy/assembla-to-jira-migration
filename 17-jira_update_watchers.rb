@@ -22,19 +22,31 @@ puts "\nTotal Assembla tickets: #{@total_assembla_tickets}"
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @tickets_jira = csv_to_array(tickets_jira_csv)
 
+# --- JIRA Tickets --- #
+
+users_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-users.csv"
+
+# @jira_users => assemblaid,assemblalogin,key,accountid,name,emailaddress,displayname,active (downcase)
+@jira_users = csv_to_array(users_jira_csv)
+
+@assembla_id_to_jira_name = {}
+@jira_name_to_email = {}
+@jira_users.each do |user|
+  @assembla_id_to_jira_name[user['assemblaid']] = user['name']
+  @jira_name_to_email[user['name']] = user['emailaddress']
+end
+
 # TODO
 # Move to common.rb -- start
 
 @a_id_to_j_id = {}
 @a_nr_to_j_key = {}
-@j_id_to_j_login = {}
 @tickets_jira.each do |ticket|
   assembla_id = ticket['assembla_ticket_id']
   jira_id = ticket['jira_ticket_id']
   jira_key = ticket['jira_ticket_key']
   @a_id_to_j_id[assembla_id] = jira_id
   @a_nr_to_j_key[assembla_id] = jira_key
-  @j_id_to_j_login[jira_id] = ticket['reporter_name']
 end
 
 # Move to common.rb -- end
@@ -44,10 +56,8 @@ end
 # POST /rest/api/2/issue/{issueIdOrKey}/watchers
 def jira_update_watcher(issue_id, watcher, counter)
   result = nil
-  user_login = watcher
-  user_login.sub!(/@.*$/,'')
-  user_email = @user_login_to_email[user_login]
-  headers = headers_user_login(user_login, user_email)
+  watcher_email = @jira_name_to_email[watcher]
+  headers = headers_user_login(watcher, watcher_email)
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/watchers"
   payload = "\"#{watcher}\""
   begin
@@ -78,9 +88,9 @@ end
     not_found = false
     result = nil?
     next unless user_id.length.positive?
-    watcher = @user_id_to_login[user_id]
+    watcher = @assembla_id_to_jira_name[user_id]
     unless watcher
-      puts "Unknown watcher for user_id=#{user_id}, assembla_ticket_nr=#{assembla_ticket_nr}, jira_ticket_key=#{jira_ticket_key}"
+      warning("Unknown watcher for user_id=#{user_id}, assembla_ticket_nr=#{assembla_ticket_nr}, jira_ticket_key=#{jira_ticket_key}")
       next
     end
     if @watchers_not_found.index(watcher)

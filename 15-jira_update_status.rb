@@ -6,12 +6,12 @@ load './lib/users-assembla.rb'
 @assembla_status_to_jira = {}
 JIRA_API_STATUSES.split(',').each do |status|
   if status.index(':')
-    m = /^(.*):(.*)$/.match(status.downcase)
+    m = /^(.*):(.*)$/.match(status)
     from = m[1]
     to = m[2]
-    @assembla_status_to_jira[from.downcase] = to
+    @assembla_status_to_jira[from] = to
   else
-    @assembla_status_to_jira[status.downcase] = status
+    @assembla_status_to_jira[status] = status
   end
 end
 
@@ -21,7 +21,7 @@ puts "\nAssembla status => Jira status"
 end
 
 def jira_get_status_from_assembla(assembla_status)
-  jira_status = @assembla_status_to_jira[assembla_status.downcase]
+  jira_status = @assembla_status_to_jira[assembla_status]
   goodbye("Cannot find jira_status from assembla_status='#{assembla_status}'") unless jira_status
   jira_status
 end
@@ -51,7 +51,7 @@ end
   end
   if summary.match(/^([A-Z]*):/)
     t = summary.sub(/:.*$/, '\1')
-    @extra_summary_types[t] = true if !ASSEMBLA_TYPES_EXTRA.include?(t.downcase) && @extra_summary_types[t].nil?
+    @extra_summary_types[t] = true if !ASSEMBLA_TYPES_EXTRA.include?(t) && @extra_summary_types[t].nil?
   end
 end
 
@@ -73,7 +73,7 @@ end
 # Sanity check just in case
 @missing_statuses = []
 @assembla_statuses.keys.each do |key|
-  @missing_statuses << key unless @assembla_status_to_jira[key.downcase]
+  @missing_statuses << key unless @assembla_status_to_jira[key]
 end
 
 if @missing_statuses.length.positive?
@@ -100,14 +100,14 @@ tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @jira_resolution_name_to_id = {}
 puts "\nJira ticket resolutions:"
 @resolutions_jira.each do |resolution|
-  @jira_resolution_name_to_id[resolution['name'].downcase] = resolution['id']
+  @jira_resolution_name_to_id[resolution['name']] = resolution['id']
   puts "* id='#{resolution['id']}' name='#{resolution['name']}'"
 end
 
 @jira_status_name_to_id = {}
 puts "\nJira ticket statuses:"
 @statuses_jira.each do |status|
-  @jira_status_name_to_id[status['name'].downcase] = status['id']
+  @jira_status_name_to_id[status['name']] = status['id']
   puts "* id='#{status['id']}' name='#{status['name']}'"
 end
 
@@ -161,51 +161,51 @@ end
 
 # POST /rest/api/2/issue/{issueIdOrKey}/transitions
 def jira_update_status(issue_id, assembla_status, counter)
-  if assembla_status.casecmp('done').zero? || assembla_status.casecmp('invalid').zero?
+  if assembla_status.casecmp('Done').zero? || assembla_status.casecmp('invalid').zero?
     payload = {
       update: {},
       transition: {
-        id: jira_get_transition_target_id('done')
+        id: jira_get_transition_target_id('Done')
       }
     }.to_json
     transition = {
       from: {
-        id: jira_get_status_id('to do'),
-        name: 'to do'
+        id: jira_get_status_id('To Do'),
+        name: 'To Do'
       },
       to: {
-        id: jira_get_status_id('done'),
-        name: 'done'
+        id: jira_get_status_id('Done'),
+        name: 'Done'
       }
     }
   elsif assembla_status.casecmp('new').zero?
     # Do nothing
     transition = {
       from: {
-        id: jira_get_status_id('to do'),
-        name: 'to do'
+        id: jira_get_status_id('To Do'),
+        name: 'To Do'
       },
       to: {
-        id: jira_get_status_id('to do'),
-        name: 'to do'
+        id: jira_get_status_id('To Do'),
+        name: 'To Do'
       }
     }
     return { transition: transition }
-  elsif assembla_status.casecmp('in progress').zero?
+  elsif assembla_status.casecmp('In Progress').zero?
     payload = {
       update: {},
       transition: {
-        id: jira_get_transition_target_id('in progress')
+        id: jira_get_transition_target_id('In Progress')
       }
     }.to_json
     transition = {
       from: {
-        id: jira_get_status_id('to do'),
-        name: 'to do'
+        id: jira_get_status_id('To Do'),
+        name: 'To Do'
       },
       to: {
-        id: jira_get_status_id('in progress'),
-        name: 'in progress'
+        id: jira_get_status_id('In Progress'),
+        name: 'In Progress'
       }
     }
   else
@@ -219,8 +219,8 @@ def jira_update_status(issue_id, assembla_status, counter)
     }.to_json
     transition = {
       from: {
-        id: jira_get_status_id('to do'),
-        name: 'to do'
+        id: jira_get_status_id('To Do'),
+        name: 'To Do'
       },
       to: {
         id: jira_get_status_id(jira_status),
@@ -240,7 +240,7 @@ def jira_update_status(issue_id, assembla_status, counter)
   # By default all created issues start with a status of 'To Do', so if the transition
   # is to 'To Do' we just skip it.
   #
-  if transition[:to][:name].casecmp('to do').zero?
+  if transition[:to][:name].casecmp('To Do').zero?
     puts "#{percentage}% [#{counter}|#{@total_assembla_tickets}] transition 'To Do' => SKIP"
     return { transition: transition }
   end
@@ -255,10 +255,10 @@ def jira_update_status(issue_id, assembla_status, counter)
     puts "#{percentage}% [#{counter}|#{@total_assembla_tickets}] POST #{url} #{payload.inspect} => NOK (#{e.message})"
   end
   if result
-    # If the issue has been closed (done) we set the resolution to the appropriate value
-    if assembla_status.casecmp('done').zero? || assembla_status.casecmp('invalid').zero?
+    # If the issue has been closed (Done) we set the resolution to the appropriate value
+    if assembla_status.casecmp('Done').zero? || assembla_status.casecmp('invalid').zero?
       resolution_name = assembla_status.casecmp('invalid').zero? ? "Won't do" : 'Done'
-      resolution_id = @jira_resolution_name_to_id[resolution_name.downcase].to_i
+      resolution_id = @jira_resolution_name_to_id[resolution_name].to_i
       payload = {
         update: {},
         fields: {
@@ -291,11 +291,11 @@ goodbye("No transitions available, first_id='#{first_id}', issue_id=#{issue_id}"
 
 @transition_target_name_to_id = {}
 @transitions.each do |transition|
-  @transition_target_name_to_id[transition['to']['name'].downcase] = transition['id'].to_i
+  @transition_target_name_to_id[transition['to']['name']] = transition['id'].to_i
 end
 
 def jira_get_transition_target_id(name)
-  id = @transition_target_name_to_id[name.downcase]
+  id = @transition_target_name_to_id[name]
   goodbye("Cannot get transition target id from name='#{name}'") unless id
   id
 end

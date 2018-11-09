@@ -25,6 +25,7 @@ users_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-users.csv"
 @user_id_to_login = {}
 @user_id_to_email = {}
 @assembla_login_to_jira_name = {}
+@assembla_id_to_jira_name = {}
 @users_jira.each do |user|
   id = user['assemblaid']
   login = user['name'].sub(/@.*$/, '')
@@ -34,6 +35,7 @@ users_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-users.csv"
   end
   @user_id_to_login[id] = login
   @user_id_to_email[id] = email
+  @assembla_id_to_jira_name[id] = user['name']
   @assembla_login_to_jira_name[user['assemblalogin']] = user['name']
 end
 
@@ -50,35 +52,35 @@ tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
   @assembla_id_to_jira_key[ticket['assembla_ticket_id']] = ticket['jira_ticket_key']
 end
 
-if JIRA_SERVER_TYPE == 'cloud'
-  # Ensure that all of the comment authors belong to the 'jira-administrators' group and that they
-  # are all also activated. This is required in order to be able to assign the original Assembla
-  # comment author to the newly created Jira comment.
-  jira_admin_users = jira_get_group('jira-administrators')
-  jira_all_users = jira_get_users
-  assembla_comments_user_ids = @comments_assembla.map { |comment| comment['user_id']}.uniq
-  jira_comments_user_logins = assembla_comments_user_ids.map { |user_id|  @user_id_to_login[user_id] }
-  jira_comments_user_logins << JIRA_API_UNKNOWN_USER
-  list = []
-  jira_comments_user_logins.each do |name|
-    user = jira_all_users.find { |u| u['name'] == name }
-    admin = jira_admin_users.find { |u| u['name'] == name }
-    list << {
-      name: name,
-      active: user['active'],
-      admin: admin
-    }
-  end
-  ok = list.select { |item| item[:admin] && item[:active] }
-  not_ok = list.select { |item| !item[:admin] || !item[:active] }
-  if not_ok.length.nonzero?
-    puts "\nThe following users MUST be both activated AND member of the 'jira-administrators' group:"
-    not_ok.sort{|a,b| a[:name] <=> b[:name]}.each do |user|
-      puts "* #{user[:name]}"
-    end
-    goodbye('Please fix this before continuing.')
-  end
-end
+# if JIRA_SERVER_TYPE == 'cloud'
+#   # Ensure that all of the comment authors belong to the 'jira-administrators' group and that they
+#   # are all also activated. This is required in order to be able to assign the original Assembla
+#   # comment author to the newly created Jira comment.
+#   jira_admin_users = jira_get_group('jira-administrators')
+#   jira_all_users = jira_get_users
+#   assembla_comments_user_ids = @comments_assembla.map { |comment| comment['user_id']}.uniq
+#   jira_comments_user_logins = assembla_comments_user_ids.map { |user_id|  @user_id_to_login[user_id] }
+#   jira_comments_user_logins << JIRA_API_UNKNOWN_USER
+#   list = []
+#   jira_comments_user_logins.each do |name|
+#     user = jira_all_users.find { |u| u['name'] == name }
+#     admin = jira_admin_users.find { |u| u['name'] == name }
+#     list << {
+#       name: name,
+#       active: user['active'],
+#       admin: admin
+#     }
+#   end
+#   ok = list.select { |item| item[:admin] && item[:active] }
+#   not_ok = list.select { |item| !item[:admin] || !item[:active] }
+#   if not_ok.length.nonzero?
+#     puts "\nThe following users MUST be both activated AND member of the 'jira-administrators' group:"
+#     not_ok.sort{|a,b| a[:name] <=> b[:name]}.each do |user|
+#       puts "* #{user[:name]}"
+#     end
+#     goodbye('Please fix this before continuing.')
+#   end
+# end
 
 # Jira attachments (images)
 attachments_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-attachments-download.csv"
@@ -107,24 +109,26 @@ puts "Tickets: #{@tickets_jira.length}"
 @comments_total = @comments_assembla.length
 
 def headers_user_login_comment(user_login, user_email)
-  {'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json; charset=utf-8'}
+  # Note: Jira cloud doesn't allow the user to create own comments, a user belonging to the jira-administrators
+  # group must do that.
+  return headers_user_login(user_login, user_email)
+  # {'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json; charset=utf-8'}
 end
 
 # POST /rest/api/2/issue/{issueIdOrKey}/comment
 def jira_create_comment(issue_id, user_id, comment, counter)
   result = nil
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/comment"
-  user_login = @user_id_to_login[user_id]
-  user_login.sub!(/@.*$/, '')
+  user_login = @assembla_id_to_jira_name[user_id]
   user_email = @user_id_to_email[user_id]
   headers = headers_user_login_comment(user_login, user_email)
   reformatted_body = reformat_markdown(comment['comment'], logins: @assembla_login_to_jira_name,
                                                            images: @list_of_images, content_type: 'comments', strikethru: true)
   body = "Created on #{date_time(comment['created_on'])}\n\n#{reformatted_body}"
-  # if JIRA_SERVER_TYPE == 'cloud'
-  #   author_link = user_login ? "[~#{user_login}]" : "unknown (#{user_id})"
-  #   body = "Author #{author_link} | " + body
-  # end
+  if JIRA_SERVER_TYPE == 'cloud'
+    author_link = user_login ? "[~#{user_login}]" : "unknown (#{user_id})"
+    body = "Author #{author_link} | " + body
+  end
   body = "Assembla | #{body}"
   payload = {
     body: body
