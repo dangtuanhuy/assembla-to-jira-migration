@@ -183,6 +183,10 @@ end
     @comments_skipped << comment
     next
   end
+  if JIRA_API_SKIP_COMMIT_COMMENTS && /Commit: \[\[r:/.match(body)
+    @comments_skipped << comment
+    next
+  end
   result = jira_create_comment(issue_id, user_id, comment, index + 1)
   next unless result
   comment_id = result['id']
