@@ -7,16 +7,24 @@ load './lib/users-jira.rb'
 # id,comment,user_id,created_on,updated_at,ticket_changes,user_name,user_avatar_url,ticket_id,ticket_number
 comments_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-comments.csv"
 @comments_assembla = csv_to_array(comments_assembla_csv)
-total_comments = @comments_assembla.length
 
-# Ignore empty comments
-@comments_assembla_empty = @comments_assembla.select { |comment| comment['comment'].nil? || comment['comment'].strip.empty? }
-@comments_assembla.reject! { |comment| comment['comment'].nil? || comment['comment'].strip.empty? }
+puts "Total comments: #{@comments_assembla.length}"
 
-puts "Total comments: #{total_comments}"
-puts "Empty comments: #{@comments_assembla_empty.length}"
-puts "Remaining comments: #{@comments_assembla.length}"
-puts "Skip empty comments: #{JIRA_API_SKIP_EMPTY_COMMENTS}"
+# Ignore empty comments?
+if JIRA_API_SKIP_EMPTY_COMMENTS
+  @comments_assembla_empty = @comments_assembla.select {|comment| comment['comment'].nil? || comment['comment'].strip.empty?}
+  @comments_assembla.reject! {|comment| comment['comment'].nil? || comment['comment'].strip.empty?}
+  puts "Empty: #{@comments_assembla_empty.length}"
+end
+
+# Ignore commit comments?
+if JIRA_API_SKIP_COMMIT_COMMENTS
+  @comments_assembla_commit = @comments_assembla.select {|comment| /Commit: \[\[r:/.match(comment['comment'])}
+  @comments_assembla.reject! {|comment| /Commit: \[\[r:/.match(comment['comment']).nil?}
+  puts "Commit: #{@comments_assembla_commit.length}"
+end
+
+puts "Remaining: #{@comments_assembla.length}" if JIRA_API_SKIP_EMPTY_COMMENTS || JIRA_API_SKIP_COMMIT_COMMENTS
 
 # @users_jira => assemblaid,assemblaloginkey,accountid,name,emailaddress,displayname,active
 users_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-users.csv"
@@ -52,6 +60,8 @@ tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
   @assembla_id_to_jira_key[ticket['assembla_ticket_id']] = ticket['jira_ticket_key']
 end
 
+# TODO
+#
 # if JIRA_SERVER_TYPE == 'cloud'
 #   # Ensure that all of the comment authors belong to the 'jira-administrators' group and that they
 #   # are all also activated. This is required in order to be able to assign the original Assembla
@@ -101,12 +111,15 @@ if tickets_created_on
   puts "Filter newer than: #{tickets_created_on}"
   comments_initial = @comments_assembla.length
   # Only want comments which belong to remaining tickets
-  @comments_assembla.select! { |item| @assembla_id_to_jira_id[item['ticket_id']] }
+  @comments_assembla.select! {|item| @assembla_id_to_jira_id[item['ticket_id']]}
   puts "Comments: #{comments_initial} => #{@comments_assembla.length} ∆#{comments_initial - @comments_assembla.length}"
 end
 puts "Tickets: #{@tickets_jira.length}"
 
 @comments_total = @comments_assembla.length
+
+@jira_comments = []
+@comments_diffs = []
 
 def headers_user_login_comment(user_login, user_email)
   # Note: Jira cloud doesn't allow the user to create own comments, a user belonging to the jira-administrators
@@ -123,7 +136,7 @@ def jira_create_comment(issue_id, user_id, comment, counter)
   user_email = @user_id_to_email[user_id]
   headers = headers_user_login_comment(user_login, user_email)
   reformatted_body = reformat_markdown(comment['comment'], logins: @assembla_login_to_jira_name,
-                                                           images: @list_of_images, content_type: 'comments', strikethru: true)
+                                       images: @list_of_images, content_type: 'comments', strikethru: true)
   body = "Created on #{date_time(comment['created_on'])}\n\n#{reformatted_body}"
   if JIRA_SERVER_TYPE == 'cloud'
     author_link = user_login ? "[~#{user_login}]" : "unknown (#{user_id})"
@@ -131,7 +144,7 @@ def jira_create_comment(issue_id, user_id, comment, counter)
   end
   body = "Assembla | #{body}"
   payload = {
-    body: body
+      body: body
   }.to_json
   begin
     response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
@@ -151,25 +164,20 @@ def jira_create_comment(issue_id, user_id, comment, counter)
     issue_key = @assembla_id_to_jira_key[ticket_id]
     comment_id = result['id']
     @comments_diffs << {
-      jira_comment_id: comment_id,
-      jira_ticket_id: issue_id,
-      jira_ticket_key: issue_key,
-      assembla_comment_id: id,
-      assembla_ticket_id: ticket_id,
-      before: comment['comment'],
-      after: reformatted_body
+        jira_comment_id: comment_id,
+        jira_ticket_id: issue_id,
+        jira_ticket_key: issue_key,
+        assembla_comment_id: id,
+        assembla_ticket_id: ticket_id,
+        before: comment['comment'],
+        after: reformatted_body
     }
   end
   result
 end
 
 # IMPORTANT: Make sure that the comments are ordered chronologically from first (oldest) to last (newest)
-@comments_assembla.sort! { |x, y| x['created_on'] <=> y['created_on'] }
-
-@jira_comments = []
-
-@comments_diffs = []
-@comments_skipped = []
+@comments_assembla.sort! {|x, y| x['created_on'] <=> y['created_on']}
 
 @comments_assembla.each_with_index do |comment, index|
   id = comment['id']
@@ -179,37 +187,38 @@ end
   issue_key = @assembla_id_to_jira_key[ticket_id]
   user_login = @user_id_to_login[user_id]
   body = comment['comment']
-  if JIRA_API_SKIP_EMPTY_COMMENTS && (body.nil? || body.length.zero?)
-    @comments_skipped << comment
-    next
-  end
-  if JIRA_API_SKIP_COMMIT_COMMENTS && /Commit: \[\[r:/.match(body)
-    @comments_skipped << comment
-    next
-  end
   result = jira_create_comment(issue_id, user_id, comment, index + 1)
   next unless result
   comment_id = result['id']
   @jira_comments << {
-    jira_comment_id: comment_id,
-    jira_ticket_id: issue_id,
-    jira_ticket_key: issue_key,
-    assembla_comment_id: id,
-    assembla_ticket_id: ticket_id,
-    user_login: user_login,
-    body: body
+      jira_comment_id: comment_id,
+      jira_ticket_id: issue_id,
+      jira_ticket_key: issue_key,
+      assembla_comment_id: id,
+      assembla_ticket_id: ticket_id,
+      user_login: user_login,
+      body: body
   }
 end
 
-puts "Total all: #{@comments_total}"
+puts "Total imported: #{@jira_comments.length}"
+
+# Imported tickets
 comments_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-comments.csv"
 write_csv_file(comments_jira_csv, @jira_comments)
 
+# Imported tickets with different comments (replaced)
 comments_diffs_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-comments-diffs.csv"
 write_csv_file(comments_diffs_jira_csv, @comments_diffs)
 
-if JIRA_API_SKIP_EMPTY_COMMENTS && @comments_skipped.length
-  puts "Comments skipped: #{@comments_skipped.length}"
-  comments_skipped_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-comments-skipped.csv"
-  write_csv_file(comments_skipped_jira_csv, @comments_skipped)
+# Skipped comments because empty
+if JIRA_API_SKIP_EMPTY_COMMENTS && @comments_assembla_empty && @comments_assembla_empty.length.nonzero?
+  comments_empty_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-comments-skipped-empty.csv"
+  write_csv_file(comments_empty_jira_csv, @comments_assembla_empty)
+end
+
+# Skipped comments because commit
+if JIRA_API_SKIP_COMMIT_COMMENTS && @comments_assembla_commit && @comments_assembla_commit.length.nonzero?
+  comments_commit_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-comments-skipped-commit.csv"
+  write_csv_file(comments_commit_jira_csv, @comments_assembla_commit)
 end
