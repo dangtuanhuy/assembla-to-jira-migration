@@ -256,7 +256,7 @@ def create_ticket_jira(ticket, counter, total)
 
   # Verify assignee
   if @cannot_be_assigned_issues.include?(assignee_name)
-    warning("Assignee name='#{assignee_name}' cannot be assigned issues => REMOVE")
+    warning("Assignee name='#{assignee_name}' cannot be assigned issues => REMOVE") unless assignee_name.nil? || assignee_name.length.zero?
     payload[:fields][:assignee][:name] = ''
   elsif @inactive_jira_users.include?(assignee_name)
     warning("Assignee name='#{assignee_name}' is inactive => REMOVE")

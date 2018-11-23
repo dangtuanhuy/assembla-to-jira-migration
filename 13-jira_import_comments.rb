@@ -3,6 +3,16 @@
 load './lib/common.rb'
 load './lib/users-jira.rb'
 
+@jira_administrators = jira_get_group('jira-administrators')
+@jira_admins = {}
+@jira_administrators.each do |user|
+  @jira_admins[user['name']] = true
+end
+
+def is_jira_admin(name)
+  return @jira_admins[name] || false
+end
+
 # Assembla comments
 # id,comment,user_id,created_on,updated_at,ticket_changes,user_name,user_avatar_url,ticket_id,ticket_number
 comments_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-comments.csv"
@@ -13,14 +23,18 @@ puts "Total comments: #{@comments_assembla.length}"
 # Ignore empty comments?
 if JIRA_API_SKIP_EMPTY_COMMENTS
   @comments_assembla_empty = @comments_assembla.select {|comment| comment['comment'].nil? || comment['comment'].strip.empty?}
-  @comments_assembla.reject! {|comment| comment['comment'].nil? || comment['comment'].strip.empty?}
+  if @comments_assembla_empty.length.nonzero?
+    @comments_assembla.reject! {|comment| comment['comment'].nil? || comment['comment'].strip.empty?}
+  end
   puts "Empty: #{@comments_assembla_empty.length}"
 end
 
 # Ignore commit comments?
 if JIRA_API_SKIP_COMMIT_COMMENTS
   @comments_assembla_commit = @comments_assembla.select {|comment| /Commit: \[\[r:/.match(comment['comment'])}
-  @comments_assembla.reject! {|comment| /Commit: \[\[r:/.match(comment['comment']).nil?}
+  if @comments_assembla_commit.length.nonzero?
+    @comments_assembla.reject! {|comment| /Commit: \[\[r:/.match(comment['comment'])}
+  end
   puts "Commit: #{@comments_assembla_commit.length}"
 end
 
@@ -124,8 +138,11 @@ puts "Tickets: #{@tickets_jira.length}"
 def headers_user_login_comment(user_login, user_email)
   # Note: Jira cloud doesn't allow the user to create own comments, a user belonging to the jira-administrators
   # group must do that.
-  return headers_user_login(user_login, user_email)
-  # {'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json; charset=utf-8'}
+  if is_jira_admin(user_login)
+    {'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json; charset=utf-8'}
+  else
+    headers_user_login(user_login, user_email)
+  end
 end
 
 # POST /rest/api/2/issue/{issueIdOrKey}/comment
@@ -139,8 +156,10 @@ def jira_create_comment(issue_id, user_id, comment, counter)
                                        images: @list_of_images, content_type: 'comments', strikethru: true)
   body = "Created on #{date_time(comment['created_on'])}\n\n#{reformatted_body}"
   if JIRA_SERVER_TYPE == 'cloud'
-    author_link = user_login ? "[~#{user_login}]" : "unknown (#{user_id})"
-    body = "Author #{author_link} | " + body
+    unless is_jira_admin(user_login)
+      author_link = user_login ? "[~#{user_login}]" : "unknown (#{user_id})"
+      body = "Author #{author_link} | #{body}"
+    end
   end
   body = "Assembla | #{body}"
   payload = {

@@ -112,6 +112,27 @@ def write_csv_file(filename, results)
   end
 end
 
+def write_csv_file_append(filename, results, header)
+  CSV.open(filename, 'a') do |csv|
+    # Scan whole file to collect all possible field names so that
+    # the list of columns is complete.
+    fields = []
+    results.each do |result|
+      result.keys.each do |field|
+        fields << field unless fields.include?(field)
+      end
+    end
+    csv << fields if header
+    results.each do |result|
+      row = []
+      fields.each do |field|
+        row.push(result[field])
+      end
+      csv << row
+    end
+  end
+end
+
 def normalize_name(name)
   name.downcase.tr(' /_', '-')
 end
