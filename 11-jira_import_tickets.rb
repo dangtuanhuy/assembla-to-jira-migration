@@ -171,6 +171,9 @@ def create_ticket_jira(ticket, counter, total)
   assigned_to_id = ticket['assigned_to_id']
   priority = ticket['priority']
   reporter_name = @assembla_id_to_jira_name[reporter_id]
+  if reporter_name.nil?
+    reporter_name = JIRA_API_UNKNOWN_USER
+  end
   if assigned_to_id
     assignee_name = @assembla_id_to_jira_name[assigned_to_id]
   else
@@ -186,7 +189,7 @@ def create_ticket_jira(ticket, counter, total)
 
   # Prepend the description text with a link to the original assembla ticket on the first line.
   description = "Assembla ticket [##{ticket_number}|#{ENV['ASSEMBLA_URL_TICKETS']}/#{ticket_number}] | "
-  author_name = if @is_not_a_user.include?(reporter_name)
+  author_name = if @is_not_a_user.include?(reporter_name) || reporter_name == JIRA_API_UNKNOWN_USER
                   'unknown'
                 else
                   "[~#{reporter_name}]"
@@ -631,24 +634,28 @@ if @invalid_reporters.length.positive?
   @invalid_reporters.each do |reporter|
     puts "ticket_id='#{reporter[:ticket_id]}' reporter: id='#{reporter[:reporter_id]}'"
   end
-  goodbye('Please fix before continuing')
+  # goodbye('Please fix before continuing')
 end
 
 puts "\nReporters => OK"
+
+@tickets_jira_csv_append = "#{OUTPUT_DIR_JIRA}/jira-tickets-append.csv"
 
 @completed = 0
 @skip_remaining = true
 puts "SKIP to ticket #{@startAt}" if @startAt > 1
 @tickets_assembla.each_with_index do |ticket, index|
-  cnt = index + 1
-  next if @startAt > cnt
+  counter = index + 1
+  next if @startAt > counter
   if @maxResults != -1 && @completed > @maxResults - 1
     puts "SKIP remaining #{@tickets_assembla.length - (@startAt - 1 + @maxResults)} tickets" if @skip_remaining
     @skip_remaining = false
     next
   end
 
-  @jira_issues << create_ticket_jira(ticket, cnt, @total_tickets)
+  issue = create_ticket_jira(ticket, counter, @total_tickets)
+  write_csv_file_append(@tickets_jira_csv_append, [issue], counter == 1)
+  @jira_issues << issue
 
   @completed = @completed + 1
 end
