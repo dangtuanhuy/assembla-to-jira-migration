@@ -163,9 +163,12 @@ end
 @comments_assembla.sort! {|x, y| x['created_on'] <=> y['created_on']}
 
 @total_imported = 0
+@total_imported_nok = 0
 @comments_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-comments.csv"
+@comments_jira_nok_csv = "#{OUTPUT_DIR_JIRA}/jira-comments-nok.csv"
 
 @comments_assembla.each_with_index do |comment, index|
+  result = nil
   id = comment['id']
   counter = index + 1
   ticket_id = comment['ticket_id']
@@ -174,20 +177,35 @@ end
   issue_key = @assembla_id_to_jira_key[ticket_id]
   user_login = @user_id_to_login[user_id]
   body = comment['comment']
-  result = jira_create_comment(issue_id, user_id, comment, counter)
-  next unless result
-  comment_id = result['id']
-  comment = {
-    jira_comment_id: comment_id,
-    jira_ticket_id: issue_id,
-    jira_ticket_key: issue_key,
-    assembla_comment_id: id,
-    assembla_ticket_id: ticket_id,
-    user_login: user_login,
-    body: body
-  }
-  write_csv_file_append(@comments_jira_csv, [comment], @total_imported.zero?)
-  @total_imported += 1
+  if issue_id.nil? || issue_id.length.zero?
+    warning("Cannot find jira_issue_id for assembla_ticket_id='#{ticket_id}'")
+  else
+    result = jira_create_comment(issue_id, user_id, comment, counter)
+  end
+  if result
+    comment_id = result['id']
+    comment = {
+      jira_comment_id: comment_id,
+      jira_ticket_id: issue_id,
+      jira_ticket_key: issue_key,
+      assembla_comment_id: id,
+      assembla_ticket_id: ticket_id,
+      user_login: user_login,
+      body: body
+    }
+    write_csv_file_append(@comments_jira_csv, [comment], @total_imported.zero?)
+    @total_imported += 1
+  else
+    comment_nok = {
+        error: issue_id.nil? ? 'invalid ticket_id' : 'create failed',
+        assembla_ticket_id: ticket_id,
+        assembla_comment_id: id,
+        user_login: user_login,
+        body: body
+    }
+    write_csv_file_append(@comments_jira_nok_csv, [comment_nok], @total_imported_nok.zero?)
+    @total_imported_nok += 1
+  end
 end
 
 puts "Total imported: #{@total_imported}"
@@ -195,4 +213,8 @@ puts @comments_jira_csv
 
 puts "Total diffs: #{@total_comments_diffs}"
 puts @comments_diffs_jira_csv
+
+puts "Total NOK: #{@total_imported_nok}"
+puts @comments_jira_nok_csv
+
 
