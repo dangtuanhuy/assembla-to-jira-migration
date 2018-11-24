@@ -153,7 +153,7 @@ def jira_create_comment(issue_id, user_id, comment, counter)
       before: comment['comment'],
       after: reformatted_body
     }
-    write_csv_file_append(@comments_diffs_jira_csv, [comments_diff], @total_comments_diffs.nonzero?)
+    write_csv_file_append(@comments_diffs_jira_csv, [comments_diff], @total_comments_diffs.zero?)
     @total_comments_diffs += 1
   end
   result
