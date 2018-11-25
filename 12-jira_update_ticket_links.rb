@@ -6,7 +6,7 @@ load './lib/common.rb'
 
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 ticket_links_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-ticket-links.csv"
-@tickets_jira = csv_to_array(tickets_jira_csv)
+@tickets_jira = csv_to_array(tickets_jira_csv).select { |ticket| ticket['result'] == 'OK' }
 @ticket_links_jira = csv_to_array(ticket_links_jira_csv)
 
 @tickets = {}

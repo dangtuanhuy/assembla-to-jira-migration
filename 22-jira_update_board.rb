@@ -28,11 +28,11 @@ end
 puts
 
 # --- Jira --- #
-jira_projects_csv = "#{OUTPUT_DIR_JIRA}/jira-projects.csv"
-jira_tickets_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
+projects_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-projects.csv"
+tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 
-@projects_jira = csv_to_array(jira_projects_csv)
-@tickets_jira = csv_to_array(jira_tickets_csv)
+@projects_jira = csv_to_array(projects_jira_csv)
+@tickets_jira = csv_to_array(tickets_jira_csv).select { |ticket| ticket['result'] == 'OK' }
 
 project = @projects_jira.detect { |p| p['name'] == JIRA_API_PROJECT_NAME }
 goodbye("Cannot find project with name='#{JIRA_API_PROJECT_NAME}'") unless project

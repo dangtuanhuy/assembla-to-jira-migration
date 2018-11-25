@@ -16,7 +16,7 @@ end
 # issue_type_name, assignee_name,reporter_name,priority_name,status_name,labels,description,assembla_ticket_id,
 # assembla_ticket_number,custom_field,milestone_name,story_rank
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
-@tickets_jira = csv_to_array(tickets_jira_csv)
+@tickets_jira = csv_to_array(tickets_jira_csv).select { |ticket| ticket['result'] == 'OK' }
 @total_jira_tickets = @tickets_jira.length
 
 # PUT /rest/agile/1.0/issue/rank
@@ -27,15 +27,15 @@ def jira_rank_issues(issues, after_issue, counter)
     issues: issues,
     rankAfterIssue: after_issue
   }.to_json
+  percentage = ((counter * 100) / @total_jira_tickets).round.to_s.rjust(3)
   begin
-    percentage = ((counter * 100) / @total_jira_tickets).round.to_s.rjust(3)
     RestClient::Request.execute(method: :put, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN)
-    puts "#{percentage}% [#{counter}|#{@total_jira_tickets}] PUT #{url} issues=#{issues.to_s} after=\"#{after_issue}\" => OK"
+    puts "#{percentage}% [#{counter}|#{@total_jira_tickets}] PUT #{url} issues=#{issues} after=\"#{after_issue}\" => OK"
     result = true
   rescue RestClient::ExceptionWithResponse => e
     rest_client_exception(e, 'PUT', url, payload)
   rescue => e
-    puts "#{percentage}% [#{counter}|#{@total_jira_tickets}] PUT #{url} issues=#{issues.to_s} after=\"#{after_issue}\" => NOK (#{e.message})"
+    puts "#{percentage}% [#{counter}|#{@total_jira_tickets}] PUT #{url} issues=#{issues} after=\"#{after_issue}\" => NOK (#{e.message})"
   end
   result
 end
@@ -44,7 +44,7 @@ end
 
 diff = 0 - @tickets_jira.first['story_rank'].to_i.round
 
-@tickets_rank = @tickets_jira.map { |ticket| { rank: ticket['story_rank'].to_i.round + diff + 1, key: ticket['jira_ticket_key']} }
+@tickets_rank = @tickets_jira.map { |ticket| { rank: ticket['story_rank'].to_i.round + diff + 1, key: ticket['jira_ticket_key'] } }
 
 @list = []
 puts "\nTotal tickets: #{@total_jira_tickets}"
@@ -55,7 +55,7 @@ puts @list.to_s
 
 @previous_key = nil
 @tickets_rank.each_with_index do |ticket, index|
-  rank = ticket[:rank]
+  # rank = ticket[:rank]
   key = ticket[:key]
   issues = [key]
   if index.positive?

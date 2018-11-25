@@ -49,7 +49,7 @@ end
   else
     @assembla_statuses[status] += 1
   end
-  if summary.match(/^([A-Z]*):/)
+  if summary.match?(/^([A-Z]*):/)
     t = summary.sub(/:.*$/, '\1')
     @extra_summary_types[t] = true if !ASSEMBLA_TYPES_EXTRA.include?(t) && @extra_summary_types[t].nil?
   end
@@ -78,15 +78,15 @@ end
 
 if @missing_statuses.length.positive?
   puts "\nSanity check => NOK"
-  puts "The following statuses are missing:"
+  puts 'The following statuses are missing:'
   @missing_statuses.each do |status|
     puts "* #{status}"
   end
-  goodbye("Update JIRA_API_STATUSES in .env file and create JIRA statuses if needed")
+  goodbye('Update JIRA_API_STATUSES in .env file and create JIRA statuses if needed')
 end
 
 puts
-puts "Sanity check => OK"
+puts 'Sanity check => OK'
 
 # Jira tickets
 resolutions_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-resolutions.csv"
@@ -95,7 +95,7 @@ tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 
 @resolutions_jira = csv_to_array(resolutions_jira_csv)
 @statuses_jira = csv_to_array(statuses_jira_csv)
-@tickets_jira = csv_to_array(tickets_jira_csv)
+@tickets_jira = csv_to_array(tickets_jira_csv).select { |ticket| ticket['result'] == 'OK' }
 
 @jira_resolution_name_to_id = {}
 puts "\nJira ticket resolutions:"
@@ -131,7 +131,7 @@ end
 def jira_get_transitions(issue_id)
   result = nil
   user_login = @jira_id_to_login[issue_id]
-  user_login.sub!(/@.*$/,'')
+  user_login.sub!(/@.*$/, '')
   user_email = @user_login_to_email[user_login]
   headers = headers_user_login(user_login, user_email)
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/transitions"
@@ -231,7 +231,7 @@ def jira_update_status(issue_id, assembla_status, counter)
 
   result = nil
   user_login = @jira_id_to_login[issue_id]
-  user_login.sub!(/@.*$/,'')
+  user_login.sub!(/@.*$/, '')
   user_email = @user_login_to_email[user_login]
   headers = headers_user_login(user_login, user_email)
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/transitions"
@@ -286,7 +286,7 @@ goodbye('Cannot find first_id') unless first_id
 issue_id = @assembla_id_to_jira[first_id]
 goodbye("Cannot find issue_id, first_id='#{first_id}'") unless first_id
 
-@transitions = jira_get_transitions(@assembla_id_to_jira[@tickets_assembla.first['id']])
+@transitions = jira_get_transitions(issue_id)
 goodbye("No transitions available, first_id='#{first_id}', issue_id=#{issue_id}") unless @transitions && @transitions
 
 @transition_target_name_to_id = {}
@@ -306,6 +306,10 @@ end
   assembla_ticket_id = ticket['id']
   assembla_ticket_status = ticket['status']
   jira_ticket_id = @assembla_id_to_jira[ticket['id']]
+  unless jira_ticket_id
+    warning("Cannot find jira_ticket_id for assembla_ticket_id='#{assembla_ticket_id}'")
+    next
+  end
   result = jira_update_status(jira_ticket_id, assembla_ticket_status, index + 1)
   @jira_updates_tickets << {
     result: result.nil? ? 'NOK' : 'OK',

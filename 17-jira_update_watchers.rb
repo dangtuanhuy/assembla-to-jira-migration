@@ -20,7 +20,7 @@ puts "\nTotal Assembla tickets: #{@total_assembla_tickets}"
 
 # Jira tickets
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
-@tickets_jira = csv_to_array(tickets_jira_csv)
+@tickets_jira = csv_to_array(tickets_jira_csv).select { |ticket| ticket['result'] == 'OK' }
 
 # --- JIRA Tickets --- #
 
@@ -60,14 +60,14 @@ def jira_update_watcher(issue_id, watcher, counter)
   headers = headers_user_login(watcher, watcher_email)
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/watchers"
   payload = "\"#{watcher}\""
+  percentage = ((counter * 100) / @total_assembla_tickets).round.to_s.rjust(3)
   begin
-    percentage = ((counter * 100) / @total_assembla_tickets).round.to_s.rjust(3)
     RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
     puts "#{percentage}% [#{counter}|#{@total_assembla_tickets}] POST #{url} '#{watcher}' => OK"
     result = true
   rescue RestClient::ExceptionWithResponse => e
     message = rest_client_exception(e, 'POST', url, payload)
-    if /404/.match(message)
+    if /404/.match?(message)
       @watchers_not_found << watcher
     end
   rescue => e
@@ -76,13 +76,19 @@ def jira_update_watcher(issue_id, watcher, counter)
   result
 end
 
-@jira_updates_tickets = []
+@total_updates = 0
+@watchers_tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets-watchers.csv"
 
 @tickets_assembla.each_with_index do |ticket, index|
+  counter = index + 1
   assembla_ticket_id = ticket['id']
   assembla_ticket_nr = ticket['number']
   assembla_ticket_watchers = ticket['notification_list']
   jira_ticket_id = @a_id_to_j_id[assembla_ticket_id]
+  unless jira_ticket_id
+    warning("Cannot find jira_ticket_id for assembla_ticket_id='#{assembla_ticket_id}'")
+    next
+  end
   jira_ticket_key = @a_nr_to_j_key[assembla_ticket_nr]
   assembla_ticket_watchers.split(',').each do |user_id|
     not_found = false
@@ -97,10 +103,17 @@ end
       not_found = true
       puts "Watcher='#{watcher}' previous (404 Not Found) => SKIP"
     else
-      result = jira_update_watcher(jira_ticket_id, watcher, index + 1)
+      result = jira_update_watcher(jira_ticket_id, watcher, counter)
+      @total_updates += 1 if result
     end
-    @jira_updates_tickets << {
-      result: result.nil? ? "NOK#{ not_found ? '(404 Not Found)': '' }" : 'OK',
+    if result
+      message = 'OK'
+    else
+      message = 'NOK'
+      message += ' (404 Not Found)' if not_found
+    end
+    updates_tickets = {
+      result: message,
       assembla_ticket_id: assembla_ticket_id,
       assembla_ticket_number: assembla_ticket_nr,
       jira_ticket_id: jira_ticket_id,
@@ -108,9 +121,9 @@ end
       assembla_user_id: user_id,
       watcher: watcher
     }
+    write_csv_file_append(@watchers_tickets_jira_csv, [updates_tickets], counter == 1)
   end
 end
 
-puts "\nTotal updates: #{@jira_updates_tickets.length}"
-watchers_tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets-watchers.csv"
-write_csv_file(watchers_tickets_jira_csv, @jira_updates_tickets)
+puts "\nTotal updates: #{@total_updates}"
+puts @watchers_tickets_jira_csv

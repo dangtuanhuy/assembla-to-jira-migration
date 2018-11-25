@@ -101,7 +101,7 @@ end
 # --- JIRA Tickets --- #
 
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
-@tickets_jira = csv_to_array(tickets_jira_csv)
+@tickets_jira = csv_to_array(tickets_jira_csv).select { |ticket| ticket['result'] == 'OK' }
 comments_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-comments.csv"
 @comments_jira = csv_to_array(comments_jira_csv)
 attachments_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-attachments-import-ok.csv"

@@ -7,7 +7,7 @@ load './lib/users-assembla.rb'
 issuelink_types_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-issuelink-types.csv"
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @issuelink_types_jira = csv_to_array(issuelink_types_jira_csv)
-@tickets_jira = csv_to_array(tickets_jira_csv)
+@tickets_jira = csv_to_array(tickets_jira_csv).select { |ticket| ticket['result'] == 'OK' }
 
 # Convert assembla_ticket_id to jira_ticket
 @assembla_id_to_jira = {}
@@ -150,9 +150,11 @@ def jira_update_association(name, ticket1_id, ticket2_id, ticket_id, counter)
   result
 end
 
-@jira_associations_tickets = []
+@total_updates = 0
+@associations_tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets-associations.csv"
 
 @associations_assembla.each_with_index do |association, index|
+  counter = index + 1
   name = association['relationship_name']
   skip = ASSEMBLA_SKIP_ASSOCIATIONS.include?(name.split.first)
   unknown = false
@@ -171,8 +173,9 @@ end
     unknown = true
   end
   unless skip or unknown
-    results = jira_update_association(name, jira_ticket1_id, jira_ticket2_id,  jira_ticket_id, index + 1)
+    results = jira_update_association(name, jira_ticket1_id, jira_ticket2_id,  jira_ticket_id, counter)
   end
+  @total_updates += 1 if results
   result = if skip
              'SKIP'
            elsif unknown
@@ -182,7 +185,7 @@ end
            else
              'NOK'
            end
-  @jira_associations_tickets << {
+  associations_ticket = {
     result: result,
     assembla_ticket1_id: assembla_ticket1_id,
     jira_ticket1_id: jira_ticket1_id,
@@ -190,8 +193,8 @@ end
     jira_ticket2_id: jira_ticket2_id,
     relationship_name: name.capitalize
   }
+  write_csv_file_append(@associations_tickets_jira_csv, [associations_ticket], counter == 1)
 end
 
-puts "\nTotal updates: #{@jira_associations_tickets.length}"
-associations_tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets-associations.csv"
-write_csv_file(associations_tickets_jira_csv, @jira_associations_tickets)
+puts "\nTotal updates: #{@total_updates}"
+puts @associations_tickets_jira_csv

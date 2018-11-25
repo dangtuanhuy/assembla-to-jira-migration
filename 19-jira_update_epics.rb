@@ -58,7 +58,7 @@ puts "\nTotal Assembla epics: #{@tickets_assembla_epic_h.length} + #{@tickets_as
 # issue_type_name, assignee_name,reporter_name,priority_name,status_name,labels,description,assembla_ticket_id,
 # assembla_ticket_number,custom_field,milestone_name,story_rank
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
-@tickets_jira = csv_to_array(tickets_jira_csv)
+@tickets_jira = csv_to_array(tickets_jira_csv).select { |ticket| ticket['result'] == 'OK' }
 
 puts "\nTotal Jira tickets: #{@tickets_jira.length}"
 
@@ -236,16 +236,21 @@ if @local_epics_not_found.length.positive?
   puts
 end
 
+@total_updated = 0
+@updated_epics_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-update-epics.csv"
+
 puts "\nMoving stories to epics"
 @total_epics_with_stories = @epics_with_stories.length
 @updated_epics = []
 @epics_with_stories.each_with_index do |epic, index|
+  counter = index + 1
   stories_nonzero = epic[:stories].select { |story| story[:story_id].positive? }
   story_keys = stories_nonzero.map { |story| story[:story_key] }
   while story_keys.length.positive?
     story_keys_slice = story_keys.slice!(0, 50)
-    result = jira_move_stories_to_epic(epic, story_keys_slice, index + 1, @total_epics_with_stories)
-    @updated_epics << {
+    result = jira_move_stories_to_epic(epic, story_keys_slice, counter, @total_epics_with_stories)
+    @total_updated += 1 if result[:result]
+    updated_epic = {
       result: result[:result] ? 'OK' : 'NOK',
       epic_nr: epic[:epic_nr],
       jira_key: epic[:jira_key],
@@ -253,9 +258,9 @@ puts "\nMoving stories to epics"
       story_keys: "[#{story_keys_slice.join(',')}]",
       error: result[:error]
     }
+    write_csv_file_append(@updated_epics_jira_csv, [updated_epic], counter == 1)
   end
 end
 
-puts "Total updated epics: #{@updated_epics.length}"
-updated_epics_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-update-epics.csv"
-write_csv_file(updated_epics_jira_csv, @updated_epics)
+puts "Total updated: #{@total_updated}"
+puts @updated_epics_jira_csv

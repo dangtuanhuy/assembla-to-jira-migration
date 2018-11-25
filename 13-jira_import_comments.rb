@@ -64,7 +64,7 @@ end
 # Jira tickets
 # result,retries,message,jira_ticket_id,jira_ticket_key,project_id,summary,issue_type_id,issue_type_name,assignee_name,reporter_name,priority_name,status_name,labels,description,assembla_ticket_id,assembla_ticket_number,milestone_name,story_rank
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
-@tickets_jira = csv_to_array(tickets_jira_csv)
+@tickets_jira = csv_to_array(tickets_jira_csv).select { |ticket| ticket['result'] == 'OK' }
 
 # Convert assembla_ticket_id to jira_ticket_id and assembla_ticket_number to jira_ticket_key
 @assembla_id_to_jira_id = {}

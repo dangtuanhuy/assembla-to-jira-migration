@@ -13,7 +13,7 @@ end
 
 # Jira tickets
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
-@tickets_jira = csv_to_array(tickets_jira_csv)
+@tickets_jira = csv_to_array(tickets_jira_csv).select { |ticket| ticket['result'] == 'OK' }
 
 # TODO: Move this to ./lib/tickets-assembla.rb and reuse in other scripts.
 @a_id_to_a_nr = {}

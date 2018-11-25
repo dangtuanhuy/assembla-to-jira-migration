@@ -16,7 +16,7 @@ JIRA_API_SPACE_TO_PROJECT.split(',').each do |item|
   goodbye("Cannot find project with key=#{key}, item=#{item}, JIRA_API_SPACE_TO_PROJECT=#{JIRA_API_SPACE_TO_PROJECT}") unless project
   project_name = project['name']
 
-  tickets = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-tickets.csv")
+  tickets = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-tickets.csv").select { |ticket| ticket['result'] == 'OK' }
   comments = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-comments.csv")
 
   ticket_a_nr_to_j_key = {}
@@ -44,7 +44,7 @@ end
   @project_by_space[project[:space]] = project
 end
 
-@tickets_jira = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-tickets.csv")
+@tickets_jira = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-tickets.csv").select { |ticket| ticket['result'] == 'OK' }
 
 @ticket_a_id_to_a_nr = {}
 @ticket_a_nr_to_j_key = {}
@@ -142,7 +142,7 @@ end
 # https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)-summary/activity/ticket:
 
 # @re_ticket = %r{https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)(?:\-.*)?(?:\?.*\b)?}
-@re_ticket = %r{https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)(?:\-[^)\]]+)?(?:\?.*\b)?}
+@re_ticket = %r{https?://.*?\.assembla\.com/spaces/(.*?)/tickets/(\d+)(?:-[^)\]]+)?(?:\?.*\b)?}
 
 # => /browse/[:jira-ticket-key]
 
