@@ -2,14 +2,6 @@
 
 load './lib/common.rb'
 
-if JIRA_SERVER_TYPE == 'hosted'
-  puts 'No need to run this script for a hosted server.'
-  exit
-else
-  # puts "Sorry, but this has not yet implemented. Please be patient...\n\nFor now you must rank issues manually in Jira."
-  # exit
-end
-
 # Jira tickets
 
 # jira-tickets.csv: result,retries,message,jira_ticket_id,jira_ticket_key,project_id,summary,issue_type_id,
@@ -55,7 +47,6 @@ puts @list.to_s
 
 @previous_key = nil
 @tickets_rank.each_with_index do |ticket, index|
-  # rank = ticket[:rank]
   key = ticket[:key]
   issues = [key]
   if index.positive?
