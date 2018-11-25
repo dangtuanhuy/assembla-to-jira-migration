@@ -125,6 +125,11 @@ def jira_create_comment(issue_id, user_id, comment, counter)
     body = "Author #{author_link} | #{body}"
   end
   body = "Assembla | #{body}"
+  # Ensure that the body is not too long.
+  if body.length > 32767
+    body = body[0..32760] + '...'
+    warning('Comment body length is greater than 32767 => truncate')
+  end
   payload = {
       body: body
   }.to_json
