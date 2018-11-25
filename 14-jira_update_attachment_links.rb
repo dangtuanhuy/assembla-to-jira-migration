@@ -182,13 +182,15 @@ end
 
 total = @tickets_with_links.length
 @tickets_with_links.each_with_index do |ticket, index|
+  counter = index + 1
   jira_issue_key = ticket[:jira_issue_key]
-  issue = jira_get_issue(jira_issue_key)
-  fields = issue['fields']
+  result = jira_get_issue(jira_issue_key)
+  next unless result
+  fields = result['fields']
   description_in = fields['description']
   description_out = reformat_markdown_attachments(description_in)
   if description_out != description_in
-    jira_update_issue_description(jira_issue_key, description_out, index + 1, total)
+    jira_update_issue_description(jira_issue_key, description_out, counter, total)
   else
     puts "jira_issue_key='#{jira_issue_key}' descriptions are the same => SKIP"
   end
@@ -196,13 +198,15 @@ end
 
 total = @comments_with_links.length
 @comments_with_links.each_with_index do |comment, index|
+  counter = index + 1
   jira_comment_id = comment[:jira_comment_id]
   jira_issue_key = comment[:jira_issue_key]
-  comment = jira_get_issue_comment(jira_issue_key, jira_comment_id)
-  body_in = comment['body']
+  result = jira_get_issue_comment(jira_issue_key, jira_comment_id)
+  next unless result
+  body_in = result['body']
   body_out = reformat_markdown_attachments(body_in)
   if body_out != body_in
-    jira_update_issue_comment_body(jira_issue_key, jira_comment_id, body_out, index + 1, total)
+    jira_update_issue_comment_body(jira_issue_key, jira_comment_id, body_out, counter, total)
   else
     puts "jira_issue_key='#{jira_issue_key}', jira_comment_id='#{jira_comment_id}' bodies are the same => SKIP"
   end

@@ -34,10 +34,12 @@ downloaded_attachments_csv = "#{OUTPUT_DIR_JIRA}/jira-attachments-download.csv"
 
 puts "Total attachments: #{@total_attachments}"
 
-goodbye("Invalid arg='#{ARGV[0]}', cannot be greater than the number of attachments=#{@total_attachments}") if restart_offset > @total_attachments
+if restart_offset > @total_attachments
+  goodbye("Invalid arg='#{ARGV[0]}', cannot be greater than the number of attachments=#{@total_attachments}")
+end
 
 # IMPORTANT: Make sure that the downloads are ordered chronologically from first (oldest) to last (newest)
-@downloaded_attachments.sort! {|x, y| x['created_at'] <=> y['created_at']}
+@downloaded_attachments.sort! { |x, y| x['created_at'] <=> y['created_at'] }
 
 # Two csv output files will be generated: ok and nok.
 @attachments_ok_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-attachments-import-ok.csv"
@@ -73,16 +75,17 @@ goodbye("Invalid arg='#{ARGV[0]}', cannot be greater than the number of attachme
   url = "#{URL_JIRA_ISSUES}/#{jira_ticket_id}/attachments"
   counter = index + 1
   next if counter < restart_offset
-  percentage = ((counter * 100) / @total_attachments).round.to_s.rjust(3)
-  begin
-    payload = {mulitpart: true, file: File.new(filepath, 'rb')}
-    base64_encoded = if JIRA_SERVER_TYPE == 'hosted'
-                       Base64.encode64(created_by + ':' + created_by)
-                     else
-                       Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
-                     end
-    headers = {'Authorization': "Basic #{base64_encoded}", 'X-Atlassian-Token': 'no-check'}
 
+  payload = { mulitpart: true, file: File.new(filepath, 'rb') }
+  base64_encoded = if JIRA_SERVER_TYPE == 'hosted'
+                     Base64.encode64(created_by + ':' + created_by)
+                   else
+                     Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
+                   end
+  headers = { 'Authorization': "Basic #{base64_encoded}", 'X-Atlassian-Token': 'no-check' }
+  percentage = ((counter * 100) / @total_attachments).round.to_s.rjust(3)
+
+  begin
     response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
     result = JSON.parse(response.body)
     jira_attachment_id = result[0]['id']

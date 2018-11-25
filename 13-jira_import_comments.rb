@@ -17,9 +17,11 @@ if JIRA_API_SKIP_EMPTY_COMMENTS
     @comments_assembla.reject! {|comment| comment['comment'].nil? || comment['comment'].strip.empty?}
     comments_empty_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-comments-skipped-empty.csv"
     write_csv_file(comments_empty_jira_csv, comments_assembla_empty)
+    puts "Empty: #{comments_assembla_empty.length}"
+    comments_assembla_empty = nil
+  else
+    puts "Empty: None"
   end
-  puts "Empty: #{comments_assembla_empty.length}"
-  comments_assembla_empty = nil
 end
 
 # Ignore commit comments?
@@ -29,9 +31,11 @@ if JIRA_API_SKIP_COMMIT_COMMENTS
     @comments_assembla.reject! {|comment| /Commit: \[\[r:/.match(comment['comment'])}
     comments_commit_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-comments-skipped-commit.csv"
     write_csv_file(comments_commit_jira_csv, comments_assembla_commit)
+    puts "Commit: #{comments_assembla_commit.length}"
+    comments_assembla_commit = nil
+  else
+    puts "Commit: None"
   end
-  puts "Commit: #{comments_assembla_commit.length}"
-  comments_assembla_commit = nil
 end
 
 puts "Remaining: #{@comments_assembla.length}" if JIRA_API_SKIP_EMPTY_COMMENTS || JIRA_API_SKIP_COMMIT_COMMENTS
@@ -124,13 +128,13 @@ def jira_create_comment(issue_id, user_id, comment, counter)
   payload = {
       body: body
   }.to_json
+  percentage = ((counter * 100) / @comments_total).round.to_s.rjust(3)
   begin
     response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
     result = JSON.parse(response.body)
     # Dry run: uncomment the following two lines and comment out the previous two lines.
     # result = {}
     # result['id'] = counter
-    percentage = ((counter * 100) / @comments_total).round.to_s.rjust(3)
     puts "#{percentage}% [#{counter}|#{@comments_total}] POST #{url} => OK"
   rescue RestClient::ExceptionWithResponse => e
     # TODO: use following helper method for all RestClient calls in other files.
