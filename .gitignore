@@ -56,3 +56,4 @@ build-iPhoneSimulator/
 !.env.example
 .idea
 
+*.csv

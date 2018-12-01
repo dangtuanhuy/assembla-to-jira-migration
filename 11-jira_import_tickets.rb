@@ -23,6 +23,13 @@ end
 puts "\nstartAt: #{@startAt}"
 puts "maxResults: #{@maxResults}" if @maxResults != -1
 
+@total_missing_tickets = 0
+@is_missing_ticket = {}
+csv_to_array("#{OUTPUT_DIR_JIRA}/jira-tickets-nok.csv").each do |t|
+  @is_missing_ticket[t['ticket_id']] = true
+  @total_missing_tickets += 1
+end
+
 # --- ASSEMBLA Tickets --- #
 
 tickets_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
@@ -50,6 +57,10 @@ if tickets_created_on
   puts "Tickets: #{tickets_initial} => #{@tickets_assembla.length} ∆#{tickets_initial - @tickets_assembla.length}"
 else
   puts "\nTickets: #{@tickets_assembla.length}"
+end
+
+if @total_missing_tickets > 0
+  @tickets_assembla.select! { |t| @is_missing_ticket[t['id']] }
 end
 
 # --- JIRA Tickets --- #
@@ -96,6 +107,17 @@ end
 
 # This is populated as the tickets are created.
 @assembla_number_to_jira_key = {}
+
+if @total_missing_tickets > 0
+  # Prefill with previous
+  ok = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-tickets.csv.org").select { |t| t['result'] == 'OK' }
+  ok.each do |t|
+    ticket_number = t['assembla_ticket_number']
+    jira_ticket_key = t['jira_ticket_key']
+    @assembla_number_to_jira_key[ticket_number] = jira_ticket_key
+  end
+  puts
+end
 
 def jira_get_field_by_name(name)
   @fields_jira.find {|field| field['name'] == name}
@@ -198,6 +220,11 @@ def create_ticket_jira(ticket, counter, total)
   description += "Created on #{date_time(created_on)}\n\n"
   reformatted_description = "#{reformat_markdown(ticket['description'], logins: @assembla_login_to_jira_name, images: @list_of_images, content_type: 'description', tickets: @assembla_number_to_jira_key)}"
   description += reformatted_description
+
+  if description.length > 32767
+    description = description[0..32760] + '...'
+    warning('Ticket description length is greater than 32767 => truncate')
+  end
 
   labels = get_labels(ticket)
 
@@ -383,6 +410,12 @@ def create_ticket_jira(ticket, counter, total)
                 name: 'task'
             }
             payload[:fields][:issuetype][:id] = issue_type[:id]
+            payload[:fields].delete(:parent)
+            recover = true
+          end
+        when 'parent'
+          case reason
+          when /could not find issue by id or key/i
             payload[:fields].delete(:parent)
             recover = true
           end

@@ -22,6 +22,16 @@ puts "\nTotal Assembla tickets: #{@total_assembla_tickets}"
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @tickets_jira = csv_to_array(tickets_jira_csv).select { |ticket| ticket['result'] == 'OK' }
 
+@is_ticket_id = {}
+@tickets_jira.each do |ticket|
+  @is_ticket_id[ticket['assembla_ticket_id']] = true
+end
+
+@tickets_assembla.select! { |item| @is_ticket_id[item['id']] }
+@total_assembla_tickets = @tickets_assembla.length
+puts "\nTotal Assembla tickets after: #{@total_assembla_tickets}"
+
+
 # --- JIRA Tickets --- #
 
 users_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-users.csv"
@@ -62,6 +72,7 @@ def jira_update_watcher(issue_id, watcher, counter)
   payload = "\"#{watcher}\""
   percentage = ((counter * 100) / @total_assembla_tickets).round.to_s.rjust(3)
   begin
+    # For a dry-run, comment out the next line
     RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
     puts "#{percentage}% [#{counter}|#{@total_assembla_tickets}] POST #{url} '#{watcher}' => OK"
     result = true
@@ -121,6 +132,7 @@ end
       assembla_user_id: user_id,
       watcher: watcher
     }
+    # For a dry-run comment out the next line
     write_csv_file_append(@watchers_tickets_jira_csv, [updates_tickets], counter == 1)
   end
 end

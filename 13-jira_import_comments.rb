@@ -3,12 +3,41 @@
 load './lib/common.rb'
 load './lib/users-jira.rb'
 
+# Jira tickets
+# result,retries,message,jira_ticket_id,jira_ticket_key,project_id,summary,issue_type_id,issue_type_name,assignee_name,reporter_name,priority_name,status_name,labels,description,assembla_ticket_id,assembla_ticket_number,milestone_name,story_rank
+tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
+@tickets_jira = csv_to_array(tickets_jira_csv).select {|ticket| ticket['result'] == 'OK'}
+
+@is_ticket_id = {}
+@tickets_jira.each do |ticket|
+  @is_ticket_id[ticket['assembla_ticket_id']] = true
+end
+
+# @missing = []
+# csv_to_array(tickets_jira_csv).select {|ticket| ticket['result'] == 'NOK'}.each do |t|
+#   @missing.push({
+#                     ticket_id: t['assembla_ticket_id'],
+#                     issue_type: t['issue_type_name'],
+#                     reporter: t['reporter_name'],
+#                     assignee: t['assignee_name'],
+#                     summary: t['summary'],
+#                     milestone: t['milestone_name'],
+#                     story_rank: t['story_rank']
+#                 })
+# end
+# write_csv_file("#{OUTPUT_DIR_JIRA}/jira-tickets-nok.csv", @missing)
+
 # Assembla comments
 # id,comment,user_id,created_on,updated_at,ticket_changes,user_name,user_avatar_url,ticket_id,ticket_number
 comments_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-comments.csv"
 @comments_assembla = csv_to_array(comments_assembla_csv)
 
 puts "Total comments: #{@comments_assembla.length}"
+
+# TEST
+@comments_assembla.select! { |c| @is_ticket_id[c['ticket_id']]}
+
+puts "Total comments after: #{@comments_assembla.length}"
 
 # Ignore empty comments?
 if JIRA_API_SKIP_EMPTY_COMMENTS
@@ -60,11 +89,6 @@ users_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-users.csv"
   @assembla_id_to_jira_name[id] = user['name']
   @assembla_login_to_jira_name[user['assemblalogin']] = user['name']
 end
-
-# Jira tickets
-# result,retries,message,jira_ticket_id,jira_ticket_key,project_id,summary,issue_type_id,issue_type_name,assignee_name,reporter_name,priority_name,status_name,labels,description,assembla_ticket_id,assembla_ticket_number,milestone_name,story_rank
-tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
-@tickets_jira = csv_to_array(tickets_jira_csv).select { |ticket| ticket['result'] == 'OK' }
 
 # Convert assembla_ticket_id to jira_ticket_id and assembla_ticket_number to jira_ticket_key
 @assembla_id_to_jira_id = {}

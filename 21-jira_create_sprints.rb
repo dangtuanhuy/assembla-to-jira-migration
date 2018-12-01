@@ -148,6 +148,7 @@ def jira_move_issues_to_sprint(sprint, tickets)
     issues: issues
   }.to_json
   begin
+    # For a dry-run, comment out the following line
     RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN)
     puts "POST #{url} name='#{sprint['name']}' #{issues.length} issues [#{issues.join(',')}] => OK"
     result = true
@@ -203,6 +204,7 @@ goodbye("Cannot find project with name='#{JIRA_API_PROJECT_NAME}'") unless proje
   issues = @tickets_sprint.map { |ticket| ticket['jira_ticket_key'] }
   while @tickets_sprint.length.positive?
     @tickets_sprint_slice = @tickets_sprint.slice!(0, 50)
+    # For a dry-run, comment out the following two lines
     jira_update_sprint_state(next_sprint, 'active')
     jira_move_issues_to_sprint(next_sprint, @tickets_sprint_slice)
   end
@@ -210,8 +212,10 @@ goodbye("Cannot find project with name='#{JIRA_API_PROJECT_NAME}'") unless proje
 end
 
 # First sprint should be 'active' and the other 'closed'
+# For a dry-run, comment out the following line
 jira_update_sprint_state(@jira_sprints.first, 'active') if @jira_sprints.length > 0
 
 puts "\nTotal updates: #{@jira_sprints.length}"
 sprints_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-sprints.csv"
+# For a dry-run, comment out the following line
 write_csv_file(sprints_jira_csv, @jira_sprints)

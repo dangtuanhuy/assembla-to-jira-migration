@@ -11,6 +11,19 @@ tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @tickets_jira = csv_to_array(tickets_jira_csv).select { |ticket| ticket['result'] == 'OK' }
 @total_jira_tickets = @tickets_jira.length
 
+@is_ticket_key = {}
+@tickets_jira.each do |ticket|
+  @is_ticket_key[ticket['jira_ticket_key']] = true
+end
+
+# TEST
+tickets_jira_csv_org = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv.org"
+csv_to_array(tickets_jira_csv_org).select { |ticket| ticket['result'] == 'OK' }.each do |t|
+  @tickets_jira.push(t)
+end
+@total_jira_tickets = @tickets_jira.length
+# TEST
+
 # PUT /rest/agile/1.0/issue/rank
 def jira_rank_issues(issues, after_issue, counter)
   result = nil
@@ -21,6 +34,7 @@ def jira_rank_issues(issues, after_issue, counter)
   }.to_json
   percentage = ((counter * 100) / @total_jira_tickets).round.to_s.rjust(3)
   begin
+    # For a dry-run, comment out the following line.
     RestClient::Request.execute(method: :put, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN)
     puts "#{percentage}% [#{counter}|#{@total_jira_tickets}] PUT #{url} issues=#{issues} after=\"#{after_issue}\" => OK"
     result = true
@@ -46,11 +60,15 @@ end
 puts @list.to_s
 
 @previous_key = nil
+@total_ranked = 0
 @tickets_rank.each_with_index do |ticket, index|
+  counter = index + 1
   key = ticket[:key]
-  issues = [key]
-  if index.positive?
-    jira_rank_issues(issues, @previous_key, index + 1)
+  if @previous_key && @is_ticket_key[key]
+    jira_rank_issues([key], @previous_key, counter)
+    @total_ranked += 1
   end
   @previous_key = key
 end
+
+puts"\nTotal ranked: #{@total_ranked}"

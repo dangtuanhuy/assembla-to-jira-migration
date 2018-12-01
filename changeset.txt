@@ -1,0 +1,35 @@
+http://gishtech.com/assets/documents/Assembla-to-Jira-Migration.pdf
+
+* Comment body length must be less than 32767.
+* Minor changes rank tickets script.
+* Check that issue_id alright and filter out tickets OK.
+* Update attachment links continues despite jira api call errors.
+* Failed import comments saved to jira-comments-nok.csv file.
+* Made import attachments more robust.
+* Import comments outputs cvs file on the file rather than on completion, better for possible trouble-shooting.
+* If user belongs to 'jira-administrators' group, import comment as this user rather than as admin (default).
+* Skip empty and commit comments, save in csv files for future reference.
+* Included JIRA_API_SKIP_COMMIT_COMMENTS that when true will ignore all comments with commit messages, e.g. containing 'Commit: [[r:...]]'
+* Comment authors fixed.
+* More robust handling of inactive and unknown users when importing jira tickets.
+* More stupid bugs fixed.
+* More necessary changes, minor bugs and email instead of username for matching users.
+* When importing jira comments make sure that all users of comments also are both activates and member of the `jira-administrators` group. This is required in order to be able to create new comments as the original assembla creator.
+* Conversion for assembla custom field 'Team list' to jira user list field.
+* Initial branch custom-fields for team list conversion (experimental)
+* Improved and more efficient jira update watchers script, e.g. save watchers not found and do not retry later when you already know they will fail.
+* Changes needed for jira update status script.
+* A bunch of (minor) changes needed to get the jira import tickets script to work.
+* The file `users-report.csv` should be used instead of `users.csv` as input for the `08-jira_import_users.rb` script.
+* General improvements to jira user handling.
+* jira_get_user_by_email tests
+* Strip unused attributes from users.
+* Refactor jira import tickets for custom fields. Also need to change user handling as it has been modified in the jira api.
+* Using the jira issue createmeta api call.
+* Allow startAt and maxResults for create tickets.
+* Check that the admin user belongs to both the 'site-admins' and 'jira-administrators' groups and that the user is activated as well.
+* Initial changes for 11-jira_import_tickets.
+* Import custom fields listed in the assembla tickets-custom-fields.csv output file.
+* Trying to get assembla custom field imported correctly into Jira.
+* 20-custom-field-parent: check if parent issue is nil for sub-task and if so then change to task with warning.
+* New script update epics nok and readme.

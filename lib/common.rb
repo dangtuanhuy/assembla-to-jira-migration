@@ -627,6 +627,25 @@ def jira_get_issue_comment(issue_id, comment_id)
   result
 end
 
+def jira_get_issue_comments(issue_id)
+  result = nil
+  url = "#{URL_JIRA_ISSUES}/#{issue_id}/comment"
+  begin
+    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
+    result = JSON.parse(response.body)
+    if result
+      result.delete_if {|k, _| k =~ /self|expand/i}
+      result = result['comments']
+      puts "GET #{url} => OK"
+    end
+  rescue RestClient::ExceptionWithResponse => e
+    rest_client_exception(e, 'GET', url)
+  rescue => e
+    puts "GET #{url} => NOK (#{e.message})"
+  end
+  result
+end
+
 def jira_get_issue_types
   result = nil
   begin

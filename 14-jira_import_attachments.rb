@@ -15,6 +15,12 @@ end
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @tickets_jira = csv_to_array(tickets_jira_csv).select { |ticket| ticket['result'] == 'OK' }
 
+# Filter for ok tickets only
+@is_ticket_id = {}
+@tickets_jira.each do |ticket|
+  @is_ticket_id[ticket['assembla_ticket_id']] = true
+end
+
 # TODO: Move this to ./lib/tickets-assembla.rb and reuse in other scripts.
 @a_id_to_a_nr = {}
 @a_id_to_j_id = {}
@@ -28,11 +34,18 @@ end
 @tickets_jira = nil
 
 # Downloaded attachments
+# created_at,created_by,assembla_attachment_id,assembla_ticket_id,filename,content_type
 downloaded_attachments_csv = "#{OUTPUT_DIR_JIRA}/jira-attachments-download.csv"
 @downloaded_attachments = csv_to_array(downloaded_attachments_csv)
 @total_attachments = @downloaded_attachments.length
 
 puts "Total attachments: #{@total_attachments}"
+
+# Filter for ok tickets only
+@downloaded_attachments.select! { |c| @is_ticket_id[c['assembla_ticket_id']]}
+@total_attachments = @downloaded_attachments.length
+
+puts "Total attachments after: #{@total_attachments}"
 
 if restart_offset > @total_attachments
   goodbye("Invalid arg='#{ARGV[0]}', cannot be greater than the number of attachments=#{@total_attachments}")

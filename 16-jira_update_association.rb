@@ -9,6 +9,12 @@ tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @issuelink_types_jira = csv_to_array(issuelink_types_jira_csv)
 @tickets_jira = csv_to_array(tickets_jira_csv).select { |ticket| ticket['result'] == 'OK' }
 
+# Filter for ok tickets only
+@is_ticket_id = {}
+@tickets_jira.each do |ticket|
+  @is_ticket_id[ticket['assembla_ticket_id']] = true
+end
+
 # Convert assembla_ticket_id to jira_ticket
 @assembla_id_to_jira = {}
 @jira_id_to_login = {}
@@ -19,7 +25,32 @@ tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
   @jira_id_to_login[jira_id] = ticket['reporter_name']
 end
 
+@tickets_jira = nil
+
+# TEST
+tickets_jira_csv_org = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv.org"
+@tickets_jira_org = csv_to_array(tickets_jira_csv_org).select { |ticket| ticket['result'] == 'OK' }
+
+@tickets_jira_org.each do |ticket|
+  jira_id = ticket['jira_ticket_id']
+  assembla_id = ticket['assembla_ticket_id']
+  if @assembla_id_to_jira[assembla_id]
+    warning("assembla_id='#{assembla_id}' already present")
+  else
+    @assembla_id_to_jira[assembla_id] = jira_id
+  end
+  if @jira_id_to_login[jira_id]
+    warning("jira_id='#{jira_id}' already present")
+  else
+    @jira_id_to_login[jira_id] = ticket['reporter_name']
+  end
+end
+
+@tickets_jira_org = nil
+# TEST
+
 # Assembla tickets
+# id,ticket1_id,ticket2_id,relationship,created_at,ticket_id,ticket_number,relationship_name
 associations_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-associations.csv"
 @associations_assembla = csv_to_array(associations_csv)
 
@@ -33,6 +64,12 @@ end
 
 @total_assembla_associations = @associations_assembla.length
 puts "Total Assembla associations: #{@total_assembla_associations}"
+
+# Filter for ok tickets only
+@associations_assembla.select! { |c| @is_ticket_id[c['ticket_id']]}
+
+@total_assembla_associations = @associations_assembla.length
+puts "Total Assembla associations after: #{@total_assembla_associations}"
 
 # Collect ticket statuses
 @relationship_names = {}
