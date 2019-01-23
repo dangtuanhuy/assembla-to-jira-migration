@@ -110,7 +110,7 @@ end
 
 if @total_missing_tickets > 0
   # Prefill with previous
-  ok = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-tickets.csv.org").select { |t| t['result'] == 'OK' }
+  ok = csv_to_array("#{OUTPUT_DIR_JIRA}/jira-tickets.csv").select { |t| t['result'] == 'OK' }
   ok.each do |t|
     ticket_number = t['assembla_ticket_number']
     jira_ticket_key = t['jira_ticket_key']
