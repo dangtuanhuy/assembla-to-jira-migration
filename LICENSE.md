@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2017 Kiffin Gish
+Copyright (c) 2019 Kiffin Gish
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
