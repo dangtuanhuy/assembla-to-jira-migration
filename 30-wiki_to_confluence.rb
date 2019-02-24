@@ -154,7 +154,32 @@ def create_page_item(id, offset)
     end
 end
 
-get_all_links
+def download_image(url, counter, total)
+  filepath = "#{IMAGES}/#{File.basename(url)}"
+  pct = percentage(counter, total)
+  return if File.exist?(filepath)
+  begin
+    content = RestClient::Request.execute(method: :get, url: url)
+    IO.binwrite(filepath, content)
+    puts "#{pct} GET url=#{url} => OK"
+  rescue => error
+    puts "#{pct} GET url=#{url} => NOK error='#{error.inspect}'"
+  end
+end
+
+def download_all_images
+  links = csv_to_array(LINKS_CSV)
+  images = links.select { |link| link['tag'] == 'image' }
+  total = images.length
+  puts "\nDownloading #{total} images"
+  images.each_with_index do |image, index|
+    download_image(image['value'], index + 1, total)
+  end
+  puts "Done!\n"
+end
+
+# get_all_links
+download_all_images
 exit
 
 @pages.each do |id, value|
