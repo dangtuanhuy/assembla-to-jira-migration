@@ -29,7 +29,7 @@ puts "\n--- Wiki pages: #{@wiki_assembla.length} ---\n"
 
 @wiki_assembla.each do |wiki|
   id = wiki['id']
-  wiki['page_name'].tr!('_', ' ')
+  # wiki['page_name'].tr!('_', ' ')
   page_name = wiki['page_name']
   abort "Duplicate id='#{id}'" if @pages[id]
   abort "Duplicate page_name='#{page_name}'" if @pages.detect { |_, value| value[:page]['page_name'] == page_name }
@@ -93,7 +93,8 @@ def get_all_links
     content.scan(%r{<a(?:.*?)? href="(.*?)"(?:.*?)?>(.*?)</a>}).each do |m|
       value = m[0]
       next unless %r{^https?://www\.assembla.com/}.match?(value)
-
+      # https://www.assembla.com/spaces/green-in-a-box/wiki/Energy_Star_and_Utility_Sync_Feature_Requests
+      #
       text = m[1]
       counter += 1
       links << {
@@ -101,7 +102,7 @@ def get_all_links
         counter: counter,
         title: title,
         tag: 'anchor',
-        value: value,
+        value: value.sub('', ''),
         text: text
       }
     end
@@ -123,7 +124,7 @@ end
 def create_page_item(id, offset)
   pages_id = @pages[id]
   page = pages_id[:page]
-  title = page['page_name']
+  title = page['page_name'].tr('_', ' ')
   parent_id = page['parent_id']
   user_id = page['user_id']
   user = @users_assembla.detect { |u| u['id'] == user_id }
@@ -179,8 +180,26 @@ def download_all_images
 end
 
 # get_all_links
-download_all_images
+
+@all_images = csv_to_array(LINKS_CSV).select { |link| link['tag'] == 'image' }
+puts "\n--- Images: #{@all_images.length} ---"
+@all_images.each { |image| puts image['value'] }
+
+@all_anchors = csv_to_array(LINKS_CSV).select { |link| link['tag'] == 'anchor' }.sort_by { |image| image['value']}
+puts "\n--- Anchors: #{@all_anchors.length} ---"
+puts "\nwiki:"
+@all_anchors.select {|image| image['value'].match(%r{/wiki/}) }.each do |image|
+  page_name = image['value'].match(%r{/([^/]*)$})[1]
+  found = @wiki_assembla.detect {|wiki| wiki['page_name'] == page_name}
+  puts "#{image['value']} => #{page_name} #{found ? 'OK' : 'NOK'}"
+end
+puts "\ndocuments:"
+@all_anchors.select {|image| image['value'].match(%r{/documents/}) }.each { |image| puts image['value'] }
+puts "\ntickets:"
+@all_anchors.select {|image| image['value'].match(%r{/tickets/}) }.each { |image| puts image['value'] }
+
 exit
+# download_all_images
 
 @pages.each do |id, value|
   parent_id = value[:page]['parent_id']
@@ -212,6 +231,7 @@ count = 0
   count += 1
 end
 
+exit
 
 count = 0
 @parent_pages.each do |id, _|
