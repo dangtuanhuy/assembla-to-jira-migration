@@ -13,7 +13,8 @@ def format_created_at(created_at)
   created_at.sub(/\.[^.]*$/, '').tr('T', ' ')
 end
 
-# id,page_name,contents,status,version,position,wiki_format,change_comment,parent_id,space_id,user_id,created_at,updated_at
+# wiki_assembla => id,page_name,contents,status,version,position,wiki_format,change_comment,parent_id,space_id,
+# user_id,created_at,updated_at
 wiki_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/wiki-pages.csv"
 @wiki_assembla = csv_to_array(wiki_assembla_csv)
 
@@ -62,6 +63,100 @@ def show_page_tree(id, offset)
   children_ids.each_with_index { |child_id, index| show_page_tree(child_id, offset.dup << index) }
 end
 
+def get_all_links
+  links = []
+  # wiki_assembla => id,page_name,contents,status,version,position,wiki_format,change_comment,parent_id,space_id,
+  # user_id,created_at,updated_at
+  @wiki_assembla.each do |wiki|
+    counter = 0
+    id = wiki['id']
+    content = wiki['contents']
+    title = wiki['page_name']
+
+    # <img ... src="(value)" ... />
+    content.scan(%r{<img(?:.*?)? src="(.*?)"(?:.*?)?/?>}).each do |m|
+      value = m[0]
+      next unless %r{^https?://www\.assembla.com/}.match?(value)
+
+      counter += 1
+      links << {
+        id: id,
+        counter: counter,
+        title: title,
+        tag: 'image',
+        value: value,
+        text: ''
+      }
+    end
+
+    # <a ... href="(value)" ...>(title)</a>
+    content.scan(%r{<a(?:.*?)? href="(.*?)"(?:.*?)?>(.*?)</a>}).each do |m|
+      value = m[0]
+      next unless %r{^https?://www\.assembla.com/}.match?(value)
+
+      text = m[1]
+      counter += 1
+      links << {
+        id: id,
+        counter: counter,
+        title: title,
+        tag: 'anchor',
+        value: value,
+        text: text
+      }
+    end
+  end
+
+  puts "\nLinks #{links.length}"
+  unless links.length.zero?
+    links.each do |l|
+      if l[:counter] == 1
+        puts "* #{l[:filename]} '#{l[:title]}'"
+      end
+      puts "  #{l[:counter].to_s.rjust(2, '0')} #{l[:tag]} #{l[:value]}"
+    end
+  end
+  puts
+  write_csv_file(LINKS_CSV, links)
+end
+
+def create_page_item(id, offset)
+  pages_id = @pages[id]
+  page = pages_id[:page]
+  title = page['page_name']
+  parent_id = page['parent_id']
+  user_id = page['user_id']
+  user = @users_assembla.detect { |u| u['id'] == user_id }
+  author = user ? user['name'] : ''
+  created_at = format_created_at(page['created_at'])
+  body = page['contents']
+
+  result = confluence_create_page(@space['key'], title, body, parent_id)
+  @created_pages <<
+    if result
+      {
+        result: 'OK',
+        id: result['id'],
+        offset: offset.join('-'),
+        title: title,
+        author: author,
+        created_at: created_at
+      }
+    else
+      {
+        result: 'NOK',
+        id: 0,
+        offset: offset.join('-'),
+        title: title,
+        author: author,
+        created_at: created_at
+      }
+    end
+end
+
+get_all_links
+exit
+
 @pages.each do |id, value|
   parent_id = value[:page]['parent_id']
   next unless parent_id
@@ -92,39 +187,6 @@ count = 0
   count += 1
 end
 
-def create_page_item(id, offset)
-  pages_id = @pages[id]
-  page = pages_id[:page]
-  title = page['page_name']
-  parent_id = page['parent_id']
-  user_id = page['user_id']
-  user = @users_assembla.detect { |u| u['id'] == user_id }
-  author = user ? user['name'] : ''
-  created_at = format_created_at(page['created_at'])
-  body = page['contents']
-
-  result = confluence_create_page(@space['key'], title, body, parent_id)
-  @created_pages <<
-      if result
-        {
-            result: 'OK',
-            id: result['id'],
-            offset: offset.join('-'),
-            title: title,
-            author: author,
-            created_at: created_at
-        }
-      else
-        {
-            result: 'NOK',
-            id: 0,
-            offset: offset.join('-'),
-            title: title,
-            author: author,
-            created_at: created_at
-        }
-      end
-end
 
 count = 0
 @parent_pages.each do |id, _|
