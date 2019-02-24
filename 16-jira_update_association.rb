@@ -28,7 +28,7 @@ end
 @tickets_jira = nil
 
 # TEST
-tickets_jira_csv_org = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv.org"
+tickets_jira_csv_org = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @tickets_jira_org = csv_to_array(tickets_jira_csv_org).select { |ticket| ticket['result'] == 'OK' }
 
 @tickets_jira_org.each do |ticket|
