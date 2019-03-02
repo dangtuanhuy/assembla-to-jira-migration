@@ -80,12 +80,12 @@ def get_all_links
 
       counter += 1
       links << {
-        id: id,
-        counter: counter,
-        title: title,
-        tag: 'image',
-        value: value,
-        text: ''
+          id: id,
+          counter: counter,
+          title: title,
+          tag: 'image',
+          value: value,
+          text: ''
       }
     end
 
@@ -98,12 +98,12 @@ def get_all_links
       text = m[1]
       counter += 1
       links << {
-        id: id,
-        counter: counter,
-        title: title,
-        tag: 'anchor',
-        value: value.sub('', ''),
-        text: text
+          id: id,
+          counter: counter,
+          title: title,
+          tag: 'anchor',
+          value: value.sub('', ''),
+          text: text
       }
     end
   end
@@ -134,29 +134,29 @@ def create_page_item(id, offset)
 
   result = confluence_create_page(@space['key'], title, body, parent_id)
   @created_pages <<
-    if result
-      {
-        result: 'OK',
-        id: result['id'],
-        offset: offset.join('-'),
-        title: title,
-        author: author,
-        created_at: created_at
-      }
-    else
-      {
-        result: 'NOK',
-        id: 0,
-        offset: offset.join('-'),
-        title: title,
-        author: author,
-        created_at: created_at
-      }
-    end
+      if result
+        {
+            result: 'OK',
+            id: result['id'],
+            offset: offset.join('-'),
+            title: title,
+            author: author,
+            created_at: created_at
+        }
+      else
+        {
+            result: 'NOK',
+            id: 0,
+            offset: offset.join('-'),
+            title: title,
+            author: author,
+            created_at: created_at
+        }
+      end
 end
 
-def download_image(url, counter, total)
-  filepath = "#{IMAGES}/#{File.basename(url)}"
+def download_item(dir, url, counter, total)
+  filepath = "#{dir}/#{File.basename(url)}"
   pct = percentage(counter, total)
   return if File.exist?(filepath)
   begin
@@ -169,37 +169,77 @@ def download_image(url, counter, total)
 end
 
 def download_all_images
-  links = csv_to_array(LINKS_CSV)
-  images = links.select { |link| link['tag'] == 'image' }
-  total = images.length
+  total = @all_images.length
   puts "\nDownloading #{total} images"
-  images.each_with_index do |image, index|
-    download_image(image['value'], index + 1, total)
+  @all_images.each_with_index do |image, index|
+    download_item(IMAGES, image['value'], index + 1, total)
   end
-  puts "Done!\n"
+  puts "\nDone!\n"
 end
 
-# get_all_links
+def download_all_documents
+  total = @all_documents.length
+  puts "\nDownloading #{total} images"
+  @all_documents.each_with_index do |document, index|
+    download_item(DOCUMENTS, document['value'], index + 1, total)
+  end
+  puts "\nDone!\n"
+end
 
-@all_images = csv_to_array(LINKS_CSV).select { |link| link['tag'] == 'image' }
+def show_all_items(items)
+  list_ids = []
+  items.each do |item|
+    id = item['id']
+    list_ids << id unless list_ids.include?(id)
+  end
+  list_ids.each_with_index do |id, index|
+    page = @pages[id][:page]
+    @links = items.select { |document| document['id'] == id }
+    num = @links.length
+    puts "#{index + 1}.0 id=#{id} title='#{page['page_name']}' => #{num} link#{num == 1 ? '' : 's'}"
+    @links.each_with_index do |link, ind|
+      value = link['value']
+      padding = ' ' * ((index + 1).to_s.length + 1)
+      puts "#{padding}#{ind + 1} #{value}"
+    end
+  end
+end
+
+# --- Links --- #
+# id,counter,title,tag,value,text
+@all_links = csv_to_array(LINKS_CSV)
+puts "\n--- Links: #{@all_links.length} ---"
+
+# --- Images --- #
+@all_images = @all_links.select { |link| link['tag'] == 'image' }
 puts "\n--- Images: #{@all_images.length} ---"
-@all_images.each { |image| puts image['value'] }
+show_all_items(@all_images)
 
-@all_anchors = csv_to_array(LINKS_CSV).select { |link| link['tag'] == 'anchor' }.sort_by { |image| image['value']}
+# --- Anchors (documents + wikis) #
+@all_anchors = csv_to_array(LINKS_CSV).select { |link| link['tag'] == 'anchor' }.sort_by { |wiki| wiki['value'] }
 puts "\n--- Anchors: #{@all_anchors.length} ---"
-puts "\nwiki:"
-@all_anchors.select {|image| image['value'].match(%r{/wiki/}) }.each do |image|
-  page_name = image['value'].match(%r{/([^/]*)$})[1]
-  found = @wiki_assembla.detect {|wiki| wiki['page_name'] == page_name}
-  puts "#{image['value']} => #{page_name} #{found ? 'OK' : 'NOK'}"
-end
-puts "\ndocuments:"
-@all_anchors.select {|image| image['value'].match(%r{/documents/}) }.each { |image| puts image['value'] }
-puts "\ntickets:"
-@all_anchors.select {|image| image['value'].match(%r{/tickets/}) }.each { |image| puts image['value'] }
 
-exit
-# download_all_images
+# --- Documents --- #
+@all_documents = @all_anchors.select { |anchor| anchor['value'].match(%r{/documents/}) }
+puts "\n--- Documents: #{@all_documents.length} ---"
+show_all_items(@all_documents)
+
+# --- Tickets --- #
+@all_tickets = @all_anchors.select { |anchor| anchor['value'].match(%r{/tickets/}) }
+puts "\n--- Tickets: #{@all_tickets.length} ---"
+show_all_items(@all_tickets)
+
+@all_wikis = @all_anchors.select { |anchor| anchor['value'].match(%r{/wiki/}) }
+puts "\n--- Wikis: #{@all_wikis.length} ---"
+show_all_items(@all_wikis)
+# @all_wikis.each do |wiki|
+#   page_name = wiki['value'].match(%r{/([^/]*)$})[1]
+#   found = @wiki_assembla.detect { |w| w['page_name'] == page_name }
+#   puts "#{wiki['value']} : #{page_name} => #{found ? 'FOUND' : 'NOT FOUND'}"
+# end
+
+download_all_images
+download_all_documents
 
 @pages.each do |id, value|
   parent_id = value[:page]['parent_id']
