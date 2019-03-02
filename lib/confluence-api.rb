@@ -12,7 +12,8 @@ def confluence_get_spaces
     body = JSON.parse(response.body)
     results = body['results']
     puts "GET url='#{url}' => OK"
-  rescue => error
+  rescue => e
+    error = e.response ? JSON.parse(e.response) : e
     puts "GET url='#{url}' => NOK error='#{error}'"
   end
   results
@@ -40,7 +41,8 @@ def confluence_get_content(id)
     response = RestClient::Request.execute(method: :get, url: url, headers: HEADERS)
     result = JSON.parse(response.body)
     puts "GET url='#{url}' => OK"
-  rescue => error
+  rescue => e
+    error = e.response ? JSON.parse(e.response) : e
     puts "GET url='#{url}' => NOK error='#{error}'"
   end
   result
@@ -54,7 +56,8 @@ def confluence_get_version(id)
     response = RestClient::Request.execute(method: :get, url: url, headers: HEADERS)
     result = JSON.parse(response.body)
     puts "GET url='#{url}' => OK"
-  rescue => error
+  rescue => e
+    error = e.response ? JSON.parse(e.response) : e
     puts "GET url='#{url}' => NOK error='#{error}'"
   end
   result
@@ -78,33 +81,46 @@ end
 #   }
 # }
 #
-def confluence_create_page(key, title, content, parent_id)
+def confluence_create_page(key, title, content, parent_id, counter, total)
   result = nil
+  error = nil
   payload = {
-    "type": 'page',
-    "title": title,
-    "space": { "key": key },
-    "body": {
-      "storage": {
-        "value": content,
-        "representation": 'storage'
+      "type": 'page',
+      "title": title,
+      "space": { "key": key },
+      "body": {
+          "storage": {
+              "value": content,
+              "representation": 'storage'
+          }
       }
-    }
   }
+
   if parent_id
     payload['ancestors'] = [{ "id": parent_id }]
   end
+
+  pct = percentage(counter, total)
   payload = payload.to_json
   url = "#{API}/content"
-  # { 'X-Atlassian-Token': 'no-check' }
   begin
     response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: HEADERS)
     result = JSON.parse(response.body)
-    puts "POST url='#{url}' title='#{title}' => OK"
-  rescue => error
-    puts "POST url='#{url}' title='#{title}' => NOK error='#{error}'"
+    puts "#{pct} POST url='#{url}' title='#{title}' => OK"
+      # message"=>"Error parsing xhtml:
+  rescue RestClient::BadRequest => e
+    error = JSON.parse(e.response)
+    if error['message'].start_with?('Error parsing xhtml')
+      puts "#{pct} POST url='#{url}' title='#{title}' => NOK error='#{error}' Error parsing xhtml"
+    else
+      puts "#{pct} POST url='#{url}' title='#{title}' => NOK error='#{error}'"
+    end
+  rescue => e
+    error = e.response ? JSON.parse(e.response) : e
+    puts "#{pct} POST url='#{url}' title='#{title}' => NOK error='#{error}'"
   end
-  result
+
+  [result, error]
 end
 
 # PUT wiki/rest/api/content/{id}
@@ -128,16 +144,16 @@ def confluence_update_page(key, id, title, content, counter, total)
 
   pct = percentage(counter, total)
   payload = {
-    "title": title,
-    "type": 'page',
-    "space": { "key": key },
-    "version": { "number": version + 1 },
-    "body": {
-      "storage": {
-        "value": content,
-        "representation": 'storage'
+      "title": title,
+      "type": 'page',
+      "space": { "key": key },
+      "version": { "number": version + 1 },
+      "body": {
+          "storage": {
+              "value": content,
+              "representation": 'storage'
+          }
       }
-    }
   }
   payload = payload.to_json
   url = "#{API}/content/#{id}"
@@ -145,7 +161,8 @@ def confluence_update_page(key, id, title, content, counter, total)
     response = RestClient::Request.execute(method: :put, url: url, payload: payload, headers: HEADERS)
     result = JSON.parse(response.body)
     puts "#{pct} PUT url='#{url}' id='#{id}' => OK"
-  rescue => error
+  rescue => e
+    error = JSON.parse(e.response)
     puts "#{pct} PUT url='#{url}' id='#{id}' => NOK error='#{error}'"
   end
   result
@@ -160,22 +177,23 @@ def confluence_create_attachment(page_id, filepath, counter, total)
   result = nil
   pct = percentage(counter, total)
   payload =
-    {
-      multipart: true,
-      file: File.new(filepath, 'rb')
-    }
+      {
+          multipart: true,
+          file: File.new(filepath, 'rb')
+      }
   url = "#{API}/content/#{page_id}/child/attachment"
   headers = {
-    'Authorization': "Basic #{Base64.encode64("#{EMAIL}:#{PASSWORD}")}",
-    'Content-Type': 'application/json; charset=utf-8',
-    'Accept': 'application/json',
-    'X-Atlassian-Token': 'nocheck'
+      'Authorization': "Basic #{Base64.encode64("#{EMAIL}:#{PASSWORD}")}",
+      'Content-Type': 'application/json; charset=utf-8',
+      'Accept': 'application/json',
+      'X-Atlassian-Token': 'nocheck'
   }
   begin
     response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
     result = JSON.parse(response.body)
     puts "#{pct} POST url='#{url}' page_id='#{page_id}' filepath='#{filepath}' => OK"
-  rescue => error
+  rescue => e
+    error = JSON.parse(e.response)
     puts "#{pct} POST url='#{url}' page_id='#{page_id}' filepath='#{filepath}' => NOK error='#{error}'"
   end
   result

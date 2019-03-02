@@ -171,7 +171,7 @@ def get_all_links
   write_csv_file(LINKS_CSV, links)
 end
 
-def create_page_item(id, offset)
+def create_page_item(id, offset, counter, total)
   pages_id = @pages[id]
   page = pages_id[:page]
   title = page['page_name']
@@ -185,9 +185,9 @@ def create_page_item(id, offset)
 
   url = "#{WIKI}/#{title}"
   # Prepend the body with a link to the original Wiki page
-  body = "<p>Created by #{user['name']} at #{created_at}</p><p><a href=\"#{url}\" target=\"_blank\">Assembla Wiki</a></p>#{body}"
+  body = "<p>Created by #{author} at #{created_at}</p><p><a href=\"#{url}\" target=\"_blank\">Assembla Wiki</a></p>#{body}"
 
-  result = confluence_create_page(@space['key'], title_stripped, body, parent_id)
+  result, error = confluence_create_page(@space['key'], title_stripped, body, parent_id, counter, total)
   @created_pages <<
       if result
         {
@@ -196,7 +196,9 @@ def create_page_item(id, offset)
             offset: offset.join('-'),
             title: title_stripped,
             author: author,
-            created_at: created_at
+            created_at: created_at,
+            body: body,
+            error: error
         }
       else
         {
@@ -205,7 +207,9 @@ def create_page_item(id, offset)
             offset: offset.join('-'),
             title: title_stripped,
             author: author,
-            created_at: created_at
+            created_at: created_at,
+            body: body,
+            error: error
         }
       end
 end
@@ -333,10 +337,16 @@ count = 0
   count += 1
 end
 
+total_parent_pages = @parent_pages.length
+puts "\n--- Create parent pages: #{total_parent_pages} ---\n"
+
 count = 0
+total = @parent_pages.length
 @parent_pages.each do |id, _|
-  create_page_item(id, [count])
+  create_page_item(id, [count], count + 1, total_parent_pages)
   count += 1
 end
+
+write_csv_file(CREATED_PAGES_CSV, @created_pages)
 
 puts "\nDone\n"
