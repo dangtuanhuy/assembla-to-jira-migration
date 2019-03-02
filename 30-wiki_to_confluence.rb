@@ -174,7 +174,8 @@ end
 def create_page_item(id, offset)
   pages_id = @pages[id]
   page = pages_id[:page]
-  title = page['page_name'].tr('_', ' ')
+  title = page['page_name']
+  title_stripped = title.tr('_', ' ')
   parent_id = page['parent_id']
   user_id = page['user_id']
   user = @users_assembla.detect { |u| u['id'] == user_id }
@@ -182,14 +183,18 @@ def create_page_item(id, offset)
   created_at = format_created_at(page['created_at'])
   body = page['contents']
 
-  result = confluence_create_page(@space['key'], title, body, parent_id)
+  url = "#{WIKI}/#{title}"
+  # Prepend the body with a link to the original Wiki page
+  body = "<p>Created by #{user['name']} at #{created_at}</p><p><a href=\"#{url}\" target=\"_blank\">Assembla Wiki</a></p>#{body}"
+
+  result = confluence_create_page(@space['key'], title_stripped, body, parent_id)
   @created_pages <<
       if result
         {
             result: 'OK',
             id: result['id'],
             offset: offset.join('-'),
-            title: title,
+            title: title_stripped,
             author: author,
             created_at: created_at
         }
@@ -198,7 +203,7 @@ def create_page_item(id, offset)
             result: 'NOK',
             id: 0,
             offset: offset.join('-'),
-            title: title,
+            title: title_stripped,
             author: author,
             created_at: created_at
         }
@@ -297,8 +302,6 @@ show_all_items(@all_wikis, verify_proc)
 
 download_all_images
 download_all_documents
-
-exit
 
 @pages.each do |id, value|
   parent_id = value[:page]['parent_id']

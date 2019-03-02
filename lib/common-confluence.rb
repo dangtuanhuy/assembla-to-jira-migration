@@ -21,6 +21,7 @@ DEBUG = ENV['DEBUG'] == 'true'
 DATA = ENV['DATA'] || 'data/confluence'
 IMAGES = ENV['IMAGES'] || 'data/confluence/images'
 DOCUMENTS = ENV['DOCUMENTS'] || 'data/confluence/documents'
+WIKI = ENV['ASSEMBLA_WIKI'] || throw('ASSEMBLA_WIKI must be defined')
 API = ENV['CONFLUENCE_API'] || throw('CONFLUENCE_API must be defined')
 SPACE = ENV['CONFLUENCE_SPACE'] || throw('CONFLUENCE_SPACE must be defined')
 EMAIL = ENV['CONFLUENCE_EMAIL'] || throw('CONFLUENCE_EMAIL must be defined')
@@ -38,6 +39,7 @@ puts "DEBUG:    : '#{DEBUG}'"
 puts "DATA      : '#{DATA}'"
 puts "IMAGES    : '#{IMAGES}'"
 puts "DOCUMENTS : '#{DOCUMENTS}'"
+puts "WIKI      : '#{WIKI}'"
 puts "API       : '#{API}'"
 puts "SPACE     : '#{SPACE}'"
 puts "EMAIL     : '#{EMAIL}'"
