@@ -13,10 +13,17 @@ def format_created_at(created_at)
   created_at.sub(/\.[^.]*$/, '').tr('T', ' ')
 end
 
-# wiki_assembla => id,page_name,contents,status,version,position,wiki_format,change_comment,parent_id,space_id,
+# id,page_name,contents,status,version,position,wiki_format,change_comment,parent_id,space_id,
 # user_id,created_at,updated_at
 wiki_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/wiki-pages.csv"
 @wiki_assembla = csv_to_array(wiki_assembla_csv)
+
+# id,number,summary,description,priority,completed_date,component_id,created_on,permission_type,importance,is_story,
+# milestone_id,notification_list,space_id,state,status,story_importance,updated_at,working_hours,estimate,
+# total_estimate,total_invested_hours,total_working_hours,assigned_to_id,reporter_id,custom_fields,hierarchy_type,
+# due_date,assigned_to_name,picture_url
+tickets_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
+@tickets_assembla = csv_to_array(tickets_assembla_csv)
 
 # id,login,name,picture,email,organization,phone
 users_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/users.csv"
@@ -186,7 +193,7 @@ def download_all_documents
   puts "\nDone!\n"
 end
 
-def show_all_items(items)
+def show_all_items(items, verify_proc)
   list_ids = []
   items.each do |item|
     id = item['id']
@@ -200,7 +207,7 @@ def show_all_items(items)
     @links.each_with_index do |link, ind|
       value = link['value']
       padding = ' ' * ((index + 1).to_s.length + 1)
-      puts "#{padding}#{ind + 1} #{value}"
+      puts "#{padding}#{ind + 1} #{value} => #{verify_proc.call(value) ? '' : 'N'}OK"
     end
   end
 end
@@ -213,7 +220,10 @@ puts "\n--- Links: #{@all_links.length} ---"
 # --- Images --- #
 @all_images = @all_links.select { |link| link['tag'] == 'image' }
 puts "\n--- Images: #{@all_images.length} ---"
-show_all_items(@all_images)
+# verify_proc = proc do |value|
+#   File.exist?("#{IMAGES}/#{File.basename(value)}")
+# end
+show_all_items(@all_images, lambda { |value| File.exist?("#{IMAGES}/#{File.basename(value)}") } )
 
 # --- Anchors (documents + wikis) #
 @all_anchors = csv_to_array(LINKS_CSV).select { |link| link['tag'] == 'anchor' }.sort_by { |wiki| wiki['value'] }
@@ -222,21 +232,29 @@ puts "\n--- Anchors: #{@all_anchors.length} ---"
 # --- Documents --- #
 @all_documents = @all_anchors.select { |anchor| anchor['value'].match(%r{/documents/}) }
 puts "\n--- Documents: #{@all_documents.length} ---"
-show_all_items(@all_documents)
+show_all_items(@all_documents, lambda { |value| File.exist?("#{DOCUMENTS}/#{File.basename(value)}") } )
 
 # --- Tickets --- #
 @all_tickets = @all_anchors.select { |anchor| anchor['value'].match(%r{/tickets/}) }
 puts "\n--- Tickets: #{@all_tickets.length} ---"
-show_all_items(@all_tickets)
+verify_proc = lambda do |value|
+  value = value.sub(/#.*$/,'')
+  ticket_nr = File.basename(value)
+  @tickets_assembla.detect { |t| t['number'] == ticket_nr }
+end
+show_all_items(@all_tickets, verify_proc)
+
+exit
 
 @all_wikis = @all_anchors.select { |anchor| anchor['value'].match(%r{/wiki/}) }
 puts "\n--- Wikis: #{@all_wikis.length} ---"
-show_all_items(@all_wikis)
-# @all_wikis.each do |wiki|
-#   page_name = wiki['value'].match(%r{/([^/]*)$})[1]
-#   found = @wiki_assembla.detect { |w| w['page_name'] == page_name }
-#   puts "#{wiki['value']} : #{page_name} => #{found ? 'FOUND' : 'NOT FOUND'}"
-# end
+verify_proc = lambda do |value|
+  page_name = value.match(%r{/([^/]*)$})[1]
+  @wiki_assembla.detect { |w| w['page_name'] == page_name }
+end
+show_all_items(@all_wikis, verify_proc)
+
+exit
 
 download_all_images
 download_all_documents
