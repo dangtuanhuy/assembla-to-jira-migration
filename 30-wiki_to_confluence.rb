@@ -13,6 +13,49 @@ def format_created_at(created_at)
   created_at.sub(/\.[^.]*$/, '').tr('T', ' ')
 end
 
+# result,retries,message,jira_ticket_id,jira_ticket_key,project_id,summary,issue_type_id,issue_type_name,
+# assignee_name,reporter_name,priority_name,status_name,labels,description,assembla_ticket_id,assembla_ticket_number,
+# milestone_name,story_rank
+tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
+@jira_tickets_csv = csv_to_array(tickets_jira_csv).select { |ticket| ticket['result'] == 'OK' }
+
+tickets_jira_csv_org = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv.org"
+if File.exist?(tickets_jira_csv_org)
+  @jira_tickets_csv_org = csv_to_array(tickets_jira_csv_org).select { |ticket| ticket['result'] == 'OK' }
+end
+
+# Check for duplicates just in case.
+@assembla_nr_to_jira_key = {}
+duplicates = []
+if File.exist?(tickets_jira_csv_org)
+  @jira_tickets_csv_org.sort_by { |ticket| ticket['assembla_ticket_number'].to_i }.each do |ticket|
+    nr = ticket['assembla_ticket_number']
+    key = ticket['jira_ticket_key']
+    if @assembla_nr_to_jira_key[nr]
+      duplicates << { nr: nr, key: key }
+    else
+      @assembla_nr_to_jira_key[nr] = key
+    end
+  end
+end
+
+@jira_tickets_csv.sort_by { |ticket| ticket['assembla_ticket_number'].to_i }.each do |ticket|
+  nr = ticket['assembla_ticket_number']
+  key = ticket['jira_ticket_key']
+  if @assembla_nr_to_jira_key[nr]
+    duplicates << { nr: nr, key: key }
+  else
+    @assembla_nr_to_jira_key[nr] = key
+  end
+end
+
+if duplicates.length.positive?
+  puts "\nDuplicates found: #{duplicates}\n"
+  duplicates.each do |duplicate|
+    puts "* #{duplicate[:nr]} #{duplicate[:key]}"
+  end
+end
+
 # id,page_name,contents,status,version,position,wiki_format,change_comment,parent_id,space_id,
 # user_id,created_at,updated_at
 wiki_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/wiki-pages.csv"
@@ -223,7 +266,7 @@ puts "\n--- Images: #{@all_images.length} ---"
 # verify_proc = proc do |value|
 #   File.exist?("#{IMAGES}/#{File.basename(value)}")
 # end
-show_all_items(@all_images, lambda { |value| File.exist?("#{IMAGES}/#{File.basename(value)}") } )
+show_all_items(@all_images, lambda { |value| File.exist?("#{IMAGES}/#{File.basename(value)}") })
 
 # --- Anchors (documents + wikis) #
 @all_anchors = csv_to_array(LINKS_CSV).select { |link| link['tag'] == 'anchor' }.sort_by { |wiki| wiki['value'] }
@@ -232,19 +275,17 @@ puts "\n--- Anchors: #{@all_anchors.length} ---"
 # --- Documents --- #
 @all_documents = @all_anchors.select { |anchor| anchor['value'].match(%r{/documents/}) }
 puts "\n--- Documents: #{@all_documents.length} ---"
-show_all_items(@all_documents, lambda { |value| File.exist?("#{DOCUMENTS}/#{File.basename(value)}") } )
+show_all_items(@all_documents, lambda { |value| File.exist?("#{DOCUMENTS}/#{File.basename(value)}") })
 
 # --- Tickets --- #
 @all_tickets = @all_anchors.select { |anchor| anchor['value'].match(%r{/tickets/}) }
 puts "\n--- Tickets: #{@all_tickets.length} ---"
 verify_proc = lambda do |value|
-  value = value.sub(/#.*$/,'')
+  value = value.sub(/#.*$/, '')
   ticket_nr = File.basename(value)
   @tickets_assembla.detect { |t| t['number'] == ticket_nr }
 end
 show_all_items(@all_tickets, verify_proc)
-
-exit
 
 @all_wikis = @all_anchors.select { |anchor| anchor['value'].match(%r{/wiki/}) }
 puts "\n--- Wikis: #{@all_wikis.length} ---"
@@ -254,10 +295,10 @@ verify_proc = lambda do |value|
 end
 show_all_items(@all_wikis, verify_proc)
 
-exit
-
 download_all_images
 download_all_documents
+
+exit
 
 @pages.each do |id, value|
   parent_id = value[:page]['parent_id']
@@ -288,8 +329,6 @@ count = 0
   show_page_tree(id, [count])
   count += 1
 end
-
-exit
 
 count = 0
 @parent_pages.each do |id, _|
