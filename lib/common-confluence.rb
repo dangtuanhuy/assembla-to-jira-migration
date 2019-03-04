@@ -29,9 +29,11 @@ PASSWORD = ENV['CONFLUENCE_PASSWORD'] || throw('CONFLUENCE_PASSWORD must be defi
 
 # Global constants
 LINKS_CSV = "#{DATA}/links.csv"
-UPLOADED_IMAGES_CSV ="#{DATA}/uploaded-images.csv"
-CREATED_PAGES_CSV ="#{DATA}/created-pages.csv"
-UPDATED_PAGES_CSV ="#{DATA}/updated-pages.csv"
+UPLOADED_IMAGES_CSV = "#{DATA}/uploaded-images.csv"
+CREATED_PAGES_CSV = "#{DATA}/created-pages.csv"
+CREATED_PAGES_NOK_CSV = "#{DATA}/created-pages-nok.csv"
+UPDATED_PAGES_CSV = "#{DATA}/updated-pages.csv"
+WIKI_FIXED_CSV = "#{DATA}/wiki-pages-fixed.csv"
 
 # Display environment
 puts
@@ -50,7 +52,28 @@ puts
 
 # Authentication header
 HEADERS = {
-  'Authorization': "Basic #{Base64.encode64("#{EMAIL}:#{PASSWORD}")}",
-  'Content-Type': 'application/json; charset=utf-8',
-  'Accept': 'application/json'
+    'Authorization': "Basic #{Base64.encode64("#{EMAIL}:#{PASSWORD}")}",
+    'Content-Type': 'application/json; charset=utf-8',
+    'Accept': 'application/json'
 }.freeze
+
+# The Assembla HTML is a complete mess! Ensure that the html can be  parsed
+# by the confluence api, e.g. avoid the dreaded 'error parsing xhtml' error.
+def fix_html(html)
+  result = html.
+      gsub('<br>', '<br/>').
+      gsub('<wbr>', '&lt;wbr&gt;').
+      gsub('<package>', '&lt;package&gt;').
+      gsub('<strike>', '<del>').
+      gsub('</strike>', '</del>').
+      gsub(%r{</?span([^>]*?)>}, '').
+      gsub(%r{</?colgroup>}, '').
+      gsub(%r{(<h[1-6].*?)/>}, '\1>').
+      gsub(%r{(<(col|img)[^>]+)(?<!/)>}, '\1/>')
+  begin
+    result = HtmlBeautifier.beautify(result)
+  rescue RuntimeError => e
+    puts "HtmlBeautifier error (#{e})"
+  end
+  result
+end

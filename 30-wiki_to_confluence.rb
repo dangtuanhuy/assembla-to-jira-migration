@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'htmlbeautifier'
+
 load './lib/common.rb'
 load './lib/common-confluence.rb'
 load './lib/confluence-api.rb'
@@ -59,7 +61,15 @@ end
 # id,page_name,contents,status,version,position,wiki_format,change_comment,parent_id,space_id,
 # user_id,created_at,updated_at
 wiki_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/wiki-pages.csv"
-@wiki_assembla = csv_to_array(wiki_assembla_csv)
+@wiki_assembla = []
+csv_to_array(wiki_assembla_csv).each_with_index do |wiki, index|
+  wiki['contents'] = fix_html(wiki['contents'])
+  @wiki_assembla << wiki
+end
+
+write_csv_file(WIKI_FIXED_CSV, @wiki_assembla)
+
+@wiki_assembla = csv_to_array(WIKI_FIXED_CSV)
 
 # id,number,summary,description,priority,completed_date,component_id,created_on,permission_type,importance,is_story,
 # milestone_id,notification_list,space_id,state,status,story_importance,updated_at,working_hours,estimate,
@@ -174,35 +184,42 @@ end
 def create_page_item(id, offset, counter, total)
   pages_id = @pages[id]
   page = pages_id[:page]
+  page_id = page['id']
   title = page['page_name']
+  body = page['contents']
   title_stripped = title.tr('_', ' ')
   parent_id = page['parent_id']
   user_id = page['user_id']
   user = @users_assembla.detect { |u| u['id'] == user_id }
   author = user ? user['name'] : ''
   created_at = format_created_at(page['created_at'])
-  body = page['contents']
 
   url = "#{WIKI}/#{title}"
-  # Prepend the body with a link to the original Wiki page
-  body = "<p>Created by #{author} at #{created_at}</p><p><a href=\"#{url}\" target=\"_blank\">Assembla Wiki</a></p>#{body}"
 
-  result, error = confluence_create_page(@space['key'], title_stripped, body, parent_id, counter, total)
+  # Prepend the body with a link to the original Wiki page
+  prefix = "<p>Created by #{author} at #{created_at}</p><p><a href=\"#{url}\" target=\"_blank\">Assembla Wiki</a></p>"
+
+  # TODO: Remove the following line (only for testing)
+  parent_id = nil
+  puts 'Parent_id = NULL!'
+  result, error = confluence_create_page(@space['key'], title_stripped, prefix, body, parent_id, counter, total)
   @created_pages <<
       if result
         {
-            result: 'OK',
+            result: error ? 'NOK' : 'OK',
+            page_id: page_id,
             id: result['id'],
             offset: offset.join('-'),
             title: title_stripped,
             author: author,
             created_at: created_at,
-            body: body,
-            error: error
+            body: error ? body : '',
+            error: error ? error : ''
         }
       else
         {
             result: 'NOK',
+            page_id: page_id,
             id: 0,
             offset: offset.join('-'),
             title: title_stripped,
@@ -340,13 +357,23 @@ end
 total_parent_pages = @parent_pages.length
 puts "\n--- Create parent pages: #{total_parent_pages} ---\n"
 
+# count = 0
+# total = @parent_pages.length
+# @parent_pages.each do |id, _|
+#   create_page_item(id, [count], count + 1, total_parent_pages)
+#   count += 1
+# end
+
 count = 0
-total = @parent_pages.length
-@parent_pages.each do |id, _|
-  create_page_item(id, [count], count + 1, total_parent_pages)
+total_pages = @pages.length
+@pages.each do |id, _|
+  create_page_item(id, [count], count + 1, total_pages)
   count += 1
 end
 
 write_csv_file(CREATED_PAGES_CSV, @created_pages)
+
+@nok = csv_to_array(CREATED_PAGES_CSV).select { |page| page['result'] == 'NOK' }
+write_csv_file(CREATED_PAGES_NOK_CSV, @nok)
 
 puts "\nDone\n"

@@ -81,43 +81,51 @@ end
 #   }
 # }
 #
-def confluence_create_page(key, title, content, parent_id, counter, total)
+def confluence_create_page(key, title, prefix, body, parent_id, counter, total)
   result = nil
   error = nil
-  payload = {
-      "type": 'page',
-      "title": title,
-      "space": { "key": key },
-      "body": {
-          "storage": {
-              "value": content,
-              "representation": 'storage'
-          }
-      }
-  }
+  content = "#{prefix}#{body}"
+  retries = 0
+  while result.nil? && retries < 2
+    if retries == 1
+      content = "#{prefix}<p>Error parsing XHTML</p>"
+    end
+    payload = {
+        "type": 'page',
+        "title": title,
+        "space": { "key": key },
+        "body": {
+            "storage": {
+                "value": content,
+                "representation": 'storage'
+            }
+        }
+    }
 
-  if parent_id
-    payload['ancestors'] = [{ "id": parent_id }]
-  end
+    if parent_id
+      payload['ancestors'] = [{ "id": parent_id }]
+    end
 
-  pct = percentage(counter, total)
-  payload = payload.to_json
-  url = "#{API}/content"
-  begin
-    response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: HEADERS)
-    result = JSON.parse(response.body)
-    puts "#{pct} POST url='#{url}' title='#{title}' => OK"
-      # message"=>"Error parsing xhtml:
-  rescue RestClient::BadRequest => e
-    error = JSON.parse(e.response)
-    if error['message'].start_with?('Error parsing xhtml')
-      puts "#{pct} POST url='#{url}' title='#{title}' => NOK error='#{error}' Error parsing xhtml"
-    else
+    pct = percentage(counter, total)
+    payload = payload.to_json
+    url = "#{API}/content"
+    begin
+      response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: HEADERS)
+      result = JSON.parse(response.body)
+      puts "#{pct} POST url='#{url}' title='#{title}' => OK"
+    rescue RestClient::BadRequest => e
+      error = JSON.parse(e.response)
+      if error['message'].start_with?('Error parsing xhtml')
+        msg = retries.zero? ? '(RETRY) ' : ''
+        puts "#{pct} POST url='#{url}' title='#{title}' => NOK #{msg}error='#{error['message']}'"
+        retries += 1
+      else
+        puts "#{pct} POST url='#{url}' title='#{title}' => NOK error='#{error}'"
+      end
+    rescue => e
+      error = e.response ? JSON.parse(e.response) : e
       puts "#{pct} POST url='#{url}' title='#{title}' => NOK error='#{error}'"
     end
-  rescue => e
-    error = e.response ? JSON.parse(e.response) : e
-    puts "#{pct} POST url='#{url}' title='#{title}' => NOK error='#{error}'"
   end
 
   [result, error]
