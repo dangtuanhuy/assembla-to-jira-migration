@@ -6,6 +6,7 @@ require 'fileutils'
 require 'dotenv/load'
 require 'rest-client'
 require 'base64'
+require 'htmlbeautifier'
 
 # Check that the correct ruby version is being used.
 version = File.read('.ruby-version').strip
@@ -61,14 +62,14 @@ HEADERS = {
 # by the confluence api, e.g. avoid the dreaded 'error parsing xhtml' error.
 def fix_html(html)
   result = html.
-      gsub('<br>', '<br/>').
+      gsub(%r{<br\s*>}, '<br/>').
       gsub('<wbr>', '&lt;wbr&gt;').
       gsub('<package>', '&lt;package&gt;').
       gsub('<strike>', '<del>').
       gsub('</strike>', '</del>').
       gsub(%r{</?span([^>]*?)>}, '').
       gsub(%r{</?colgroup>}, '').
-      gsub(%r{(<h[1-6].*?)/>}, '\1>').
+      gsub(%r{(<h[1-6](.*?))/>}, '\1>').
       gsub(%r{(<(col|img)[^>]+)(?<!/)>}, '\1/>')
   begin
     result = HtmlBeautifier.beautify(result)

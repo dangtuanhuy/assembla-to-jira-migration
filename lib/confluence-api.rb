@@ -114,13 +114,17 @@ def confluence_create_page(key, title, prefix, body, parent_id, counter, total)
       result = JSON.parse(response.body)
       puts "#{pct} POST url='#{url}' title='#{title}' => OK"
     rescue RestClient::BadRequest => e
-      error = JSON.parse(e.response)
-      if error['message'].start_with?('Error parsing xhtml')
-        msg = retries.zero? ? '(RETRY) ' : ''
-        puts "#{pct} POST url='#{url}' title='#{title}' => NOK #{msg}error='#{error['message']}'"
-        retries += 1
+      if e.response
+        error = JSON.parse(e.response)
+        if error['message'].start_with?('Error parsing xhtml')
+          msg = retries.zero? ? '(RETRY) ' : ''
+          puts "#{pct} POST url='#{url}' title='#{title}' => NOK #{msg}error='#{error['message']}'"
+          retries += 1
+        else
+          puts "#{pct} POST url='#{url}' title='#{title}' => NOK error='#{error}'"
+        end
       else
-        puts "#{pct} POST url='#{url}' title='#{title}' => NOK error='#{error}'"
+        puts "#{pct} POST url='#{url}' title='#{title}' => NOK error='#{e}'"
       end
     rescue => e
       error = e.response ? JSON.parse(e.response) : e

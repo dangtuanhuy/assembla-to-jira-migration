@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'htmlbeautifier'
-
 load './lib/common.rb'
 load './lib/common-confluence.rb'
 load './lib/confluence-api.rb'
@@ -357,6 +355,7 @@ end
 total_parent_pages = @parent_pages.length
 puts "\n--- Create parent pages: #{total_parent_pages} ---\n"
 
+# TODO:
 # count = 0
 # total = @parent_pages.length
 # @parent_pages.each do |id, _|
