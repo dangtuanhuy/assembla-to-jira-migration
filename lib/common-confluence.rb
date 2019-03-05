@@ -58,13 +58,17 @@ HEADERS = {
     'Accept': 'application/json'
 }.freeze
 
+def fix_text(text)
+  CGI.escapeHTML(text).gsub(/(?:\n\r?|\r\n?)/, '<br/>')
+end
+
 # The Assembla HTML is a complete mess! Ensure that the html can be  parsed
 # by the confluence api, e.g. avoid the dreaded 'error parsing xhtml' error.
 def fix_html(html)
   result = html.
       gsub('<package>', '&lt;package&gt;').
       # replace all strike-tags with del-tags.
-      gsub('<strike[^>]*?>', '<del>').
+      gsub(/<strike[^>]*?>/, '<del>').
       gsub('</strike>', '</del>').
       # remove all span-, font- or colgroup-tags
       gsub(%r{</?(span|font|colgroup)([^>]*?)>}, '').

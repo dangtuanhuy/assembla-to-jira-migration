@@ -58,10 +58,18 @@ end
 
 # id,page_name,contents,status,version,position,wiki_format,change_comment,parent_id,space_id,
 # user_id,created_at,updated_at
+#
+# wiki_format:
+# 1 => text
+# 3 => html
 wiki_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/wiki-pages.csv"
 @wiki_assembla = []
 csv_to_array(wiki_assembla_csv).each_with_index do |wiki, index|
-  wiki['contents'] = fix_html(wiki['contents'])
+  if wiki['wiki_format'].to_i == 1
+    wiki['contents'] = fix_text(wiki['contents'])
+  else
+    wiki['contents'] = fix_html(wiki['contents'])
+  end
   @wiki_assembla << wiki
 end
 
