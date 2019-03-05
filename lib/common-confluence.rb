@@ -62,19 +62,26 @@ HEADERS = {
 # by the confluence api, e.g. avoid the dreaded 'error parsing xhtml' error.
 def fix_html(html)
   result = html.
-      gsub(%r{<br\s*>}, '<br/>').
-      gsub('<wbr>', '&lt;wbr&gt;').
       gsub('<package>', '&lt;package&gt;').
-      gsub('<strike>', '<del>').
+      # replace all strike-tags with del-tags.
+      gsub('<strike[^>]*?>', '<del>').
       gsub('</strike>', '</del>').
-      gsub(%r{</?span([^>]*?)>}, '').
-      gsub(%r{</?colgroup>}, '').
-      gsub(%r{(<h[1-6](.*?))/>}, '\1>').
-      gsub(%r{(<(col|img)[^>]+)(?<!/)>}, '\1/>')
+      # remove all span-, font- or colgroup-tags
+      gsub(%r{</?(span|font|colgroup)([^>]*?)>}, '').
+      # strip down all h-tags
+      gsub(/(<h[1-6])(.*?)>/, '\1>').
+      # fix all unclosed col- and img-tags
+      gsub(%r{(<(col|img)[^>]+)(?<!/)>}, '\1/>').
+      # strip down all li tags
+      gsub(/<li[^>]*?>/, '<li>').
+      # strip down all br-tags and ensure closed.
+      gsub(/<wbr(.*?)>/, '<wbr/>').
+      gsub(/<br(.*?)>/, '<br/>')
   begin
     result = HtmlBeautifier.beautify(result)
   rescue RuntimeError => e
-    puts "HtmlBeautifier error (#{e})"
+    puts "HtmlBeautifier error (#{e}) => SKIP"
   end
+
   result
 end

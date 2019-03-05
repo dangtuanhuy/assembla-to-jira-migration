@@ -84,12 +84,17 @@ end
 def confluence_create_page(key, title, prefix, body, parent_id, counter, total)
   result = nil
   error = nil
+  error_message = nil
   content = "#{prefix}#{body}"
   retries = 0
-  while result.nil? && retries < 2
+  while result.nil? && retries < 3
     if retries == 1
-      content = "#{prefix}<p>Error parsing XHTML</p>"
+      macro = "<ac:structured-macro ac:name=\"code\" ac:schema-version=\"1\" ac:macro-id=\"5920cc53-cd45-4ee4-8012-5c987c6e0c75\"><ac:plain-text-body><![CDATA[#{body}]]></ac:plain-text-body></ac:structured-macro>"
+      content = "#{prefix}<p>#{CGI.escapeHTML(error_message)}</p>#{macro}"
+    elsif retries == 2
+      content = "#{prefix}<p>#{error_message}</p>"
     end
+
     payload = {
         "type": 'page',
         "title": title,
@@ -117,18 +122,22 @@ def confluence_create_page(key, title, prefix, body, parent_id, counter, total)
       if e.response
         error = JSON.parse(e.response)
         if error['message'].start_with?('Error parsing xhtml')
-          msg = retries.zero? ? '(RETRY) ' : ''
-          puts "#{pct} POST url='#{url}' title='#{title}' => NOK #{msg}error='#{error['message']}'"
+          msg = retries < 2 ? "[RETRY ##{retries + 1}] " : ''
+          error_message = error['message']
+          puts "#{pct} POST url='#{url}' title='#{title}' => NOK #{msg}error='#{error_message}'"
           retries += 1
         else
           puts "#{pct} POST url='#{url}' title='#{title}' => NOK error='#{error}'"
+          retries = 100
         end
       else
         puts "#{pct} POST url='#{url}' title='#{title}' => NOK error='#{e}'"
+        retries = 100
       end
     rescue => e
       error = e.response ? JSON.parse(e.response) : e
       puts "#{pct} POST url='#{url}' title='#{title}' => NOK error='#{error}'"
+      retries = 100
     end
   end
 

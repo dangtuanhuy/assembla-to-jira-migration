@@ -2,15 +2,20 @@ require 'htmlbeautifier'
 
 def fix_html(html)
   result = html.
-      gsub('<br>', '<br/>').
       gsub('<wbr>', '&lt;wbr&gt;').
       gsub('<package>', '&lt;package&gt;').
+      # replace all strike-tags with del-tags.
       gsub('<strike>', '<del>').
       gsub('</strike>', '</del>').
-      gsub(%r{</?span([^>]*?)>}, '').
-      gsub(%r{</?colgroup>}, '').
-      gsub(%r{(<h[1-6](.*?))/>}, '\1>').
-      gsub(%r{(<(col|img)[^>]+)(?<!/)>}, '\1/>')
+      # remove all span-, font- or colgroup-tags
+      gsub(%r{</?(span|font|colgroup)([^>]*?)>}, '').
+      # strip down all h-tags
+      gsub(/(<h[1-6])(.*?)>/, '\1>').
+      # fix all unclosed col- and img-tags
+      gsub(%r{(<(col|img)[^>]+)(?<!/)>}, '\1/>').
+      # strip down all li tags
+      gsub(/<li[^>]*?>/, '<li>').
+      gsub(/<br ?>/, '<br/>')
   begin
     result = HtmlBeautifier.beautify(result)
   rescue RuntimeError => e
