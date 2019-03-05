@@ -58,16 +58,14 @@ end
 
 # id,page_name,contents,status,version,position,wiki_format,change_comment,parent_id,space_id,
 # user_id,created_at,updated_at
-# wiki_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/wiki-pages.csv"
-# @wiki_assembla = []
-# csv_to_array(wiki_assembla_csv).each_with_index do |wiki, index|
-#   wiki['contents'] = fix_html(wiki['contents'])
-#   @wiki_assembla << wiki
-# end
-#
-# write_csv_file(WIKI_FIXED_CSV, @wiki_assembla)
-#
-# exit
+wiki_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/wiki-pages.csv"
+@wiki_assembla = []
+csv_to_array(wiki_assembla_csv).each_with_index do |wiki, index|
+  wiki['contents'] = fix_html(wiki['contents'])
+  @wiki_assembla << wiki
+end
+
+write_csv_file(WIKI_FIXED_CSV, @wiki_assembla)
 
 @wiki_assembla = csv_to_array(WIKI_FIXED_CSV)
 
