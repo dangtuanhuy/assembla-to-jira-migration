@@ -110,27 +110,34 @@ Now that all of the Assembla data is available, we can now take this and import 
 8. Import users
 9. Download ticket attachments
 10. Create custom fields
-11. Import tickets
-12. Resolve/update ticket links
-13. Import ticket comments
-14. Import ticket attachments & update links
-15. Update ticket status (resolutions)
-16. Update ticket associations
-17. Update ticket watchers
-18. Resolve/update ticket and comment external links
-19. Move stories to epics
-20. Rank tickets (cloud only)
+11. Import custom fields
+12. Import tickets
+13. Resolve/update ticket links
+14. Import ticket comments
+15. Import ticket attachments
+16. UPdate attachment links
+17. Update ticket status (resolutions)
+18. Update ticket associations
+19. Update ticket watchers
+20. Resolve/update ticket and comment external links
+21. Move stories to epics
+22. Move stories to epics which could not be exported
+23. Rank tickets (cloud only)
 
 ### Scrum/Kanban board
 
 Using the Agile extension, create the sprints and populate the scrum/kanban board.
 
-21. Create sprints
-22. Update board
+24. Create sprints
+25. Update board
+
+### Wiki to Confluence migration
+
+26. Migrate Assembla wiki to Confluence space.
 
 ### Cleanup
 
-23. Manual cleanup actions
+27. Manual cleanup actions
 
 Congratulations, you did it!
 
