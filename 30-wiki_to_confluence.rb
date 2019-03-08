@@ -20,9 +20,7 @@ tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @jira_tickets_csv = csv_to_array(tickets_jira_csv).select { |ticket| ticket['result'] == 'OK' }
 
 tickets_jira_csv_org = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv.org"
-if File.exist?(tickets_jira_csv_org)
-  @jira_tickets_csv_org = csv_to_array(tickets_jira_csv_org).select { |ticket| ticket['result'] == 'OK' }
-end
+@jira_tickets_csv_org = csv_to_array(tickets_jira_csv_org).select { |ticket| ticket['result'] == 'OK' } if File.exist?(tickets_jira_csv_org)
 
 # Check for duplicates just in case.
 @assembla_nr_to_jira_key = {}
@@ -64,12 +62,8 @@ end
 # 3 => html
 wiki_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/wiki-pages.csv"
 @wiki_assembla = []
-csv_to_array(wiki_assembla_csv).each_with_index do |wiki, index|
-  if wiki['wiki_format'].to_i == 1
-    wiki['contents'] = fix_text(wiki['contents'])
-  else
-    wiki['contents'] = fix_html(wiki['contents'])
-  end
+csv_to_array(wiki_assembla_csv).each do |wiki|
+  wiki['contents'] = wiki['wiki_format'].to_i == 3 ? fix_html(wiki['contents']) : fix_text(wiki['contents'])
   @wiki_assembla << wiki
 end
 
@@ -91,7 +85,8 @@ users_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/users.csv"
 @pages = {}
 @created_pages = []
 
-puts "\n--- Wiki pages: #{@wiki_assembla.length} ---\n"
+@total_wiki_pages = @wiki_assembla.length
+puts "\n--- Wiki pages: #{@total_wiki_pages} ---\n"
 
 @wiki_assembla.each do |wiki|
   id = wiki['id']
@@ -129,6 +124,12 @@ def show_page_tree(id, offset)
   children_ids.each_with_index { |child_id, index| show_page_tree(child_id, offset.dup << index) }
 end
 
+def create_all_pages(id, offset)
+  # puts "create_all_pages() id='#{id}' offset=[#{offset.join(',')}]"
+  create_page_item(id, offset)
+  @pages[id][:children_ids].each_with_index { |child_id, index| create_all_pages(child_id, offset.dup << index) }
+end
+
 def get_all_links
   links = []
   # wiki_assembla => id,page_name,contents,status,version,position,wiki_format,change_comment,parent_id,space_id,
@@ -146,12 +147,12 @@ def get_all_links
 
       counter += 1
       links << {
-          id: id,
-          counter: counter,
-          title: title,
-          tag: 'image',
-          value: value,
-          text: ''
+        id: id,
+        counter: counter,
+        title: title,
+        tag: 'image',
+        value: value,
+        text: ''
       }
     end
 
@@ -159,17 +160,16 @@ def get_all_links
     content.scan(%r{<a(?:.*?)? href="(.*?)"(?:.*?)?>(.*?)</a>}).each do |m|
       value = m[0]
       next unless %r{^https?://www\.assembla.com/}.match?(value)
-      # https://www.assembla.com/spaces/green-in-a-box/wiki/Energy_Star_and_Utility_Sync_Feature_Requests
-      #
+
       text = m[1]
       counter += 1
       links << {
-          id: id,
-          counter: counter,
-          title: title,
-          tag: 'anchor',
-          value: value.sub('', ''),
-          text: text
+        id: id,
+        counter: counter,
+        title: title,
+        tag: 'anchor',
+        value: value.sub('', ''),
+        text: text
       }
     end
   end
@@ -177,9 +177,7 @@ def get_all_links
   puts "\nLinks #{links.length}"
   unless links.length.zero?
     links.each do |l|
-      if l[:counter] == 1
-        puts "* #{l[:filename]} '#{l[:title]}'"
-      end
+      puts "* #{l[:filename]} '#{l[:title]}'" if l[:counter] == 1
       puts "  #{l[:counter].to_s.rjust(2, '0')} #{l[:tag]} #{l[:value]}"
     end
   end
@@ -187,66 +185,82 @@ def get_all_links
   write_csv_file(LINKS_CSV, links)
 end
 
-def create_page_item(id, offset, counter, total)
+def create_page_item(id, offset)
   pages_id = @pages[id]
   page = pages_id[:page]
   page_id = page['id']
   title = page['page_name']
   body = page['contents']
   title_stripped = title.tr('_', ' ')
-  parent_id = page['parent_id']
+
   user_id = page['user_id']
   user = @users_assembla.detect { |u| u['id'] == user_id }
   author = user ? user['name'] : ''
   created_at = format_created_at(page['created_at'])
+
+  parent_id = page['parent_id']
+  if parent_id
+    # Convert Assembla parent_id to Confluence created page id
+    parent = @created_pages.detect { |p| p[:page_id] == parent_id }
+    if parent
+      parent_id = parent[:id]
+    else
+      puts "Cannot find parent of child id='#{page_id}' title='#{title}' parent_id='#{parent_id}' => set parent_id to nil"
+      parent_id = nil
+    end
+  end
 
   url = "#{WIKI}/#{title}"
 
   # Prepend the body with a link to the original Wiki page
   prefix = "<p>Created by #{author} at #{created_at}</p><p><a href=\"#{url}\" target=\"_blank\">Assembla Wiki</a></p><hr/>"
 
-  # TODO: Remove the following line (only for testing)
-  parent_id = nil
-  puts 'Parent_id = NULL!'
-  result, error = confluence_create_page(@space['key'], title_stripped, prefix, body, parent_id, counter, total)
+  result, error = confluence_create_page(@space['key'],
+                                         title_stripped,
+                                         prefix,
+                                         body,
+                                         parent_id,
+                                         @created_pages.length + 1,
+                                         @total_wiki_pages)
   @created_pages <<
-      if result
-        {
-            result: error ? 'NOK' : 'OK',
-            page_id: page_id,
-            id: result['id'],
-            offset: offset.join('-'),
-            title: title_stripped,
-            author: author,
-            created_at: created_at,
-            body: error ? body : '',
-            error: error ? error : ''
-        }
-      else
-        {
-            result: 'NOK',
-            page_id: page_id,
-            id: 0,
-            offset: offset.join('-'),
-            title: title_stripped,
-            author: author,
-            created_at: created_at,
-            body: body,
-            error: error
-        }
-      end
+    if result
+      {
+        result: error ? 'NOK' : 'OK',
+        page_id: page_id,
+        id: result['id'],
+        offset: offset.join('-'),
+        title: title_stripped,
+        author: author,
+        created_at: created_at,
+        body: error ? body : '',
+        error: error || ''
+      }
+    else
+      {
+        result: 'NOK',
+        page_id: page_id,
+        id: 0,
+        offset: offset.join('-'),
+        title: title_stripped,
+        author: author,
+        created_at: created_at,
+        body: body,
+        error: error
+      }
+    end
 end
 
 def download_item(dir, url, counter, total)
   filepath = "#{dir}/#{File.basename(url)}"
   pct = percentage(counter, total)
   return if File.exist?(filepath)
+
   begin
     content = RestClient::Request.execute(method: :get, url: url)
     IO.binwrite(filepath, content)
     puts "#{pct} GET url=#{url} => OK"
-  rescue => error
-    puts "#{pct} GET url=#{url} => NOK error='#{error.inspect}'"
+  rescue RestClient::RuntimeError => e
+    puts "#{pct} GET url=#{url} => NOK error='#{e.inspect}'"
   end
 end
 
@@ -295,19 +309,16 @@ puts "\n--- Links: #{@all_links.length} ---"
 # --- Images --- #
 @all_images = @all_links.select { |link| link['tag'] == 'image' }
 puts "\n--- Images: #{@all_images.length} ---"
-# verify_proc = proc do |value|
-#   File.exist?("#{IMAGES}/#{File.basename(value)}")
-# end
-show_all_items(@all_images, lambda { |value| File.exist?("#{IMAGES}/#{File.basename(value)}") })
+show_all_items(@all_images, ->(value) { File.exist?("#{IMAGES}/#{File.basename(value)}") })
 
-# --- Anchors (documents + wikis) #
+# --- Anchors (documents + wiki pages) #
 @all_anchors = csv_to_array(LINKS_CSV).select { |link| link['tag'] == 'anchor' }.sort_by { |wiki| wiki['value'] }
 puts "\n--- Anchors: #{@all_anchors.length} ---"
 
 # --- Documents --- #
 @all_documents = @all_anchors.select { |anchor| anchor['value'].match(%r{/documents/}) }
 puts "\n--- Documents: #{@all_documents.length} ---"
-show_all_items(@all_documents, lambda { |value| File.exist?("#{DOCUMENTS}/#{File.basename(value)}") })
+show_all_items(@all_documents, ->(value) { File.exist?("#{DOCUMENTS}/#{File.basename(value)}") })
 
 # --- Tickets --- #
 @all_tickets = @all_anchors.select { |anchor| anchor['value'].match(%r{/tickets/}) }
@@ -360,27 +371,15 @@ count = 0
   count += 1
 end
 
-total_parent_pages = @parent_pages.length
-puts "\n--- Create parent pages: #{total_parent_pages} ---\n"
-
-# TODO:
-# count = 0
-# total = @parent_pages.length
-# @parent_pages.each do |id, _|
-#   create_page_item(id, [count], count + 1, total_parent_pages)
-#   count += 1
-# end
+puts "\n--- Create pages: #{@total_wiki_pages} ---\n"
 
 count = 0
-total_pages = @pages.length
-@pages.each do |id, _|
-  create_page_item(id, [count], count + 1, total_pages)
+@parent_pages.each do |id, _|
+  create_all_pages(id, [count])
   count += 1
 end
 
-write_csv_file(CREATED_PAGES_CSV, @created_pages)
-
-@nok = csv_to_array(CREATED_PAGES_CSV).select { |page| page['result'] == 'NOK' }
-write_csv_file(CREATED_PAGES_NOK_CSV, @nok)
+# Record created pages NOK, if any
+write_csv_file(CREATED_PAGES_NOK_CSV, csv_to_array(CREATED_PAGES_CSV).select { |page| page['result'] == 'NOK' })
 
 puts "\nDone\n"
