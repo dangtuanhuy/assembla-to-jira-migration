@@ -60,14 +60,16 @@ end
 # wiki_format:
 # 1 => text
 # 3 => html
-wiki_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/wiki-pages.csv"
-@wiki_assembla = []
-csv_to_array(wiki_assembla_csv).each do |wiki|
-  wiki['contents'] = wiki['wiki_format'].to_i == 3 ? fix_html(wiki['contents']) : fix_text(wiki['contents'])
-  @wiki_assembla << wiki
-end
 
-write_csv_file(WIKI_FIXED_CSV, @wiki_assembla)
+# TODO: uncomment the following lines when ready
+# wiki_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/wiki-pages.csv"
+# @wiki_assembla = []
+# csv_to_array(wiki_assembla_csv).each do |wiki|
+#   wiki['contents'] = wiki['wiki_format'].to_i == 3 ? fix_html(wiki['contents']) : fix_text(wiki['contents'])
+#   @wiki_assembla << wiki
+# end
+#
+# write_csv_file(WIKI_FIXED_CSV, @wiki_assembla)
 
 @wiki_assembla = csv_to_array(WIKI_FIXED_CSV)
 
@@ -338,8 +340,9 @@ verify_proc = lambda do |value|
 end
 show_all_items(@all_wikis, verify_proc)
 
-download_all_images
-download_all_documents
+# TODO: uncomment the following two lines when ready
+# download_all_images
+# download_all_documents
 
 @pages.each do |id, value|
   parent_id = value[:page]['parent_id']
@@ -371,15 +374,47 @@ count = 0
   count += 1
 end
 
-puts "\n--- Create pages: #{@total_wiki_pages} ---\n"
+# TODO: uncomment the following lines when ready
+# puts "\n--- Create pages: #{@total_wiki_pages} ---\n"
+#
+# count = 0
+# @parent_pages.each do |id, _|
+#   create_all_pages(id, [count])
+#   count += 1
+# end
+#
+# # Record created pages NOK, if any
+# write_csv_file(CREATED_PAGES_NOK_CSV, csv_to_array(CREATED_PAGES_CSV).select { |page| page['result'] == 'NOK' })
+#
+#
 
-count = 0
-@parent_pages.each do |id, _|
-  create_all_pages(id, [count])
-  count += 1
+# result,page_id,id,offset,title,author,created_at,body,error
+@created_pages= csv_to_array(CREATED_PAGES_CSV)
+
+# upload_all_images
+# id,counter,title,tag,value,text
+@all_images.each_with_index do |image, index|
+  value = image['value']
+  basename = File.basename(value)
+  filepath = "#{IMAGES}/#{basename}"
+  if File.exist?(filepath)
+    wiki_id = image['id']
+    confluence_page = @created_pages.detect { |page| page['page_id'] == wiki_id}
+    if confluence_page
+      confluence_id = confluence_page['id']
+      puts "wiki_id=#{wiki_id} image=#{basename} confluence_id=#{confluence_id} => OK"
+    else
+      puts "Cannot find wiki_page_id='#{wiki_page_id}'"
+    end
+    else
+    puts "Cannot find image='#{filepath}'"
+  end
 end
 
-# Record created pages NOK, if any
-write_csv_file(CREATED_PAGES_NOK_CSV, csv_to_array(CREATED_PAGES_CSV).select { |page| page['result'] == 'NOK' })
+#
+# convert_all_image_links
+# convert_all_ticket_links
+#
+# update_all_pages
 
 puts "\nDone\n"
