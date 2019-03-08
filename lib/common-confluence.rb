@@ -53,9 +53,9 @@ puts
 
 # Authentication header
 HEADERS = {
-    'Authorization': "Basic #{Base64.encode64("#{EMAIL}:#{PASSWORD}")}",
-    'Content-Type': 'application/json; charset=utf-8',
-    'Accept': 'application/json'
+  'Authorization': "Basic #{Base64.encode64("#{EMAIL}:#{PASSWORD}")}",
+  'Content-Type': 'application/json; charset=utf-8',
+  'Accept': 'application/json'
 }.freeze
 
 def fix_text(text)
@@ -66,21 +66,21 @@ end
 # by the confluence api, e.g. avoid the dreaded 'error parsing xhtml' error.
 def fix_html(html)
   result = html.
-      gsub('<package>', '&lt;package&gt;').
-      # replace all strike-tags with del-tags.
-      gsub(/<strike[^>]*?>/, '<del>').
-      gsub('</strike>', '</del>').
-      # remove all span-, font- or colgroup-tags
-      gsub(%r{</?(span|font|colgroup)([^>]*?)>}, '').
-      # strip down all h-tags
-      gsub(/(<h[1-6])(.*?)>/, '\1>').
-      # fix all unclosed col- and img-tags
-      gsub(%r{(<(col|img)[^>]+)(?<!/)>}, '\1/>').
-      # strip down all li tags
-      gsub(/<li[^>]*?>/, '<li>').
-      # strip down all br-tags and ensure closed.
-      gsub(/<wbr(.*?)>/, '<wbr/>').
-      gsub(/<br(.*?)>/, '<br/>')
+    gsub('<package>', '&lt;package&gt;').
+    # replace all strike-tags with del-tags.
+    gsub(/<strike[^>]*?>/, '<del>').
+    gsub('</strike>', '</del>').
+    # remove all span-, font- or colgroup-tags
+    gsub(%r{</?(span|font|colgroup)([^>]*?)>}, '').
+    # strip down all h-tags
+    gsub(/(<h[1-6])(.*?)>/, '\1>').
+    # fix all unclosed col- and img-tags
+    gsub(%r{(<(col|img)[^>]+)(?<!/)>}, '\1/>').
+    # strip down all li tags
+    gsub(/<li[^>]*?>/, '<li>').
+    # strip down all br-tags and ensure closed.
+    gsub(/<wbr(.*?)>/, '<wbr/>').
+    gsub(/<br(.*?)>/, '<br/>')
   begin
     result = HtmlBeautifier.beautify(result)
   rescue RuntimeError => e

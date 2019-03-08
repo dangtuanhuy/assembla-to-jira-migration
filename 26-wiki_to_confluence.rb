@@ -383,50 +383,101 @@ end
 #   count += 1
 # end
 #
+# puts
+#
+# write_csv_file(CREATED_PAGES_CSV, @created_pages)
+#
 # # Record created pages NOK, if any
-# write_csv_file(CREATED_PAGES_NOK_CSV, csv_to_array(CREATED_PAGES_CSV).select { |page| page['result'] == 'NOK' })
+# write_csv_file(CREATED_PAGES_NOK_CSV, @created_pages.select { |page| page[:result] == 'NOK' })
 #
+# result,page_id,id,offset,title,author,created_at,body,error
+# @created_pages = csv_to_array(CREATED_PAGES_CSV)
+
+# TODO: uncomment the following two lines when ready
+# total_images = @all_images.length
+# puts "\n--- Upload images: #{total_images} ---\n"
 #
+# # id,counter,title,tag,value,text
+# @uploaded_images = []
+# @all_images.each_with_index do |image, index|
+#   link_url = image['value']
+#   basename = File.basename(link_url)
+#   filepath = "#{IMAGES}/#{basename}"
+#   if File.exist?(filepath)
+#     wiki_image_id = image['id']
+#     confluence_page = @created_pages.detect { |page| page['page_id'] == wiki_image_id }
+#     if confluence_page
+#       confluence_page_id = confluence_page['id']
+#       result = confluence_create_attachment(confluence_page_id, filepath, index + 1, total_images)
+#       @uploaded_images << {
+#         result: result ? 'OK' : 'NOK',
+#         confluence_image_id: result ? result['results'][0]['id'] : nil,
+#         wiki_image_id: wiki_image_id,
+#         confluence_page_id: confluence_page_id,
+#         link_url: link_url
+#       }
+#     else
+#       puts "Cannot find confluence_id for wiki_id='#{wiki_image_id}'"
+#     end
+#   else
+#     puts "Cannot find image='#{filepath}'"
+#   end
+# end
+#
+# puts
+# write_csv_file(UPLOADED_IMAGES_CSV, @uploaded_images)
+
+# convert_all_image_links
+# result,confluence_image_id,wiki_image_id,confluence_page_id,link_url
+@confluence_page_ids = {}
+@uploaded_images = csv_to_array(UPLOADED_IMAGES_CSV)
+@uploaded_images.each do |image|
+  confluence_page_id = image['confluence_page_id']
+  @confluence_page_ids[confluence_page_id] = [] unless @confluence_page_ids[confluence_page_id]
+  confluence_image_id = image['confluence_image_id']
+  link_url = image['link_url']
+  @confluence_page_ids[confluence_page_id] << { confluence_image_id: confluence_image_id, link_url: link_url }
+end
 
 # result,page_id,id,offset,title,author,created_at,body,error
-@created_pages = csv_to_array(CREATED_PAGES_CSV)
+@c_to_w_page_id = {}
+csv_to_array(CREATED_PAGES_CSV).each do |page|
+  @c_to_w_page_id[page['id']] = page['page_id']
+end
 
-total_images = @all_images.length
-puts "\n--- Upload images: #{total_images} ---\n"
+@confluence_page_ids.each do |c_page_id, images|
+  w_page_id = @c_to_w_page_id[c_page_id]
+  if w_page_id.nil?
+    puts "confluence_page_id='#{c_page_id}' => NOK (unknown w_page_id)"
+    next
+  end
 
-# id,counter,title,tag,value,text
-@uploaded_images = []
-@all_images.each_with_index do |image, index|
-  link_url = image['value']
-  basename = File.basename(link_url)
-  filepath = "#{IMAGES}/#{basename}"
-  if File.exist?(filepath)
-    wiki_image_id = image['id']
-    confluence_page = @created_pages.detect { |page| page['page_id'] == wiki_image_id }
-    if confluence_page
-      confluence_page_id = confluence_page['id']
-      result = confluence_create_attachment(confluence_page_id, filepath, index + 1, total_images)
-      @uploaded_images << {
-        result: result ? 'OK' : 'NOK',
-        confluence_image_id: result ? result['id'] : nil,
-        wiki_image_id: wiki_image_id,
-        confluence_page_id: confluence_page_id,
-        link_url: link_url
-      }
+  # id,page_name,contents,status,version,position,wiki_format,change_comment,parent_id,space_id,user_id,created_at,updated_at
+  w_page = csv_to_array(WIKI_FIXED_CSV).detect { |page| page['id'] == w_page_id }
+  if w_page.nil?
+    puts "confluence_page_id='#{c_page_id}' wiki_page_id='#{w_page_id}' => NOK (unknown w_page)"
+    next
+  end
+
+  puts "confluence_page_id='#{c_page_id}' wiki_page_id='#{w_page_id}' => OK"
+
+  content = confluence_get_content(c_page_id)
+
+  images.each do |image|
+    confluence_image_id = image[:confluence_image_id]
+    link_url = image[:link_url]
+    if content.include?(link_url)
+      content.sub!(link_url, 'XXXXXX')
+      res = 'OK'
     else
-      puts "Cannot find confluence_id for wiki_id='#{wiki_image_id}'"
+      res = 'NOK'
     end
-  else
-    puts "Cannot find image='#{filepath}'"
+    puts "* confluence_image_id='#{confluence_image_id}' link_url='#{link_url}' => #{res}"
   end
 end
 
-write_csv_file(UPLOADED_IMAGES_CSV, @uploaded_images)
-
-#
-# convert_all_image_links
 # convert_all_ticket_links
 #
-# update_all_pages
+# update_all_document_links
 
 puts "\nDone\n"

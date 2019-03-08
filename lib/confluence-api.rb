@@ -32,20 +32,21 @@ else
   exit
 end
 
-
 # GET wiki/rest/api/content/{id}?expand=body.storage
+# content = result['body']['storage']['value']
 def confluence_get_content(id)
-  result = nil
+  content = nil
   url = "#{API}/content/#{id}?expand=body.storage"
   begin
     response = RestClient::Request.execute(method: :get, url: url, headers: HEADERS)
     result = JSON.parse(response.body)
+    content = result['body']['storage']['value']
     puts "GET url='#{url}' => OK"
   rescue => e
     error = e.response ? JSON.parse(e.response) : e
     puts "GET url='#{url}' => NOK error='#{error}'"
   end
-  result
+  content
 end
 
 # GET wiki/rest/api/content/{id}?expand=version
@@ -96,15 +97,15 @@ def confluence_create_page(key, title, prefix, body, parent_id, counter, total)
     end
 
     payload = {
-        "type": 'page',
-        "title": title,
-        "space": { "key": key },
-        "body": {
-            "storage": {
-                "value": content,
-                "representation": 'storage'
-            }
+      "type": 'page',
+      "title": title,
+      "space": { "key": key },
+      "body": {
+        "storage": {
+          "value": content,
+          "representation": 'storage'
         }
+      }
     }
 
     if parent_id
@@ -161,20 +162,21 @@ def confluence_update_page(key, id, title, content, counter, total)
   result = nil
   result_get_version = confluence_get_version(id)
   return nil unless result_get_version
+
   version = result_get_version['version']['number']
 
   pct = percentage(counter, total)
   payload = {
-      "title": title,
-      "type": 'page',
-      "space": { "key": key },
-      "version": { "number": version + 1 },
-      "body": {
-          "storage": {
-              "value": content,
-              "representation": 'storage'
-          }
+    "title": title,
+    "type": 'page',
+    "space": { "key": key },
+    "version": { "number": version + 1 },
+    "body": {
+      "storage": {
+        "value": content,
+        "representation": 'storage'
       }
+    }
   }
   payload = payload.to_json
   url = "#{API}/content/#{id}"
@@ -198,16 +200,16 @@ def confluence_create_attachment(page_id, filepath, counter, total)
   result = nil
   pct = percentage(counter, total)
   payload =
-      {
-          multipart: true,
-          file: File.new(filepath, 'rb')
-      }
+    {
+      multipart: true,
+      file: File.new(filepath, 'rb')
+    }
   url = "#{API}/content/#{page_id}/child/attachment"
   headers = {
-      'Authorization': "Basic #{Base64.encode64("#{EMAIL}:#{PASSWORD}")}",
-      'Content-Type': 'application/json; charset=utf-8',
-      'Accept': 'application/json',
-      'X-Atlassian-Token': 'nocheck'
+    'Authorization': "Basic #{Base64.encode64("#{EMAIL}:#{PASSWORD}")}",
+    'Content-Type': 'application/json; charset=utf-8',
+    'Accept': 'application/json',
+    'X-Atlassian-Token': 'nocheck'
   }
   begin
     response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
