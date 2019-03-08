@@ -2,46 +2,70 @@
 
 load './lib/common.rb'
 
+load './lib/users-jira.rb'
+
 # IMPORTANT: Make sure that the `JIRA_API_ADMIN_USER` exists, is activated and belongs to both
 # the `site-admins` and the `jira-administrators` groups.
+#
+@jira_administrators = jira_get_group('jira-administrators')
+admin_administrator = @jira_administrators.detect{|user| user['emailAddress'] == JIRA_API_ADMIN_EMAIL}
 
-admin = jira_get_user(JIRA_API_ADMIN_USER, true)
-goodbye("JIRA_API_ADMIN_USER='#{JIRA_API_ADMIN_USER}' does NOT exist. Please create.") unless admin
-goodbye("JIRA_API_ADMIN_USER='#{JIRA_API_ADMIN_USER}' is NOT active. Please activate.") unless admin['active']
-puts "\nFound JIRA_API_ADMIN_USER='#{JIRA_API_ADMIN_USER}'"
+@jira_site_admins = jira_get_group('site-admins')
+admin_site_admin = @jira_site_admins.detect{|user| user['emailAddress'] == JIRA_API_ADMIN_EMAIL}
 
-groups = JIRA_SERVER_TYPE == 'hosted' ? %w(jira-administrators) : %w(jira-administrators site-admins)
-groups.each do |group|
-  next if admin['groups']['items'].detect { |item| item['name'] == group}
-  goodbye("Admin user MUST belong to the following groups: [#{groups.join(',')}]. Please add user '#{admin['name']}' to these groups.")
-end
+goodbye("Admin user with JIRA_API_ADMIN_EMAIL='#{JIRA_API_ADMIN_EMAIL}' does NOT exist or does NOT belong to both the 'jira-administrators' and the 'site-admins' groups.") unless admin_site_admin && admin_administrator
 
-@jira_users = []
+goodbye("Admin user with JIRA_API_ADMIN_EMAIL='#{JIRA_API_ADMIN_EMAIL}' is NOT active, please activate user.") unless admin_site_admin['active'] && admin_administrator['active']
 
-users_csv = "#{OUTPUT_DIR_ASSEMBLA}/users.csv"
-jira_users_csv = "#{OUTPUT_DIR_JIRA}/jira-users.csv"
+# @user_assembla => count,id,login,name,picture,email,organization,phone,...
+users_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
+@users_assembla = csv_to_array(users_assembla_csv)
+goodbye('Cannot get users!') unless @users_assembla.length.nonzero?
 
-users = csv_to_array(users_csv)
+# name,key,accountId,emailAddress,displayName,active
+@existing_users_jira = jira_get_users
 
-users.each do |user|
-  count = user['count']
-  username = user['login']
-  username.sub!(/@.*$/, '')
-  next if count == '0'
-  u1 = jira_get_user(username, false)
+@users_jira = []
+# assembla => jira
+# --------    ----
+# id       => assemblaId
+# login    => name (optional trailing '@.*$' removed)
+# email    => emailAddress
+# name     => displayName
+
+@users_assembla.each do |user|
+  if user['count'].to_i.zero?
+    puts "username='#{username}' zero count => SKIP"
+    next
+  end
+  username = user['login'].sub(/@.*$/, '')
+  email = user['email']
+  if email.nil? || email.length.zero?
+    puts "username='#{username}' does NOT have a valid email => SKIP"
+    next
+  end
+  # u1 = jira_get_user_by_username(@existing_users_jira, username)
+  u1 = jira_get_user_by_email(@existing_users_jira, email)
   if u1
     # User exists so add to list
-    @jira_users << u1
+    puts "username='#{username}', email='#{email}' already exists => SKIP"
+    @users_jira << { 'assemblaId': user['id'], 'assemblaLogin': user['login'] }.merge(u1)
   else
     # User does not exist so create if possible and add to list
+    puts "username='#{username}', email='#{email}' not found => CREATE"
     u2 = jira_create_user(user)
-    @jira_users << u2 if u2
+    if u2
+      @users_jira << { 'assemblaId': user['id'], 'assemblaLogin': user['login'] }.merge(u2)
+    end
   end
 end
 
-write_csv_file(jira_users_csv, @jira_users)
+# jira-users.csv => assemblaid,assemblaloginkey,accountid,name,emailaddress,displayname,active
+jira_users_csv = "#{OUTPUT_DIR_JIRA}/jira-users.csv"
+write_csv_file(jira_users_csv, @users_jira)
 
-inactive_users = @jira_users.reject { |user| user['active'] }
+# Notify inactive users.
+inactive_users = @users_jira.reject { |user| user['active'] }
 
 unless inactive_users.length.zero?
   puts "\nIMPORTANT: The following users MUST to be activated before you continue: #{inactive_users.map { |user| user['name'] }.join(', ')}"

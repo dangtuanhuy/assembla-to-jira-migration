@@ -2,6 +2,23 @@
 
 load './lib/common.rb'
 
+@startAt = 1
+@maxResults = -1
+
+unless ARGV[0].nil?
+  goodbye("Invalid ARGV1='#{ARGV[0]}', must be 'startAt=number' where number > 0") unless /^startAt=([1-9]\d*)$/.match?(ARGV[0])
+  m = /^startAt=([1-9]\d*)$/.match(ARGV[0])
+  @startAt = m[1].to_i
+  unless ARGV[1].nil?
+    goodbye("Invalid ARGV2='#{ARGV[1]}', must be 'maxResults=number' where number > 0") unless /^maxResults=([1-9]\d*)$/.match?(ARGV[1])
+    m = /^maxResults=([1-9]\d*)$/.match(ARGV[1])
+    @maxResults = m[1].to_i
+  end
+end
+
+puts "\nstartAt: #{@startAt}"
+puts "maxResults: #{@maxResults}" if @maxResults != -1
+
 # Assembla attachments
 users_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/users.csv"
 tickets_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/tickets.csv"
@@ -47,37 +64,53 @@ end
 
 @authorization = "Basic #{Base64.encode64(JIRA_API_ADMIN_USER + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])}"
 
+attachments_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-attachments-download.csv"
+
+@completed = 0
+@skip_remaining = true
+puts "SKIP to ticket #{@startAt}" if @startAt > 1
 @attachments_assembla.each_with_index do |attachment, index|
+  counter = index + 1
+  next if @startAt > counter
+  if @maxResults != -1 && @completed > @maxResults - 1
+    puts "SKIP remaining #{@attachments_assembla.length - (@startAt - 1 + @maxResults)} tickets" if @skip_remaining
+    @skip_remaining = false
+    next
+  end
+
+  @completed = @completed + 1
+
   url = attachment['url']
   id = attachment['id']
   created_at = attachment['created_at']
   created_by = @assembla_id_to_login[attachment['created_by']]
   assembla_ticket_id = attachment['ticket_id']
   content_type = attachment['content_type']
-  counter = index + 1
 
   percentage = ((counter * 100) / @attachments_total).round.to_s.rjust(3)
 
   filename = attachment['filename'] || 'nil.txt'
+
   filepath = "#{OUTPUT_DIR_JIRA_ATTACHMENTS}/#{filename}"
   nr = 0
   while File.exist?(filepath)
     nr += 1
-    goodbye("Failed for filepath='#{filepath}', nr=#{nr}") if nr > 999
+    goodbye("Failed for filepath='#{filepath}', nr=#{nr}") if nr > 9999
     extname = File.extname(filepath)
     basename = File.basename(filepath, extname)
     dirname = File.dirname(filepath)
-    basename.sub!(/\.\d{3}$/, '')
-    filename = "#{basename}.#{nr.to_s.rjust(3, '0')}#{extname}"
+    basename = basename.sub(/\.\d{4}$/, '')
+    filename = "#{basename}.#{nr.to_s.rjust(4, '0')}#{extname}"
     filepath = "#{dirname}/#{filename}"
   end
-  
-  puts "Downloading: #{url}"
+
+  puts "Downloading: #{url} => #{filename}"
   puts "#{percentage}% [#{counter}|#{@attachments_total}] #{created_at} #{assembla_ticket_id} '#{filename}' (#{content_type})"
   begin
     content = RestClient::Request.execute(method: :get, url: url, headers: ASSEMBLA_HEADERS)
     IO.binwrite(filepath, content)
-    @jira_attachments << {
+    # @jira_attachments << {
+    attachment = {
       created_at: created_at,
       created_by: created_by,
       assembla_attachment_id: id,
@@ -85,11 +118,14 @@ end
       filename: filename,
       content_type: content_type
     }
+    write_csv_file_append(attachments_jira_csv, [attachment], counter == 1)
   rescue RestClient::ExceptionWithResponse => e
     rest_client_exception(e, 'GET', url)
   end
 end
 
 puts "Total all: #{@attachments_total}"
-attachments_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-attachments-download.csv"
-write_csv_file(attachments_jira_csv, @jira_attachments)
+puts attachments_jira_csv
+
+# attachments_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-attachments-download.csv"
+# write_csv_file(attachments_jira_csv, @jira_attachments)

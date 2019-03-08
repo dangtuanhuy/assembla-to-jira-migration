@@ -13,4 +13,6 @@ gem 'dotenv'
 gem 'rest-client'
 gem 'i18n'
 
+gem 'htmlbeautifier'
+
 gem 'rubocop', require: false

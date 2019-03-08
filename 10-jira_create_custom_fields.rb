@@ -1,62 +1,7 @@
 # frozen_string_literal: true
 
 load './lib/common.rb'
-
-def jira_get_screen_tabs(project_key, screen_id)
-  url = "#{URL_JIRA_SCREENS}/#{screen_id}/tabs?projectKey=#{project_key}"
-  result = nil
-  begin
-    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
-    result = JSON.parse(response.body)
-  rescue => e
-    puts "GET #{url} => NOK (#{e.message})"
-  end
-  result
-end
-
-def jira_get_screen_available_fields(project_key, screen_id)
-  url = "#{URL_JIRA_SCREENS}/#{screen_id}/availableFields?projectKey=#{project_key}"
-  result = nil
-  begin
-    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
-    result = JSON.parse(response.body)
-  rescue => e
-    puts "GET #{url} => NOK (#{e.message})"
-  end
-  result
-end
-
-def jira_get_screen_tab_fields(project_key, screen_id, tab_id)
-  url = "#{URL_JIRA_SCREENS}/#{screen_id}/tabs/#{tab_id}/fields?projectKey=#{project_key}"
-  result = nil
-  begin
-    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
-    result = JSON.parse(response.body)
-  rescue => e
-    puts "GET #{url} => NOK (#{e.message})"
-  end
-  result
-end
-
-# POST /rest/api/2/screens/{screenId}/tabs/{tabId}/fields
-# {
-#     "fieldId": "summary"
-# }
-def jira_add_field(screen_id, tab_id, field_id)
-  url = "#{URL_JIRA_SCREENS}/#{screen_id}/tabs/#{tab_id}/fields"
-  payload = {
-    fieldId: field_id
-  }.to_json
-  result = nil
-  begin
-    response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN)
-    result = JSON.parse(response.body)
-    puts "POST #{url} => OK"
-  rescue => e
-    puts "POST #{url} => NOK (#{e.message})"
-  end
-  result
-end
+load './lib/screens.rb'
 
 # --- JIRA fields --- #
 
@@ -82,7 +27,6 @@ goodbye("Invalid ARGV2='#{ARGV[1]}', must be a number") unless /^\d+$/.match?(AR
 @customfield_id_to_name = {}
 
 @all_custom_field_names = CUSTOM_FIELD_NAMES.dup
-@all_custom_field_names << "Assembla-#{ASSEMBLA_CUSTOM_FIELD}" unless ASSEMBLA_CUSTOM_FIELD.empty?
 
 missing_fields = []
 @all_custom_field_names.each do |name|
@@ -100,7 +44,9 @@ unless missing_fields.length.zero?
   nok = []
   missing_fields.each do |name|
     description = "Custom field '#{name}'"
-    custom_field = jira_create_custom_field(name, description, 'com.atlassian.jira.plugin.system.customfieldtypes:readonlyfield')
+    custom_field = jira_create_custom_field(name, description,
+                                            'com.atlassian.jira.plugin.system.customfieldtypes:readonlyfield',
+                                            'com.atlassian.jira.plugin.system.customfieldtypes:textsearcher')
     unless custom_field
       nok << name
     end

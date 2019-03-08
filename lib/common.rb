@@ -8,6 +8,13 @@ require 'rest-client'
 require 'base64'
 require 'date'
 
+version = File.read(".ruby-version")
+unless RUBY_VERSION == version
+  puts "Ruby version = '#{version}' is required, run the following command first:"
+  puts "rvm use #{version}"
+  exit
+end
+
 @debug = ENV['DEBUG'] == 'true'
 
 ASSEMBLA_SPACE = ENV['ASSEMBLA_SPACE'].freeze
@@ -21,7 +28,7 @@ ASSEMBLA_SKIP_ASSOCIATIONS = (ENV['ASSEMBLA_SKIP_ASSOCIATIONS'] || '').split(','
 
 ASSEMBLA_TYPES_EXTRA = (ENV['ASSEMBLA_TYPES_EXTRA'] || '').split(',')
 
-ASSEMBLA_CUSTOM_FIELD = ENV['ASSEMBLA_CUSTOM_FIELD'] || ''
+# ASSEMBLA_CUSTOM_FIELD = ENV['ASSEMBLA_CUSTOM_FIELD'] || ''
 
 ASSEMBLA_TICKET_REPORT = ENV['ASSEMBLA_TICKET_REPORT'] || 0
 
@@ -39,6 +46,7 @@ JIRA_API_DEFAULT_EMAIL = (ENV['JIRA_API_DEFAULT_EMAIL'] || 'example.org').gsub(/
 JIRA_API_UNKNOWN_USER = ENV['JIRA_API_UNKNOWN_USER'].freeze
 
 JIRA_API_IMAGES_THUMBNAIL = (ENV['JIRA_API_IMAGES_THUMBNAIL'] || 'description:false,comments:true').freeze
+JIRA_API_USER_GROUPS = (ENV['JIRA_API_USER_GROUPS'] || 'jira-administrators,jira-core-users,site-admins,jira-software-users').freeze
 
 JIRA_API_PROJECT_NAME = ENV['JIRA_API_PROJECT_NAME'].freeze
 
@@ -71,8 +79,9 @@ JIRA_API_STATUSES = ENV['JIRA_API_STATUSES']
 
 MAX_RETRY = 3
 
-# By default we skip empty comments
+# By default we skip empty (body = "" or nil) and commit comments (contains 'Commit: [[r:...]]' text)
 JIRA_API_SKIP_EMPTY_COMMENTS = ENV['JIRA_API_SKIP_EMPTY_COMMENTS'] || true
+JIRA_API_SKIP_COMMIT_COMMENTS = ENV['JIRA_API_SKIP_COMMIT_COMMENTS'] || true
 
 def csv_to_array(pathname)
   csv = CSV::parse(File.open(pathname) {|f| f.read})
@@ -93,6 +102,27 @@ def write_csv_file(filename, results)
       end
     end
     csv << fields
+    results.each do |result|
+      row = []
+      fields.each do |field|
+        row.push(result[field])
+      end
+      csv << row
+    end
+  end
+end
+
+def write_csv_file_append(filename, results, header)
+  CSV.open(filename, 'a') do |csv|
+    # Scan whole file to collect all possible field names so that
+    # the list of columns is complete.
+    fields = []
+    results.each do |result|
+      result.keys.each do |field|
+        fields << field unless fields.include?(field)
+      end
+    end
+    csv << fields if header
     results.each do |result|
       row = []
       fields.each do |field|
@@ -183,7 +213,7 @@ def jira_get_server_type
   serverinfo = csv_to_array(serverinfo_csv)[0]
   server_type = serverinfo['deploymenttype'].downcase
   server_type = 'hosted' if server_type == 'server'
-  puts "Server type = #{server_type}"
+  puts "\nServer type = #{server_type}"
   server_type
 end
 
@@ -377,7 +407,7 @@ def create_csv_files(space, items)
   items.each do |item|
     create_csv_file(space, item)
   end
-  puts "#{space['name']} #{items.map {|item| item[:name]}.to_json} => done!"
+  puts "#{space['name']} #{items.map {|item| item[:name]}.to_json} => DONE"
 end
 
 def create_csv_file(space, item)
@@ -398,6 +428,7 @@ def get_output_dirname(space, dir = nil)
   dirname
 end
 
+# TODO: not used so remove.
 def jira_check_unknown_user(b)
   puts "\nUnknown user:" if b
   if JIRA_API_UNKNOWN_USER && JIRA_API_UNKNOWN_USER.length
@@ -596,6 +627,25 @@ def jira_get_issue_comment(issue_id, comment_id)
   result
 end
 
+def jira_get_issue_comments(issue_id)
+  result = nil
+  url = "#{URL_JIRA_ISSUES}/#{issue_id}/comment"
+  begin
+    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
+    result = JSON.parse(response.body)
+    if result
+      result.delete_if {|k, _| k =~ /self|expand/i}
+      result = result['comments']
+      puts "GET #{url} => OK"
+    end
+  rescue RestClient::ExceptionWithResponse => e
+    rest_client_exception(e, 'GET', url)
+  rescue => e
+    puts "GET #{url} => NOK (#{e.message})"
+  end
+  result
+end
+
 def jira_get_issue_types
   result = nil
   begin
@@ -631,23 +681,24 @@ def jira_get_issuelink_types
   result
 end
 
-def jira_create_custom_field(name, description, type)
+def jira_create_custom_field(name, description, type, searcherKey)
   result = nil
   payload = {
       name: name,
       description: description,
-      type: type
+      type: type,
+      searcherKey: searcherKey
   }.to_json
   begin
     response = RestClient::Request.execute(method: :post, url: URL_JIRA_FIELDS, payload: payload, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
-    puts "POST #{URL_JIRA_FIELDS} name='#{name}' => OK (#{result['id']})"
+    puts "POST #{URL_JIRA_FIELDS} name='#{name}' description='#{description}' type='#{type}' searcherKey='#{searcherKey}' => OK (#{result['id']})"
   rescue RestClient::ExceptionWithResponse => e
     error = JSON.parse(e.response)
-    message = error['errors'].map {|k, v| "#{k}: #{v}"}.join(' | ')
-    puts "POST #{URL_JIRA_FIELDS} name='#{name}' => NOK (#{message})"
+    message = error['errorMessages'].join(' | ')
+    puts "POST #{URL_JIRA_FIELDS} name='#{name}' description='#{description}' type='#{type}' searcherKey='#{searcherKey}' => NOK (#{message})"
   rescue => e
-    puts "POST #{URL_JIRA_FIELDS} name='#{name}' => NOK (#{e.message})"
+    puts "POST #{URL_JIRA_FIELDS} name='#{name}' description='#{description}' type='#{type}' searcherKey='#{searcherKey}' => NOK (#{e.message})"
   end
   result
 end
@@ -667,7 +718,7 @@ end
 def jira_create_user(user)
   result = nil
   url = "#{JIRA_API_HOST}/user"
-  username = user['login']
+  username = user['login'].sub(/@.*$/, '')
   email = user['email']
   if email.nil? || email.empty?
     email = "#{username}@#{JIRA_API_DEFAULT_EMAIL}"
@@ -678,11 +729,10 @@ def jira_create_user(user)
       password: username,
       # TODO: Make the following configurable and not hard-coded.
       emailAddress: email,
-      displayName: displayName,
+      displayName: displayName
   }.to_json
   begin
     response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN, timeout: 30)
-    puts "#{response.body}"
     body = JSON.parse(response.body)
     body.delete_if {|k, _| k =~ /self|avatarurls|timezone|locale|groups|applicationroles|expand/i}
     puts "POST #{url} username='#{username}' => OK (#{body.to_json})"
@@ -692,10 +742,14 @@ def jira_create_user(user)
       puts "POST #{url} username='#{username}' => NOK (#{e}) please retry"
     end
     error = JSON.parse(e.response)
-    message = error['errors'].map {|k, v| "#{k}: #{v}"}.join(' | ')
+    if error['errorMessages']
+      message = error['errorMessages'].join(' | ')
+    else
+      message = error['errors'].map {|k, v| "#{k}: #{v}"}.join(' | ')
+    end
     puts "POST #{url} username='#{username}' => NOK (#{message})"
   rescue => e
-    puts "POST #{url} username='#{username}' => NOK (#{e.message})"
+    puts "POST #{url} username='#{username}' => NOK (#{e})"
   end
   result
 end
@@ -710,6 +764,25 @@ def jira_get_user(username, groups)
     body.delete_if {|k, _| k =~ /self|avatarurls|timezone|locale|applicationroles|expand/i}
     puts "GET #{url} => OK (#{body.to_json})"
     result = body
+  rescue => e
+    if e.class == RestClient::NotFound && JSON.parse(e.response)['errorMessages'][0] =~ /does not exist/
+      puts "GET #{url} => NOK (does not exist)"
+    else
+      goodbye("GET #{url} => NOK (#{e.message})")
+    end
+  end
+  result
+end
+
+def jira_get_group(group)
+  result = nil
+  url = "#{JIRA_API_HOST}/group/member?groupname=#{group}&startAt=0&maxResults=1000"
+  begin
+    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
+    body = JSON.parse(response.body)
+    result = body.values[5]
+    puts "GET #{url}  => OK (#{result.length})"
+    result
   rescue => e
     if e.class == RestClient::NotFound && JSON.parse(e.response)['errorMessages'][0] =~ /does not exist/
       puts "GET #{url} => NOK (does not exist)"
@@ -770,6 +843,10 @@ end
 
 def markdown_name(name, logins)
   if name[0] == '@'
+    # Regex isn't perfect, catch email addresses and names that
+    # begin with a digit, just in case.
+    return name unless /@[^.]+\.[^>]+>/.match(name).nil?
+    return name unless /\d/.match(name[1]).nil?
     name = name[1..-1].sub(/@.*$/, '').strip
   elsif name[0..6] == '[[user:'
     name = name[7..-3].gsub(/\|.*$/, '').strip
@@ -777,9 +854,9 @@ def markdown_name(name, logins)
     goodbye("markdown_name(name='#{name}') has unknown format")
   end
   return @cache_markdown_names[name] if @cache_markdown_names[name]
-  ok = logins[name]
-  result = ok ? "[~#{name}]" : "@#{name}"
-  warning "Reformat markdown name='#{name}' => #{ok ? '' : 'N'}OK" unless ok
+  jira_name = logins[name]
+  result = jira_name ? "[~#{jira_name}]" : "@#{name}"
+  warning "Reformat markdown name='#{name}' => NOT FOUND" unless jira_name
   @cache_markdown_names[name] = result
 end
 
@@ -797,7 +874,7 @@ def markdown_ticket_link(ticket, tickets, strikethru = false)
     if strikethru
       result = "-#{result}-"
     end
-    warning "Reformat markdown ticket='#{ticket_number}' => Cannot find"
+    warning "Reformat markdown ticket='#{ticket_number}' => NOT FOUND"
   end
   @cache_markdown_ticket_links[ticket_number] = result
 end
@@ -817,7 +894,7 @@ def markdown_image(image, images, content_type)
     result = "!#{name}#{@content_types_thumbnail[content_type] ? '|thumbnail' : ''}!"
   else
     result = image
-    warning "Reformat markdown image='#{image}', id='#{id}', text='#{text}' => NOK"
+    warning "Reformat markdown image='#{image}', id='#{id}', text='#{text}' => NOT FOUND"
   end
   result
 end
@@ -844,7 +921,7 @@ def reformat_markdown(content, opts = {})
         gsub(/\[\[url:(.*?)\]\]/i, '[\1|\1]').
         gsub(/<code>(.*?)<\/code>/i, '{{\1}}').
         gsub(/@([^@]*)@( |$)/, '{{\1}}\2').
-        gsub(/@([a-z.-_]*)/i) {|name| markdown_name(name, logins)}.
+        gsub(/@([a-z._-]*)/i) {|name| markdown_name(name, logins)}.
         gsub(/\[\[user:(.*?)(\|(.*?))?\]\]/i) {|name| markdown_name(name, logins)}.
         gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) {|image| markdown_image(image, images, content_type)}
   end
@@ -866,6 +943,8 @@ def rest_client_exception(e, method, url, payload = {})
       end
     elsif err['status-code']
       message = "Status code: #{err['status-code']}"
+    else
+      message = e.to_s
     end
   rescue
     message = e.to_s

@@ -4,6 +4,21 @@
 
 load './lib/common.rb'
 
+### --- Jira tickets --- ###
+
+# jira-tickets.csv: result,retries,message,jira_ticket_id,jira_ticket_key,project_id,summary,issue_type_id,
+# issue_type_name, assignee_name,reporter_name,priority_name,status_name,labels,description,assembla_ticket_id,
+# assembla_ticket_number,custom_field,milestone_name,story_rank
+tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
+@tickets_jira = csv_to_array(tickets_jira_csv).select { |ticket| ticket['result'] == 'OK' }
+
+puts "\nTotal Jira tickets: #{@tickets_jira.length}"
+
+@is_ticket_id = {}
+@tickets_jira.each do |ticket|
+  @is_ticket_id[ticket['assembla_ticket_id']] = true
+end
+
 ### --- Assembla tickets --- ###
 
 # tickets.csv: id,number,summary,description,priority,completed_date,component_id,created_on,permission_type,
@@ -39,6 +54,9 @@ else
   puts "\nTotal Assembla tickets: #{@tickets_assembla.length}"
 end
 
+@tickets_assembla.select! { |item| @is_ticket_id[item['id']] }
+puts "Total Assembla tickets after: #{@tickets_assembla.length}"
+
 # hierarchy_type => epic
 @tickets_assembla_epic_h = @tickets_assembla.select do |epic_h|
   hierarchy_type_epic(epic_h['hierarchy_type']) &&
@@ -51,16 +69,6 @@ end
 
 puts "\nTotal Assembla epics: #{@tickets_assembla_epic_h.length} + #{@tickets_assembla_epic_s.length} = " \
      "#{@tickets_assembla_epic_h.length + @tickets_assembla_epic_s.length}"
-
-### --- Jira tickets --- ###
-
-# jira-tickets.csv: result,retries,message,jira_ticket_id,jira_ticket_key,project_id,summary,issue_type_id,
-# issue_type_name, assignee_name,reporter_name,priority_name,status_name,labels,description,assembla_ticket_id,
-# assembla_ticket_number,custom_field,milestone_name,story_rank
-tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
-@tickets_jira = csv_to_array(tickets_jira_csv)
-
-puts "\nTotal Jira tickets: #{@tickets_jira.length}"
 
 @tickets_jira_epics = @tickets_jira.select do |jira_ticket|
   @tickets_assembla_epic_h.detect { |assembla_ticket| assembla_ticket['id'].to_i == jira_ticket['assembla_ticket_id'].to_i } ||
@@ -183,6 +191,7 @@ def jira_move_stories_to_epic(epic, story_keys, counter, total)
   }.to_json
   list = story_keys.map { |story| story.sub(/^[^\-]+\-/, '').to_i }
   begin
+    # For a dry-run, comment out the following line
     RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN)
     percentage = ((counter * 100) / total).round.to_s.rjust(3)
     puts "#{percentage}% [#{counter}|#{total}] POST #{url} #{list} => OK"
@@ -236,16 +245,21 @@ if @local_epics_not_found.length.positive?
   puts
 end
 
+@total_updated = 0
+@updated_epics_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-update-epics.csv"
+
 puts "\nMoving stories to epics"
 @total_epics_with_stories = @epics_with_stories.length
 @updated_epics = []
 @epics_with_stories.each_with_index do |epic, index|
+  counter = index + 1
   stories_nonzero = epic[:stories].select { |story| story[:story_id].positive? }
   story_keys = stories_nonzero.map { |story| story[:story_key] }
   while story_keys.length.positive?
     story_keys_slice = story_keys.slice!(0, 50)
-    result = jira_move_stories_to_epic(epic, story_keys_slice, index + 1, @total_epics_with_stories)
-    @updated_epics << {
+    result = jira_move_stories_to_epic(epic, story_keys_slice, counter, @total_epics_with_stories)
+    @total_updated += 1 if result[:result]
+    updated_epic = {
       result: result[:result] ? 'OK' : 'NOK',
       epic_nr: epic[:epic_nr],
       jira_key: epic[:jira_key],
@@ -253,9 +267,10 @@ puts "\nMoving stories to epics"
       story_keys: "[#{story_keys_slice.join(',')}]",
       error: result[:error]
     }
+    # For a dry-run, comment out the following line
+    write_csv_file_append(@updated_epics_jira_csv, [updated_epic], counter == 1)
   end
 end
 
-puts "Total updated epics: #{@updated_epics.length}"
-updated_epics_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-update-epics.csv"
-write_csv_file(updated_epics_jira_csv, @updated_epics)
+puts "Total updated: #{@total_updated}"
+puts @updated_epics_jira_csv

@@ -57,9 +57,6 @@ else
   items = [ ITEMS.find { |item| item[:name] == ARGV[0] } ]
 end
 
-puts items.inspect
-exit
-
 write_csv_file("#{OUTPUT_DIR_ASSEMBLA}/spaces.csv", assembla_get_spaces)
 
-export_assembla_items(ITEMS)
+export_assembla_items(items)
