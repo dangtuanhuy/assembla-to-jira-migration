@@ -432,10 +432,12 @@ end
 # confluence_page_id to wiki_page_id converter
 @c_to_w_page_id = {}
 @w_to_c_page_id = {}
+@c_page_id_to_title = {}
 # result,page_id,id,offset,title,author,created_at,body,error
 csv_to_array(CREATED_PAGES_CSV).each do |page|
   @c_to_w_page_id[page['id']] = page['page_id']
   @w_to_c_page_id[page['page_id']] = page['id']
+  @c_page_id_to_title[page['id']] = page['title']
 end
 
 # Convert all <img src="link_url" ... > to
@@ -470,15 +472,19 @@ def update_all_image_links
 
     puts "confluence_page_id='#{c_page_id}' wiki_page_id='#{w_page_id}' => OK"
 
-    content = confluence_get_content(c_page_id, counter, total)
+    @content = confluence_get_content(c_page_id, counter, total)
+    next unless @content
 
+    title = @c_page_id_to_title[c_page_id]
     images.each do |image|
       confluence_image_id = image[:confluence_image_id]
       link_url = image[:link_url]
 
-      if content.match?(/<img(.*)? src="#{link_url}"([^>]*?)>/)
+      if @content.match?(/<img(.*)? src="#{link_url}"([^>]*?)>/)
         basename = File.basename(link_url)
-        content.sub!(/<img(.*)? src="#{link_url}"([^>]*?)>/, "<ac:image ac:height=\"250\"><ri:attachment ri:filename=\"#{basename}\" ri:version-at-save=\"1\" /></ac:image>")
+        @content.sub!(/<img(.*)? src="#{link_url}"([^>]*?)>/, "<ac:image ac:height=\"250\"><ri:attachment ri:filename=\"#{basename}\" ri:version-at-save=\"1\" /></ac:image>")
+        # result = confluence_update_page(@space['key'], c_page_id, title, @content, counter, total)
+        # res = result ? 'OK' : 'NOK'
         res = 'OK'
       else
         res = 'NOK'
@@ -489,6 +495,9 @@ def update_all_image_links
   end
 end
 
+# Convert all <a href="https://www.assembla.com/spaces/(space)/wiki/(title1)</a> to
+# <ac:link><ri:page ri:content-title="(title2)" ri:version-at-save="1" /></ac:link>
+# where title2 = title1.tr('_', ' ')
 def update_all_page_links
   confluence_page_ids = {}
   # id,counter,title,tag,value,text
@@ -496,34 +505,43 @@ def update_all_page_links
     wiki_page_id = wiki['id']
     confluence_page_id = @w_to_c_page_id[wiki_page_id]
     confluence_page_ids[confluence_page_id] = [] unless confluence_page_ids[confluence_page_id]
-    link_url = image['link_url']
-    wiki_page_id = File.basename(link_url)
-    external_page_id = w_to_c_page_id[wiki_page_id]
-    confluence_page_ids[confluence_page_id] << { external_page_id: external_page_id, link_url: link_url }
+    link_url = wiki['value']
+    title = File.basename(link_url).tr('_', ' ')
+    confluence_page_ids[confluence_page_id] << { title: title, link_url: link_url }
   end
 
   # Convert all <a href="...">(title)</a> to
   # <ac:link><ri:page ri:content-title="(title)" ri:version-at-save="1" /></ac:link>
   confluence_page_ids.each do |c_page_id, pages|
-
+# <a ... href="(value)" ...>(title)</a>
+# content.scan(%r{<a(?:.*?)? href="(.*?)"(?:.*?)?>(.*?)</a>}).each do |m|
+    puts "confluence_page_id='#{c_page_id}' title='#{@c_page_id_to_title[c_page_id]}' => OK"
+    pages.each do |page|
+      puts "* title='#{page[:title]}' link_url='#{page[:link_url]}' => OK"
+    end
   end
 end
 
+puts
+
 #
 # upload_all_pages
+# puts "\nDone\n"
 
 #
 # upload_all_images
+# puts "\nDone\n"
 
 #
-update_all_image_links
+# update_all_image_links
 
-# update_all_page_links
+update_all_page_links
+puts "\nDone\n"
 
 #
 # update_all_document_links
+# puts "\nDone\n"
 
 #
 # convert_all_ticket_links
-
-puts "\nDone\n"
+# puts "\nDone\n"
