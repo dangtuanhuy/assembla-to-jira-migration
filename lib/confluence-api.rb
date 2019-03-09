@@ -34,17 +34,18 @@ end
 
 # GET wiki/rest/api/content/{id}?expand=body.storage
 # content = result['body']['storage']['value']
-def confluence_get_content(id)
+def confluence_get_content(id, counter, total)
   content = nil
   url = "#{API}/content/#{id}?expand=body.storage"
+  pct = percentage(counter, total)
   begin
     response = RestClient::Request.execute(method: :get, url: url, headers: HEADERS)
     result = JSON.parse(response.body)
     content = result['body']['storage']['value']
-    puts "GET url='#{url}' => OK"
+    puts "#{pct} GET url='#{url}' => OK"
   rescue => e
     error = e.response ? JSON.parse(e.response) : e
-    puts "GET url='#{url}' => NOK error='#{error}'"
+    puts "#{pct} GET url='#{url}' => NOK error='#{error}'"
   end
   content
 end
