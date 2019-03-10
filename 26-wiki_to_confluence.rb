@@ -145,7 +145,8 @@ def get_all_links
     # <img ... src="(value)" ... />
     content.scan(%r{<img(?:.*?)? src="(.*?)"(?:.*?)?/?>}).each do |m|
       value = m[0]
-      next unless %r{^https?://www\.assembla.com/}.match?(value)
+      # next unless %r{^https?://www\.assembla.com/}.match?(value)
+      next unless %r{/#{WIKI_NAME}/}.match?(value)
 
       counter += 1
       links << {
@@ -161,7 +162,8 @@ def get_all_links
     # <a ... href="(value)" ...>(title)</a>
     content.scan(%r{<a(?:.*?)? href="(.*?)"(?:.*?)?>(.*?)</a>}).each do |m|
       value = m[0]
-      next unless %r{^https?://www\.assembla.com/}.match?(value)
+      # next unless %r{^https?://www\.assembla.com/}.match?(value)
+      next unless %r{/#{WIKI_NAME}/}.match?(value)
 
       text = m[1]
       counter += 1
@@ -170,7 +172,7 @@ def get_all_links
         counter: counter,
         title: title,
         tag: 'anchor',
-        value: value.sub('', ''),
+        value: value,
         text: text
       }
     end
@@ -193,6 +195,9 @@ def create_page_item(id, offset)
   page_id = page['id']
   title = page['page_name']
   body = page['contents']
+  if body.nil? || body.strip.length.zero?
+    body = '<p><ac:structured-macro ac:name="pagetree" ac:schema-version="1" ac:macro-id="caf6610e-f939-4ef9-b748-2121668fcf46"><ac:parameter ac:name="expandCollapseAll">true</ac:parameter><ac:parameter ac:name="root"><ac:link><ri:page ri:content-title="@self" /></ac:link></ac:parameter><ac:parameter ac:name="searchBox">true</ac:parameter></ac:structured-macro></p>'
+  end
   title_stripped = title.tr('_', ' ')
 
   user_id = page['user_id']
@@ -252,16 +257,51 @@ def create_page_item(id, offset)
     end
 end
 
-def download_item(dir, url, counter, total)
-  filepath = "#{dir}/#{File.basename(url)}"
+# GET /v1/spaces/:space_id/documents/:id
+def get_document_by_id(space_id, id, counter, total)
+  document = nil
+
   pct = percentage(counter, total)
+  begin
+    url = "#{ASSEMBLA_API_HOST}/spaces/#{space_id}/documents/#{id}"
+    result = RestClient::Request.execute(method: :get, url: url, headers: ASSEMBLA_HEADERS)
+    document = JSON.parse(result) if result
+    puts "#{pct} GET url=#{url} => OK"
+  rescue => e
+    puts "#{pct} GET url=#{url} => NOK error='#{e.inspect}'"
+  end
+  document
+end
+
+@wiki_documents = []
+
+# GET /v1/spaces/[space_id]/documents/[id]/download
+def download_item(dir, url_link, counter, total)
+  # https://www.assembla.com/spaces/green-in-a-box/documents/bZtyZ4DWqr54hcacwqjQXA/download/bZtyZ4DWqr54hcacwqjQXA
+  # https://www.assembla.com//spaces/green-in-a-box/documents/a_NRMANumr5OWBdmr6bg7m/download?filename=blob
+  url_link.sub!(%r{/download\?.*$}, '')
+  id = File.basename(url_link)
+
+  filepath = "#{dir}/#{id}"
+
+  space_id = @assembla_space['id']
+  document = get_document_by_id(space_id, id, counter, total)
+  if document
+    @wiki_documents << document
+  else
+    puts "Cannot get document with id='#{id}' => RETURN"
+    return
+  end
+
   return if File.exist?(filepath)
 
+  pct = percentage(counter, total)
+  url = document['url']
   begin
-    content = RestClient::Request.execute(method: :get, url: url)
+    content = RestClient::Request.execute(method: :get, url: url, headers: ASSEMBLA_HEADERS)
     IO.binwrite(filepath, content)
     puts "#{pct} GET url=#{url} => OK"
-  rescue RestClient::RuntimeError => e
+  rescue => e
     puts "#{pct} GET url=#{url} => NOK error='#{e.inspect}'"
   end
 end
@@ -277,11 +317,10 @@ end
 
 def download_all_documents
   total = @all_documents.length
-  puts "\nDownloading #{total} images"
+  puts "\nDownloading #{total} documents"
   @all_documents.each_with_index do |document, index|
     download_item(DOCUMENTS, document['value'], index + 1, total)
   end
-  puts "\nDone!\n"
 end
 
 def show_all_items(items, verify_proc)
@@ -305,11 +344,15 @@ end
 
 # --- Links --- #
 # id,counter,title,tag,value,text
+# TODO
+# get_all_links
 @all_links = csv_to_array(LINKS_CSV)
 puts "\n--- Links: #{@all_links.length} ---"
 
 # --- Images --- #
 @all_images = @all_links.select { |link| link['tag'] == 'image' }
+# TODO
+# download_all_images
 puts "\n--- Images: #{@all_images.length} ---"
 show_all_items(@all_images, ->(value) { File.exist?("#{IMAGES}/#{File.basename(value)}") })
 
@@ -319,8 +362,13 @@ puts "\n--- Anchors: #{@all_anchors.length} ---"
 
 # --- Documents --- #
 @all_documents = @all_anchors.select { |anchor| anchor['value'].match(%r{/documents/}) }
+# TODO
+# download_all_documents
 puts "\n--- Documents: #{@all_documents.length} ---"
 show_all_items(@all_documents, ->(value) { File.exist?("#{DOCUMENTS}/#{File.basename(value)}") })
+
+# TODO
+# write_csv_file(WIKI_DOCUMENTS_CSV, @wiki_documents)
 
 # --- Tickets --- #
 @all_tickets = @all_anchors.select { |anchor| anchor['value'].match(%r{/tickets/}) }
@@ -339,10 +387,6 @@ verify_proc = lambda do |value|
   @wiki_assembla.detect { |w| w['page_name'] == page_name }
 end
 show_all_items(@all_wikis, verify_proc)
-
-# TODO: uncomment the following two lines when ready
-# download_all_images
-# download_all_documents
 
 @pages.each do |id, value|
   parent_id = value[:page]['parent_id']
@@ -524,7 +568,7 @@ def update_all_page_links
       link_url = page[:link_url]
       if @content.match?(%r{<a(.*?)? href="#{link_url}"([^>]*?)>(.*?)</a>})
         @content.sub!(%r{<a(.*?)? href="#{link_url}"([^>]*?)>(.*?)</a>}, "<ac:link><ri:page ri:content-title=\"#{title}\" ri:version-at-save=\"1\" /></ac:link>")
-        # TODO: uncomment the following lines when ready
+        # TODO
         # result = confluence_update_page(@space['key'], c_page_id, title, @content, counter, total)
         # res = result ? 'OK' : 'NOK'
         res = 'OK'
@@ -536,27 +580,45 @@ def update_all_page_links
   end
 end
 
+def update_all_document_links
+  puts 'IMPORTANT: Update all document links manually'
+end
+
+def update_all_ticket_links
+  puts 'IMPORTANT: Update all ticket links manually'
+end
+
 puts
 
-#
+# TODO
 # upload_all_pages
 # puts "\nDone\n"
 
-#
+# TODO
+update_all_page_links
+# puts "\nDone\n"
+
+# TODO
 # upload_all_images
+# puts "\nDone\n"
+
+# TODO
+# upload_all_documents
 # puts "\nDone\n"
 
 #
 # update_all_image_links
-
-update_all_page_links
-
-puts "\nDone\n"
+# puts "\nDone\n"
 
 #
 # update_all_document_links
 # puts "\nDone\n"
 
 #
-# convert_all_ticket_links
+# "<ac:structured-macro ac:name=\"jira\" ac:schema-version=\"1\" ac:macro-id=\"ec9369db-0725-4108-a31b-e1ba56060a91\">
+#    <ac:parameter ac:name=\"server\">System JIRA</ac:parameter>
+#    <ac:parameter ac:name=\"serverId\">b5be0935-8b3a-3427-8428-594a69672b49</ac:parameter>
+#    <ac:parameter ac:name=\"key\">MP-10460</ac:parameter>
+#  </ac:structured-macro>"
+# update_all_ticket_links
 # puts "\nDone\n"

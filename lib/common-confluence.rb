@@ -23,6 +23,7 @@ DATA = ENV['DATA'] || 'data/confluence'
 IMAGES = ENV['IMAGES'] || 'data/confluence/images'
 DOCUMENTS = ENV['DOCUMENTS'] || 'data/confluence/documents'
 WIKI = ENV['ASSEMBLA_WIKI'] || throw('ASSEMBLA_WIKI must be defined')
+WIKI_NAME = ENV['ASSEMBLA_WIKI_NAME'] || throw('ASSEMBLA_WIKI_NAME must be defined')
 API = ENV['CONFLUENCE_API'] || throw('CONFLUENCE_API must be defined')
 SPACE = ENV['CONFLUENCE_SPACE'] || throw('CONFLUENCE_SPACE must be defined')
 EMAIL = ENV['CONFLUENCE_EMAIL'] || throw('CONFLUENCE_EMAIL must be defined')
@@ -35,6 +36,7 @@ CREATED_PAGES_CSV = "#{DATA}/created-pages.csv"
 CREATED_PAGES_NOK_CSV = "#{DATA}/created-pages-nok.csv"
 UPDATED_PAGES_CSV = "#{DATA}/updated-pages.csv"
 WIKI_FIXED_CSV = "#{DATA}/wiki-pages-fixed.csv"
+WIKI_DOCUMENTS_CSV = "#{DATA}/wiki-documents.csv"
 
 # Display environment
 puts
@@ -43,6 +45,7 @@ puts "DATA      : '#{DATA}'"
 puts "IMAGES    : '#{IMAGES}'"
 puts "DOCUMENTS : '#{DOCUMENTS}'"
 puts "WIKI      : '#{WIKI}'"
+puts "WIKI_NAME : '#{WIKI_NAME}'"
 puts "API       : '#{API}'"
 puts "SPACE     : '#{SPACE}'"
 puts "EMAIL     : '#{EMAIL}'"
@@ -88,4 +91,12 @@ def fix_html(html)
   end
 
   result
+end
+
+@assembla_space = get_space(ASSEMBLA_SPACE)
+if @assembla_space
+  puts "Found assembla space='#{ASSEMBLA_SPACE}' => OK"
+else
+  puts "Cannot find assembla space='#{ASSEMBLA_SPACE}' => OK"
+  exit
 end
