@@ -470,9 +470,9 @@ def update_all_image_links
       next
     end
 
-    puts "confluence_page_id='#{c_page_id}' wiki_page_id='#{w_page_id}' => OK"
-
     @content = confluence_get_content(c_page_id, counter, total)
+    puts "confluence_page_id='#{c_page_id}' wiki_page_id='#{w_page_id}' => #{@content ? 'OK' : 'NOK'}"
+    counter += 1
     next unless @content
 
     title = @c_page_id_to_title[c_page_id]
@@ -483,6 +483,7 @@ def update_all_image_links
       if @content.match?(/<img(.*)? src="#{link_url}"([^>]*?)>/)
         basename = File.basename(link_url)
         @content.sub!(/<img(.*)? src="#{link_url}"([^>]*?)>/, "<ac:image ac:height=\"250\"><ri:attachment ri:filename=\"#{basename}\" ri:version-at-save=\"1\" /></ac:image>")
+        # TODO: uncomment the following lines when ready
         # result = confluence_update_page(@space['key'], c_page_id, title, @content, counter, total)
         # res = result ? 'OK' : 'NOK'
         res = 'OK'
@@ -491,7 +492,6 @@ def update_all_image_links
       end
       puts "* confluence_image_id='#{confluence_image_id}' link_url='#{link_url}' => #{res}"
     end
-    counter += 1
   end
 end
 
@@ -510,14 +510,28 @@ def update_all_page_links
     confluence_page_ids[confluence_page_id] << { title: title, link_url: link_url }
   end
 
-  # Convert all <a href="...">(title)</a> to
-  # <ac:link><ri:page ri:content-title="(title)" ri:version-at-save="1" /></ac:link>
+  total = confluence_page_ids.length
+  counter = 1
   confluence_page_ids.each do |c_page_id, pages|
-# <a ... href="(value)" ...>(title)</a>
-# content.scan(%r{<a(?:.*?)? href="(.*?)"(?:.*?)?>(.*?)</a>}).each do |m|
-    puts "confluence_page_id='#{c_page_id}' title='#{@c_page_id_to_title[c_page_id]}' => OK"
+
+    @content = confluence_get_content(c_page_id, counter, total)
+    puts "confluence_page_id='#{c_page_id}' title='#{@c_page_id_to_title[c_page_id]}' => #{@content ? 'OK' : 'NOK'}"
+    counter += 1
+    next unless @content
+
     pages.each do |page|
-      puts "* title='#{page[:title]}' link_url='#{page[:link_url]}' => OK"
+      title = page[:title]
+      link_url = page[:link_url]
+      if @content.match?(%r{<a(.*?)? href="#{link_url}"([^>]*?)>(.*?)</a>})
+        @content.sub!(%r{<a(.*?)? href="#{link_url}"([^>]*?)>(.*?)</a>}, "<ac:link><ri:page ri:content-title=\"#{title}\" ri:version-at-save=\"1\" /></ac:link>")
+        # TODO: uncomment the following lines when ready
+        # result = confluence_update_page(@space['key'], c_page_id, title, @content, counter, total)
+        # res = result ? 'OK' : 'NOK'
+        res = 'OK'
+      else
+        res = 'NOK'
+      end
+      puts "* title='#{title}' link_url='#{link_url}' => #{res}"
     end
   end
 end
@@ -536,6 +550,7 @@ puts
 # update_all_image_links
 
 update_all_page_links
+
 puts "\nDone\n"
 
 #
