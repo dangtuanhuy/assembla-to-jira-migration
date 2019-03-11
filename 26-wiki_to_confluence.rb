@@ -278,6 +278,8 @@ end
 def download_item(dir, url_link, counter, total)
   # https://www.assembla.com/spaces/green-in-a-box/documents/bZtyZ4DWqr54hcacwqjQXA/download/bZtyZ4DWqr54hcacwqjQXA
   # https://www.assembla.com//spaces/green-in-a-box/documents/a_NRMANumr5OWBdmr6bg7m/download?filename=blob
+
+  # Strip off the 'download?filename=blob' suffix if present in the link
   url_link.sub!(%r{/download\?.*$}, '')
   id = File.basename(url_link)
 
@@ -455,11 +457,33 @@ def upload_all_images
   @all_images.each_with_index do |image, index|
     link_url = image['value']
     basename = File.basename(link_url)
+    original_name = 'unknown'
+
+    wiki_documents = csv_to_array(WIKI_DOCUMENTS_CSV)
+    msg = "Upload image #{index + 1} basename='#{basename}'"
+
+    # If the '/download?filename=blob' is present in the link we need to match the filename to the
+    # original assembla document id which was hopefully saved in the wiki-document-csv log during
+    # downloading of all of the attachments.
     m = /download\?filename=(.*)$/.match(basename)
     if m
-      found = csv_to_array(WIKI_DOCUMENTS_CSV).detect { |image| image['name'] == m[1] }
-      basename = found['id'] if found
+      filename = m[1]
+      found = wiki_documents.detect { |image| image['name'] == filename }
+      if found
+        basename = found['id']
+        original_name = filename
+      else
+        puts "#{msg} cannot find image filename='#{filename}'"
+      end
+    else
+      found = wiki_documents.detect { |image| image['id'] == basename }
+      if found
+        original_name = found['name']
+      else
+        puts "#{msg} cannot find matching image name"
+      end
     end
+
     filepath = "#{IMAGES}/#{basename}"
     if File.exist?(filepath)
       wiki_image_id = image['id']
@@ -467,7 +491,7 @@ def upload_all_images
       if confluence_page
         confluence_page_id = confluence_page['id']
         c_page_title = @c_page_id_to_title[confluence_page_id]
-        puts "upload image #{index + 1} confluence_page_id=#{confluence_page_id} title='#{c_page_title}' basename='#{basename}'"
+        puts "#{msg} confluence_page_id=#{confluence_page_id} title='#{c_page_title}' original_name='#{original_name}'"
         # TODO
         # result = confluence_create_attachment(confluence_page_id, filepath, index + 1, total_images)
         # @uploaded_images << {
@@ -478,10 +502,10 @@ def upload_all_images
         #   link_url: link_url
         # }
       else
-        puts "Cannot find confluence_id for wiki_id='#{wiki_image_id}'"
+        puts "#{msg} cannot find confluence_id for wiki_id='#{wiki_image_id}'"
       end
     else
-      puts "Cannot find image='#{filepath}'"
+      puts "#{msg} cannot find image='#{filepath}'"
     end
   end
 
@@ -502,6 +526,8 @@ def update_all_image_links
     confluence_page_ids[confluence_page_id] << { confluence_image_id: confluence_image_id, link_url: link_url }
   end
 
+  wiki_fixed = csv_to_array(WIKI_FIXED_CSV)
+
   total = confluence_page_ids.length
   counter = 0
   confluence_page_ids.each do |c_page_id, images|
@@ -519,7 +545,7 @@ def update_all_image_links
     msg += " wiki_page_id='#{w_page_id}'"
 
     # id,page_name,contents,status,version,position,wiki_format,change_comment,parent_id,space_id,user_id,created_at,updated_at
-    w_page = csv_to_array(WIKI_FIXED_CSV).detect { |page| page['id'] == w_page_id }
+    w_page = wiki_fixed.detect { |page| page['id'] == w_page_id }
     if w_page.nil?
       puts "#{msg} => NOK (unknown w_page)"
       next
