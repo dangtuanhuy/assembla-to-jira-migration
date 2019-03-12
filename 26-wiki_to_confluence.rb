@@ -491,16 +491,15 @@ def upload_all_images
       if confluence_page
         confluence_page_id = confluence_page['id']
         c_page_title = @c_page_id_to_title[confluence_page_id]
-        puts "#{msg} confluence_page_id=#{confluence_page_id} title='#{c_page_title}' original_name='#{original_name}'"
-        # TODO
-        # result = confluence_create_attachment(confluence_page_id, filepath, index + 1, total_images)
-        # @uploaded_images << {
-        #   result: result ? 'OK' : 'NOK',
-        #   confluence_image_id: result ? result['results'][0]['id'] : nil,
-        #   wiki_image_id: wiki_image_id,
-        #   confluence_page_id: confluence_page_id,
-        #   link_url: link_url
-        # }
+        # puts "#{msg} confluence_page_id=#{confluence_page_id} title='#{c_page_title}' original_name='#{original_name}'"
+        result = confluence_create_attachment(confluence_page_id, filepath, index + 1, total_images)
+        @uploaded_images << {
+          result: result ? 'OK' : 'NOK',
+          confluence_image_id: result ? result['results'][0]['id'] : nil,
+          wiki_image_id: wiki_image_id,
+          confluence_page_id: confluence_page_id,
+          link_url: link_url
+        }
       else
         puts "#{msg} cannot find confluence_id for wiki_id='#{wiki_image_id}'"
       end
@@ -533,6 +532,9 @@ def update_all_image_links
   confluence_page_ids.each do |c_page_id, images|
     counter += 1
 
+    # TODO
+    # next unless c_page_id == '127730065'
+
     w_page_id = @c_to_w_page_id[c_page_id]
     c_page_title = @c_page_id_to_title[c_page_id]
     msg = "confluence_page_id='#{c_page_id}' title='#{c_page_title}'"
@@ -562,28 +564,42 @@ def update_all_image_links
 
     puts "#{msg} images=#{images.length} => OK"
 
-    puts '---'
-    puts @content
-    puts '---'
-
     images.each do |image|
       confluence_image_id = image[:confluence_image_id]
       link_url = image[:link_url]
+      link_url_escaped = link_url.gsub('?', '\?')
+      basename = File.basename(link_url)
 
-      if @content.match?(/<img(.*)? src="#{link_url}"([^>]*?)>/)
-        basename = File.basename(link_url)
-        @content.sub!(/<img(.*)? src="#{link_url}"([^>]*?)>/, "<ac:image ac:height=\"250\"><ri:attachment ri:filename=\"#{basename}\" ri:version-at-save=\"1\" /></ac:image>")
+      wiki_documents = csv_to_array(WIKI_DOCUMENTS_CSV)
+
+      # If the '/download?filename=blob' is present in the link we need to match the filename to the
+      # original assembla document id which was hopefully saved in the wiki-document-csv log during
+      # downloading of all of the attachments.
+      m = /download\?filename=(.*)$/.match(basename)
+      if m
+        filename = m[1]
+        found = wiki_documents.detect { |image| image['name'] == filename }
+        if found
+          basename = found['id']
+        else
+          puts "#{msg} cannot find image filename='#{filename}'"
+        end
+      end
+
+      # TODO
+      next unless m
+
+      # Important: escape any '?', e.g. 'download?filename=blog.png' => 'download\?filename=blog.png'
+      if @content.match?(/<img(.*)? src="#{link_url_escaped}"([^>]*?)>/)
+        @content.sub!(/<img(.*)? src="#{link_url_escaped}"([^>]*?)>/, "<ac:image ac:height=\"250\"><ri:attachment ri:filename=\"#{basename}\" ri:version-at-save=\"1\" /></ac:image>")
         res = 'OK'
       else
         res = 'NOK'
       end
-      puts "* confluence_image_id='#{confluence_image_id}' link_url='#{link_url}' => #{res}"
+      puts "* confluence_image_id='#{confluence_image_id}' link_url='#{link_url}' basename='#{basename}' => #{res}"
     end
     # TODO: uncomment the following lines when ready
-    # confluence_update_page(@space['key'], c_page_id, c_page_title, @content, counter, total)
-    puts '---'
-    puts @content
-    puts '---'
+    confluence_update_page(@space['key'], c_page_id, c_page_title, @content, counter, total)
   end
 end
 
@@ -609,8 +625,6 @@ def update_all_page_links
 
     c_page_title = @c_page_id_to_title[c_page_id]
     msg = "confluence_page_id='#{c_page_id}' title='#{c_page_title}'"
-    # TODO
-    next if c_page_title == 'Home'
 
     @content = confluence_get_content(c_page_id, counter, total)
     if @content.nil? || @content.strip.length.zero?
@@ -647,27 +661,33 @@ def update_all_ticket_links
 end
 
 # TODO
+# puts "\n--- Upload all pages ---\n"
 # upload_all_pages
 # puts "\nDone\n"
 
 # TODO
+# puts "\n--- Upload all page links ---\n"
 # update_all_page_links
 # puts "\nDone\n"
 
 # TODO
-upload_all_images
+# puts "\n--- Upload all images ---\n"
+# upload_all_images
+# puts "\nDone\n"
+
+# TODO
+puts "\n--- Update all image links ---\n"
+update_all_image_links
 puts "\nDone\n"
 exit
 
 # TODO
+# puts "\n--- Update all documents ---\n"
 # upload_all_documents
 # puts "\nDone\n"
 
-#
-# update_all_image_links
-# puts "\nDone\n"
-
-#
+# TODO
+# puts "\n--- Update all document links ---\n"
 # update_all_document_links
 # puts "\nDone\n"
 #
