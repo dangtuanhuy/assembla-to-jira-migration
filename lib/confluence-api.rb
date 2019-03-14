@@ -170,7 +170,7 @@ def confluence_update_page(key, id, title, content, counter, total)
         "representation": 'storage'
       }
     }
-  }
+  }.to_json
   payload = payload.to_json
   url = "#{API}/content/#{id}"
   begin
@@ -178,7 +178,7 @@ def confluence_update_page(key, id, title, content, counter, total)
     result = JSON.parse(response.body)
     puts "#{pct} PUT url='#{url}' id='#{id}' => OK"
   rescue => e
-    error = JSON.parse(e.response)
+    error = e.response ? JSON.parse(e.response) : e
     puts "#{pct} PUT url='#{url}' id='#{id}' => NOK error='#{error}'"
   end
   result
@@ -209,8 +209,35 @@ def confluence_create_attachment(page_id, filepath, counter, total)
     result = JSON.parse(response.body)
     puts "#{pct} POST url='#{url}' page_id='#{page_id}' filepath='#{filepath}' => OK"
   rescue => e
-    error = JSON.parse(e.response)
+    error = e.response ? JSON.parse(e.response) : e
     puts "#{pct} POST url='#{url}' page_id='#{page_id}' filepath='#{filepath}' => NOK error='#{error}'"
+  end
+  result
+end
+
+# PUT /wiki/rest/api/content/{id}/child/attachment/{attachmentId}
+def confluence_update_attachment(page_id, attachment_id, content_type, counter, total)
+  result = nil
+  pct = percentage(counter, total)
+  payload = {
+    "version": {
+      "number": 1
+    },
+    "id": attachment_id,
+    "type": 'attachment',
+    "metadata": {
+      "mediaType": content_type,
+    }
+  }.to_json
+  url = "#{API}/content/#{page_id}/child/attachment/#{attachment_id}"
+  msg = "#{pct} PUT url='#{url}' page_id='#{page_id}' attachment_id='#{attachment_id}' content_type='#{content_type}'"
+  begin
+    response = RestClient::Request.execute(method: :put, url: url, payload: payload, headers: HEADERS)
+    result = JSON.parse(response.body)
+    puts "#{msg} => OK"
+  rescue => e
+    error = e.response ? JSON.parse(e.response) : e
+    puts "#{msg} => NOK error='#{error}'"
   end
   result
 end

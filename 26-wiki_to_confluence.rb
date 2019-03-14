@@ -145,7 +145,6 @@ def get_all_links
     # <img ... src="(value)" ... />
     content.scan(%r{<img(?:.*?)? src="(.*?)"(?:.*?)?/?>}).each do |m|
       value = m[0]
-      # next unless %r{^https?://www\.assembla.com/}.match?(value)
       next unless %r{/#{WIKI_NAME}/}.match?(value)
 
       counter += 1
@@ -162,7 +161,6 @@ def get_all_links
     # <a ... href="(value)" ...>(title)</a>
     content.scan(%r{<a(?:.*?)? href="(.*?)"(?:.*?)?>(.*?)</a>}).each do |m|
       value = m[0]
-      # next unless %r{^https?://www\.assembla.com/}.match?(value)
       next unless %r{/#{WIKI_NAME}/}.match?(value)
 
       text = m[1]
@@ -172,6 +170,21 @@ def get_all_links
         counter: counter,
         title: title,
         tag: 'anchor',
+        value: value,
+        text: text
+      }
+    end
+
+    # [[page]]
+    content.scan(/\[\[(.*?)\]\]/).each do |m|
+      value = m[0]
+      text = m[1]
+      counter += 1
+      links << {
+        id: id,
+        counter: counter,
+        title: title,
+        tag: 'markdown',
         value: value,
         text: text
       }
@@ -381,6 +394,7 @@ verify_proc = lambda do |value|
 end
 show_all_items(@all_tickets, verify_proc)
 
+# --- Wikis --- #
 @all_wikis = @all_anchors.select { |anchor| anchor['value'].match(%r{/wiki/}) }
 puts "\n--- Wikis: #{@all_wikis.length} ---"
 verify_proc = lambda do |value|
@@ -388,6 +402,22 @@ verify_proc = lambda do |value|
   @wiki_assembla.detect { |w| w['page_name'] == page_name }
 end
 show_all_items(@all_wikis, verify_proc)
+
+# --- Markdown --- #
+@all_markdown = @all_links.select { |link| link['tag'] == 'markdown' }
+@wiki_documents = csv_to_array(WIKI_DOCUMENTS_CSV)
+puts "\n--- Markdown: #{@all_markdown.length} ---"
+verify_proc = lambda do |value|
+  if value.start_with?('image:')
+    image = value.sub(/^image:/, '').sub(/\|.*$/, '')
+    return @wiki_documents.detect { |w| w['id'] == image }
+  elsif value.start_with?('url:')
+    return true
+  else
+    return @wiki_assembla.detect { |w| w['page_name'] == value.tr(' ', '_').sub(/\|.*$/, '') }
+  end
+end
+show_all_items(@all_markdown, verify_proc)
 
 @pages.each do |id, value|
   parent_id = value[:page]['parent_id']
@@ -458,6 +488,7 @@ def upload_all_images
     link_url = image['value']
     basename = File.basename(link_url)
     original_name = 'unknown'
+    content_type = 'image/png'
 
     wiki_documents = csv_to_array(WIKI_DOCUMENTS_CSV)
     msg = "Upload image #{index + 1} basename='#{basename}'"
@@ -468,16 +499,18 @@ def upload_all_images
     m = /download\?filename=(.*)$/.match(basename)
     if m
       filename = m[1]
-      found = wiki_documents.detect { |image| image['name'] == filename }
+      found = wiki_documents.detect { |img| img['name'] == filename }
       if found
         basename = found['id']
+        content_type = found['content_type']
         original_name = filename
       else
         puts "#{msg} cannot find image filename='#{filename}'"
       end
     else
-      found = wiki_documents.detect { |image| image['id'] == basename }
+      found = wiki_documents.detect { |img| img['id'] == basename }
       if found
+        content_type = found['content_type']
         original_name = found['name']
       else
         puts "#{msg} cannot find matching image name"
@@ -486,20 +519,24 @@ def upload_all_images
 
     filepath = "#{IMAGES}/#{basename}"
     if File.exist?(filepath)
-      wiki_image_id = image['id']
+      wiki_image_id = basename
       confluence_page = @created_pages.detect { |page| page['page_id'] == wiki_image_id }
       if confluence_page
         confluence_page_id = confluence_page['id']
         c_page_title = @c_page_id_to_title[confluence_page_id]
         # puts "#{msg} confluence_page_id=#{confluence_page_id} title='#{c_page_title}' original_name='#{original_name}'"
         result = confluence_create_attachment(confluence_page_id, filepath, index + 1, total_images)
+        confluence_image_id = result ? result['results'][0]['id'] : nil
         @uploaded_images << {
           result: result ? 'OK' : 'NOK',
-          confluence_image_id: result ? result['results'][0]['id'] : nil,
+          confluence_image_id: confluence_image_id,
           wiki_image_id: wiki_image_id,
           confluence_page_id: confluence_page_id,
           link_url: link_url
         }
+        if result
+          confluence_update_attachment(confluence_page_id, confluence_image_id, content_type, index + 1, total_images)
+        end
       else
         puts "#{msg} cannot find confluence_id for wiki_id='#{wiki_image_id}'"
       end
@@ -531,9 +568,6 @@ def update_all_image_links
   counter = 0
   confluence_page_ids.each do |c_page_id, images|
     counter += 1
-
-    # TODO
-    # next unless c_page_id == '127730065'
 
     w_page_id = @c_to_w_page_id[c_page_id]
     c_page_title = @c_page_id_to_title[c_page_id]
@@ -587,7 +621,7 @@ def update_all_image_links
       end
 
       # TODO
-      next unless m
+      # next unless m
 
       # Important: escape any '?', e.g. 'download?filename=blog.png' => 'download\?filename=blog.png'
       if @content.match?(/<img(.*)? src="#{link_url_escaped}"([^>]*?)>/)
@@ -676,9 +710,52 @@ end
 # puts "\nDone\n"
 
 # TODO
-puts "\n--- Update all image links ---\n"
-update_all_image_links
-puts "\nDone\n"
+# puts "\n--- Update all image links ---\n"
+# update_all_image_links
+# puts "\nDone\n"
+
+# @uploaded_images << {
+#   result: result ? 'OK' : 'NOK',
+#   confluence_image_id: confluence_image_id,
+#   wiki_image_id: wiki_image_id,
+#   confluence_page_id: confluence_page_id,
+#   link_url: link_url
+# }
+#
+#
+# TODO: temporary fix
+
+@uploaded_images = csv_to_array(UPLOADED_IMAGES_CSV)
+total = @uploaded_images.length
+counter = 0
+@wiki_documents = csv_to_array(WIKI_DOCUMENTS_CSV)
+@uploaded_images.each_with_index do |image, index|
+  confluence_page_id = image['confluence_page_id']
+  confluence_image_id = image['confluence_image_id']
+  link_url = image['link_url']
+  basename = File.basename(link_url)
+  m = /download\?filename=(.*)$/.match(basename)
+  if m
+    filename = m[1]
+    found = @wiki_documents.detect { |img| img['name'] == filename }
+    if found
+      basename = found['id']
+    else
+      puts "#{msg} cannot find image filename='#{filename}'"
+    end
+  end
+  wiki_image_id = basename
+  found = @wiki_documents.detect { |item| item['id'] == wiki_image_id}
+  msg = "confluence_page_id=#{confluence_page_id} confluence_image_id='#{confluence_image_id}' wiki_image_id='#{wiki_image_id}'"
+  if found
+    content_type = found['content_type']
+    puts "#{msg} content_type=#{content_type} => OK"
+    confluence_update_attachment(confluence_page_id, confluence_image_id, content_type, index + 1, total)
+  else
+    puts "#{msg} => NOK"
+  end
+end
+
 exit
 
 # TODO
