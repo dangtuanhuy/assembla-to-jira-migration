@@ -170,7 +170,7 @@ def confluence_update_page(key, id, title, content, counter, total)
         "representation": 'storage'
       }
     }
-  }.to_json
+  }
   payload = payload.to_json
   url = "#{API}/content/#{id}"
   begin
