@@ -189,6 +189,39 @@ def get_all_links
         text: text
       }
     end
+
+    # <pre><code>...</code></pre>
+    # content.scan(%r{<pre><code>(.*?)</code></pre>}).each do |m|
+    content.scan(%r{<pre>(.*?)</pre>}).each do |m|
+      value = m[0]
+      text = m[1]
+      counter += 1
+      links << {
+        id: id,
+        counter: counter,
+        title: title,
+        tag: 'code',
+        value: value,
+        text: text
+      }
+    end
+
+    # [title](url)
+    content.scan(/\[(.*?)\]\((.*?)\)/).each do |m|
+      next if m[0].start_with?('[')
+
+      value = m[0]
+      text = m[1]
+      counter += 1
+      links << {
+        id: id,
+        counter: counter,
+        title: title,
+        tag: 'url',
+        value: value,
+        text: text
+      }
+    end
   end
 
   puts "\nLinks #{links.length}"
@@ -337,7 +370,7 @@ def download_all_documents
   end
 end
 
-def show_all_items(items, verify_proc)
+def show_all_items(items, verify_proc = nil)
   list_ids = []
   items.each do |item|
     id = item['id']
@@ -350,8 +383,10 @@ def show_all_items(items, verify_proc)
     puts "#{index + 1}.0 id=#{id} title='#{page['page_name']}' => #{num} link#{num == 1 ? '' : 's'}"
     @links.each_with_index do |link, ind|
       value = link['value']
+      text = link['text']
       padding = ' ' * ((index + 1).to_s.length + 1)
-      puts "#{padding}#{ind + 1} #{value} => #{verify_proc.call(value) ? '' : 'N'}OK"
+      result = verify_proc.nil? ? '' : " => #{verify_proc.call(value) ? 'OK' : 'NOK'}"
+      puts "#{padding}#{ind + 1} value='#{value}' text='#{text}'#{result}"
     end
   end
 end
@@ -367,8 +402,7 @@ puts "\n--- Links: #{@all_links.length} ---"
 @all_images = @all_links.select { |link| link['tag'] == 'image' }
 # TODO
 # download_all_images
-puts "\n--- Images: #{@all_images.length} ---"
-# TODO
+# puts "\n--- Images: #{@all_images.length} ---"
 # show_all_items(@all_images, ->(value) { File.exist?("#{IMAGES}/#{File.basename(value)}") })
 
 # --- Anchors (documents + wiki pages) #
@@ -380,11 +414,10 @@ puts "\n--- Anchors: #{@all_anchors.length} ---"
 # TODO
 # download_all_documents
 puts "\n--- Documents: #{@all_documents.length} ---"
-# TODO
-# show_all_items(@all_documents, ->(value) { File.exist?("#{DOCUMENTS}/#{File.basename(value)}") })
+show_all_items(@all_documents, ->(value) { File.exist?("#{DOCUMENTS}/#{File.basename(value)}") })
 
 # TODO
-# write_csv_file(WIKI_DOCUMENTS_CSV, @wiki_documents)
+# write_csv_file(WIKI_DOCUMENTS_CSV, @all_documents)
 
 # --- Tickets --- #
 @all_tickets = @all_anchors.select { |anchor| anchor['value'].match(%r{/tickets/}) }
@@ -397,6 +430,9 @@ end
 # TODO
 # show_all_items(@all_tickets, verify_proc)
 
+# TODO
+# write_csv_file(WIKI_TICKETS_CSV, @all_tickets)
+
 # --- Wikis --- #
 @all_wikis = @all_anchors.select { |anchor| anchor['value'].match(%r{/wiki/}) }
 puts "\n--- Wikis: #{@all_wikis.length} ---"
@@ -404,8 +440,7 @@ verify_proc = lambda do |value|
   page_name = value.match(%r{/([^/]*)$})[1]
   @wiki_assembla.detect { |w| w['page_name'] == page_name }
 end
-# TODO
-# show_all_items(@all_wikis, verify_proc)
+show_all_items(@all_wikis, verify_proc)
 
 # --- Markdowns --- #
 @all_markdowns = @all_links.select { |link| link['tag'] == 'markdown' }
@@ -426,6 +461,20 @@ verify_proc = lambda do |value|
 end
 show_all_items(@all_markdowns, verify_proc)
 
+@all_codes = @all_links.select { |link| link['tag'] == 'code' }
+puts "\n--- Codes: #{@all_codes.length} ---"
+verify_proc = lambda do |value|
+  return true
+end
+show_all_items(@all_codes, verify_proc)
+
+@all_urls = @all_links.select { |link| link['tag'] == 'url' }
+puts "\n--- Urls: #{@all_urls.length} ---"
+verify_proc = lambda do |value|
+  return true
+end
+show_all_items(@all_urls, verify_proc)
+
 @pages.each do |id, value|
   parent_id = value[:page]['parent_id']
   next unless parent_id
@@ -439,7 +488,6 @@ end
 @parent_pages = @pages.reject { |_, value| value[:page]['parent_id'] }.sort_by { |_, value| value[:page]['created_at'] }
 puts "\n--- Parents: #{@parent_pages.length} ---\n"
 @parent_pages.each { |id, _| show_page(id) }
-
 puts "\nDone\n"
 
 # Child pages sorted by created_at
@@ -554,6 +602,78 @@ def upload_all_images
   end
 
   write_csv_file(UPLOADED_IMAGES_CSV, @uploaded_images)
+end
+
+def upload_all_documents
+  # result, page_id, id, offset, title, author, created_at, body, error
+  @created_pages = csv_to_array(CREATED_PAGES_CSV)
+
+  total_documents = @all_documents.length
+  puts "\n--- Upload documents: #{total_documents} ---\n"
+
+  # id,counter,title,tag,value,text
+  @uploaded_documents = []
+  @all_documents.each_with_index do |document, index|
+    link_url = document['value']
+    basename = File.basename(link_url)
+
+    wiki_documents = csv_to_array(WIKI_DOCUMENTS_CSV)
+    msg = "Upload document #{index + 1} basename='#{basename}'"
+
+    # If the '/download?filename=blob' is present in the link we need to match the filename to the
+    # original assembla document id which was hopefully saved in the wiki-document-csv log during
+    # downloading of all of the attachments.
+    m = /download\?filename=(.*)$/.match(basename)
+    if m
+      filename = m[1]
+      found = wiki_documents.detect { |img| img['name'] == filename }
+      if found
+        basename = found['id']
+        content_type = found['content_type']
+        original_name = filename
+      else
+        puts "#{msg} cannot find document filename='#{filename}'"
+      end
+    else
+      found = wiki_documents.detect { |img| img['id'] == basename }
+      if found
+        content_type = found['content_type']
+        original_name = found['name']
+      else
+        puts "#{msg} cannot find matching document name"
+      end
+    end
+
+    filepath = "#{DOCUMENTS}/#{basename}"
+    if File.exist?(filepath)
+      wiki_document_id = document['id']
+      confluence_page = @created_pages.detect { |page| page['page_id'] == wiki_document_id }
+      if confluence_page
+        confluence_page_id = confluence_page['id']
+        c_page_title = @c_page_id_to_title[confluence_page_id]
+        puts "#{msg} confluence_page_id=#{confluence_page_id} title='#{c_page_title}' wiki_document_id='#{wiki_document_id}' original_name='#{original_name}'"
+        result = confluence_create_attachment(confluence_page_id, filepath, index + 1, total_documents)
+        confluence_document_id = result ? result['results'][0]['id'] : nil
+        @uploaded_documents << {
+          result: result ? 'OK' : 'NOK',
+          confluence_document_id: confluence_document_id,
+          wiki_document_id: wiki_document_id,
+          basename: basename,
+          confluence_page_id: confluence_page_id,
+          link_url: link_url
+        }
+        if result
+          confluence_update_attachment(confluence_page_id, confluence_document_id, content_type, index + 1, total_documents)
+        end
+      else
+        puts "#{msg} cannot find confluence_id for wiki_id='#{wiki_document_id}'"
+      end
+    else
+      puts "#{msg} cannot find document='#{filepath}'"
+    end
+  end
+
+  write_csv_file(UPLOADED_DOCUMENTS_CSV, @uploaded_documents)
 end
 
 # Convert all <img src="link_url" ... > to
@@ -777,11 +897,72 @@ def update_all_md_page_links
 end
 
 def update_all_document_links
-  puts 'IMPORTANT: Update all document links manually'
+  confluence_page_ids = {}
+  total = 0
+  # result,confluence_document_id,wiki_document_id,basename,confluence_page_id,link_url
+  csv_to_array(UPLOADED_DOCUMENTS_CSV).each do |item|
+    next unless item['result'] == 'OK'
+
+    confluence_page_id = item['confluence_page_id']
+    confluence_page_ids[confluence_page_id] = [] unless confluence_page_ids[confluence_page_id]
+    confluence_page_ids[confluence_page_id] << {
+      confluence_document_id: item['confluence_document_id'],
+      wiki_document_id: item['wiki_document_id'],
+      basename: item['basename'],
+      link_url: item['link_url']
+    }
+    total += 1
+  end
+
+  puts "\n--- Update all document links: #{total} ---\n"
+
+  confluence_page_ids.each do |c_page_id, items|
+    c_page_title = @c_page_id_to_title[c_page_id]
+    puts "confluence_page_id='#{c_page_id}' title='#{c_page_title}' => #{items.length}"
+    items.each do |item|
+      confluence_document_id = item[:confluence_document_id]
+      wiki_document_id = item[:wiki_document_id]
+      basename = item[:basename]
+      link_url = item[:link_url]
+      puts "* confluence_document_id='#{confluence_document_id}' wiki_document_id='#{wiki_document_id}' basename='#{basename}' link_url='#{link_url}'"
+    end
+  end
+
+  puts "\nIMPORTANT: Update all document links manually by replacing them using insert link attachment\n"
 end
 
 def update_all_ticket_links
-  puts 'IMPORTANT: Update all ticket links manually'
+  confluence_page_ids = {}
+  total = 0
+  # id,counter,title,tag,value,text
+  csv_to_array(WIKI_TICKETS_CSV).each do |ticket|
+    wiki_page_id = ticket['id']
+    confluence_page_id = @w_to_c_page_id[wiki_page_id]
+    confluence_page_ids[confluence_page_id] = [] unless confluence_page_ids[confluence_page_id]
+    confluence_page_ids[confluence_page_id] << {
+      confluence_document_id: ticket['confluence_document_id'],
+      wiki_document_id: ticket['wiki_document_id'],
+      basename: ticket['basename'],
+      link_url: ticket['link_url']
+    }
+    total += 1
+  end
+
+  puts "\n--- Update all ticket links: #{total} ---\n"
+
+  confluence_page_ids.each do |c_page_id, tickets|
+    c_page_title = @c_page_id_to_title[c_page_id]
+    puts "confluence_page_id='#{c_page_id}' title='#{c_page_title}' => #{tickets.length}"
+    tickets.each do |ticket|
+      confluence_document_id = ticket[:confluence_document_id]
+      wiki_document_id = ticket[:wiki_document_id]
+      basename = ticket[:basename]
+      link_url = ticket[:link_url]
+      puts "* confluence_document_id='#{confluence_document_id}' wiki_document_id='#{wiki_document_id}' basename='#{basename}' link_url='#{link_url}'"
+    end
+  end
+
+  puts "\nIMPORTANT: Update all ticket links manually\n"
 end
 
 # TODO
@@ -794,7 +975,6 @@ end
 # update_all_page_links
 # puts "\nDone\n"
 
-
 # TODO
 # puts "\n--- Upload all images ---\n"
 # upload_all_images
@@ -806,26 +986,19 @@ end
 # puts "\nDone\n"
 
 # TODO
-puts "\n--- Update all markdown page links ---\n"
-update_all_md_page_links
-puts "\nDone\n"
-
-exit
+# puts "\n--- Update all markdown page links ---\n"
+# update_all_md_page_links
+# puts "\nDone\n"
 
 # TODO
-# puts "\n--- Update all documents ---\n"
 # upload_all_documents
 # puts "\nDone\n"
 
 # TODO
-# puts "\n--- Update all document links ---\n"
 # update_all_document_links
-# puts "\nDone\n"
-#
-# "<ac:structured-macro ac:name=\"jira\" ac:schema-version=\"1\" ac:macro-id=\"ec9369db-0725-4108-a31b-e1ba56060a91\">
-#    <ac:parameter ac:name=\"server\">System JIRA</ac:parameter>
-#    <ac:parameter ac:name=\"serverId\">b5be0935-8b3a-3427-8428-594a69672b49</ac:parameter>
-#    <ac:parameter ac:name=\"key\">MP-10460</ac:parameter>
-#  </ac:structured-macro>"
+puts "\nDone\n"
+
 # update_all_ticket_links
 # puts "\nDone\n"
+#
+puts "\nAll done!\n"

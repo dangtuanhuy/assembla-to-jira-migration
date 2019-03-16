@@ -32,11 +32,13 @@ PASSWORD = ENV['CONFLUENCE_PASSWORD'] || throw('CONFLUENCE_PASSWORD must be defi
 # Global constants
 LINKS_CSV = "#{DATA}/links.csv"
 UPLOADED_IMAGES_CSV = "#{DATA}/uploaded-images.csv"
+UPLOADED_DOCUMENTS_CSV = "#{DATA}/uploaded-documents.csv"
 CREATED_PAGES_CSV = "#{DATA}/created-pages.csv"
 CREATED_PAGES_NOK_CSV = "#{DATA}/created-pages-nok.csv"
 UPDATED_PAGES_CSV = "#{DATA}/updated-pages.csv"
 WIKI_FIXED_CSV = "#{DATA}/wiki-pages-fixed.csv"
 WIKI_DOCUMENTS_CSV = "#{DATA}/wiki-documents.csv"
+WIKI_TICKETS_CSV = "#{DATA}/wiki-tickets.csv"
 
 # Display environment
 puts
