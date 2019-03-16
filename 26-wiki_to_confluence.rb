@@ -368,7 +368,8 @@ puts "\n--- Links: #{@all_links.length} ---"
 # TODO
 # download_all_images
 puts "\n--- Images: #{@all_images.length} ---"
-show_all_items(@all_images, ->(value) { File.exist?("#{IMAGES}/#{File.basename(value)}") })
+# TODO
+# show_all_items(@all_images, ->(value) { File.exist?("#{IMAGES}/#{File.basename(value)}") })
 
 # --- Anchors (documents + wiki pages) #
 @all_anchors = csv_to_array(LINKS_CSV).select { |link| link['tag'] == 'anchor' }.sort_by { |wiki| wiki['value'] }
@@ -379,7 +380,8 @@ puts "\n--- Anchors: #{@all_anchors.length} ---"
 # TODO
 # download_all_documents
 puts "\n--- Documents: #{@all_documents.length} ---"
-show_all_items(@all_documents, ->(value) { File.exist?("#{DOCUMENTS}/#{File.basename(value)}") })
+# TODO
+# show_all_items(@all_documents, ->(value) { File.exist?("#{DOCUMENTS}/#{File.basename(value)}") })
 
 # TODO
 # write_csv_file(WIKI_DOCUMENTS_CSV, @wiki_documents)
@@ -392,7 +394,8 @@ verify_proc = lambda do |value|
   ticket_nr = File.basename(value)
   @tickets_assembla.detect { |t| t['number'] == ticket_nr }
 end
-show_all_items(@all_tickets, verify_proc)
+# TODO
+# show_all_items(@all_tickets, verify_proc)
 
 # --- Wikis --- #
 @all_wikis = @all_anchors.select { |anchor| anchor['value'].match(%r{/wiki/}) }
@@ -401,7 +404,8 @@ verify_proc = lambda do |value|
   page_name = value.match(%r{/([^/]*)$})[1]
   @wiki_assembla.detect { |w| w['page_name'] == page_name }
 end
-show_all_items(@all_wikis, verify_proc)
+# TODO
+# show_all_items(@all_wikis, verify_proc)
 
 # --- Markdowns --- #
 @all_markdowns = @all_links.select { |link| link['tag'] == 'markdown' }
@@ -410,11 +414,14 @@ puts "\n--- Markdown: #{@all_markdowns.length} ---"
 verify_proc = lambda do |value|
   if value.start_with?('image:')
     image = value.sub(/^image:/, '').sub(/\|.*$/, '')
-    return @wiki_documents.detect { |w| w['id'] == image }
+    return File.exist?("#{IMAGES}/#{image}")
   elsif value.start_with?('url:')
     return true
+  elsif value.start_with?('file:')
+    file = value.sub(/^file:/, '').sub(/\|.*$/, '')
+    return File.exist?("#{DOCUMENTS}/#{file}")
   else
-    return @wiki_assembla.detect { |w| w['page_name'] == value.tr(' ', '_').sub(/\|.*$/, '') }
+    return @wiki_assembla.detect { |w| w['page_name'].casecmp(value.tr(' ', '_').sub(/\|.*$/, '')).zero? }
   end
 end
 show_all_items(@all_markdowns, verify_proc)
@@ -690,7 +697,7 @@ end
 # Convert all [[page]] to
 # <ac:link><ri:page ri:content-title="(title2)" ri:version-at-save="1" /></ac:link>
 # where title2 = title1.tr('_', ' ')
-def update_all_markdown_page_links
+def update_all_md_page_links
   confluence_page_ids = {}
 
   # result,page_id,id,offset,title,author,created_at,body,error
@@ -702,15 +709,20 @@ def update_all_markdown_page_links
     next if value.start_with?('image:', 'url:', 'file:', 'snippet:')
 
     title = value.tr('_', ' ').sub(/\|.*$/, '')
+    msg = "value='#{value}' title='#{title}"
     markdown_page_id = markdown['id']
     confluence_page_id = @w_to_c_page_id[markdown_page_id]
     confluence_page_ids[confluence_page_id] = [] unless confluence_page_ids[confluence_page_id]
-    found = created_pages.detect { |page| page['result'] == 'OK' && page['title'] == title }
+    found = created_pages.detect { |page| page['result'] == 'OK' && page['title'].casecmp(title).zero? }
     if found
-      puts "value='#{value}' title='#{title}' => OK"
-      confluence_page_ids[confluence_page_id] << { value: value, title: title, page_id: found['id'] }
+      found_title = found['title']
+      if found_title != title
+        msg += " found_title='#found_title'"
+      end
+      puts "#{msg} => OK"
+      confluence_page_ids[confluence_page_id] << { value: value, title: found_title, page_id: found['id'] }
     else
-      puts "value='#{value}' title='#{title}' => NOK"
+      puts "#{msg} => NOK"
     end
   end
 
@@ -759,8 +771,7 @@ def update_all_markdown_page_links
       end
       puts "* value='#{value}' title='#{title}' page_id='#{page_id}' version=#{version} => #{res}"
     end
-    # TODO
-    # confluence_update_page(@space['key'], c_page_id, c_page_title, @content, counter, total)
+    confluence_update_page(@space['key'], c_page_id, c_page_title, @content, counter, total)
   end
 
 end
@@ -796,7 +807,7 @@ end
 
 # TODO
 puts "\n--- Update all markdown page links ---\n"
-update_all_markdown_page_links
+update_all_md_page_links
 puts "\nDone\n"
 
 exit
