@@ -413,8 +413,8 @@ puts "\n--- Anchors: #{@all_anchors.length} ---"
 @all_documents = @all_anchors.select { |anchor| anchor['value'].match(%r{/documents/}) }
 # TODO
 # download_all_documents
-puts "\n--- Documents: #{@all_documents.length} ---"
-show_all_items(@all_documents, ->(value) { File.exist?("#{DOCUMENTS}/#{File.basename(value)}") })
+# puts "\n--- Documents: #{@all_documents.length} ---"
+# show_all_items(@all_documents, ->(value) { File.exist?("#{DOCUMENTS}/#{File.basename(value)}") })
 
 # TODO
 # write_csv_file(WIKI_DOCUMENTS_CSV, @all_documents)
@@ -423,8 +423,10 @@ show_all_items(@all_documents, ->(value) { File.exist?("#{DOCUMENTS}/#{File.base
 @all_tickets = @all_anchors.select { |anchor| anchor['value'].match(%r{/tickets/}) }
 puts "\n--- Tickets: #{@all_tickets.length} ---"
 verify_proc = lambda do |value|
-  value = value.sub(/#.*$/, '')
-  ticket_nr = File.basename(value)
+  m = value.match(%r{(?:/tickets/|ticket=)(\d+)})
+  return false unless m && m[1]
+
+  ticket_nr = m[1]
   @tickets_assembla.detect { |t| t['number'] == ticket_nr }
 end
 # TODO
@@ -440,7 +442,7 @@ verify_proc = lambda do |value|
   page_name = value.match(%r{/([^/]*)$})[1]
   @wiki_assembla.detect { |w| w['page_name'] == page_name }
 end
-show_all_items(@all_wikis, verify_proc)
+# show_all_items(@all_wikis, verify_proc)
 
 # --- Markdowns --- #
 @all_markdowns = @all_links.select { |link| link['tag'] == 'markdown' }
@@ -760,7 +762,6 @@ def update_all_image_links
       end
       puts "* confluence_image_id='#{confluence_image_id}' link_url='#{link_url}' basename='#{basename}' => #{res}"
     end
-    # TODO: uncomment the following lines when ready
     confluence_update_page(@space['key'], c_page_id, c_page_title, @content, counter, total)
   end
 end
@@ -936,29 +937,79 @@ def update_all_ticket_links
   total = 0
   # id,counter,title,tag,value,text
   csv_to_array(WIKI_TICKETS_CSV).each do |ticket|
-    wiki_page_id = ticket['id']
-    confluence_page_id = @w_to_c_page_id[wiki_page_id]
+    found = nil
+    assembla_ticket_nr = nil
+    value = ticket['value']
+    text = ticket['text']
+    m = value.match(%r{(?:/tickets/|ticket=)(\d+)})
+    if m && m[1]
+      assembla_ticket_nr = m[1]
+      found = @tickets_assembla.detect { |t| t['number'] == assembla_ticket_nr }
+    end
+
+    jira_issue_key = @assembla_nr_to_jira_key[assembla_ticket_nr]
+
+    result = if assembla_ticket_nr.nil?
+               'No match'
+             elsif found.nil?
+               'Cannot find assembla ticket number'
+             elsif jira_issue_key.nil?
+               'Cannot find jira issue key'
+             else
+               'OK'
+             end
+
+    confluence_page_id = @w_to_c_page_id[ticket['id']]
     confluence_page_ids[confluence_page_id] = [] unless confluence_page_ids[confluence_page_id]
     confluence_page_ids[confluence_page_id] << {
-      confluence_document_id: ticket['confluence_document_id'],
-      wiki_document_id: ticket['wiki_document_id'],
-      basename: ticket['basename'],
-      link_url: ticket['link_url']
+      result: result,
+      value: value,
+      text: text,
+      assembla_ticket_nr: assembla_ticket_nr,
+      jira_issue_key: jira_issue_key
     }
     total += 1
   end
 
   puts "\n--- Update all ticket links: #{total} ---\n"
 
+  total = confluence_page_ids.length
+  counter = 0
   confluence_page_ids.each do |c_page_id, tickets|
+    counter += 1
+
     c_page_title = @c_page_id_to_title[c_page_id]
-    puts "confluence_page_id='#{c_page_id}' title='#{c_page_title}' => #{tickets.length}"
+    msg = "confluence_page_id='#{c_page_id}' title='#{c_page_title}'"
+
+    @content = confluence_get_content(c_page_id, counter, total)
+    if @content.nil? || @content.strip.length.zero?
+      puts "#{msg} content is empty => SKIP"
+      next
+    elsif tickets.length.zero?
+      puts "#{msg} no pages => SKIP"
+      next
+    end
+
+    puts "#{msg} => OK"
+
     tickets.each do |ticket|
-      confluence_document_id = ticket[:confluence_document_id]
-      wiki_document_id = ticket[:wiki_document_id]
-      basename = ticket[:basename]
-      link_url = ticket[:link_url]
-      puts "* confluence_document_id='#{confluence_document_id}' wiki_document_id='#{wiki_document_id}' basename='#{basename}' link_url='#{link_url}'"
+      result = ticket[:result]
+      value = ticket[:value]
+      text = ticket[:text]
+      assembla_ticket_nr = ticket[:assembla_ticket_nr]
+      jira_issue_key = ticket[:jira_issue_key]
+      puts "* value='#{value}' text='#{text}' assembla_ticket_nr='#{assembla_ticket_nr}' jira_issue_key='#{jira_issue_key}' => #{result}"
+      next unless result == 'OK'
+
+      if @content.match?(%r{<a(.*?)? href="#{value}"([^>]*?)>#{text}</a>})
+        # TODO
+        # @content.sub!(%r{<a(.*?)? href="#{value}"([^>]*?)>#{text}</a>}, jira_issue_key)
+        res = 'OK'
+      else
+        res = 'NOK'
+      end
+        # TODO
+        # confluence_update_page(@space['key'], c_page_id, c_page_title, @content, counter, total)
     end
   end
 
@@ -996,9 +1047,9 @@ end
 
 # TODO
 # update_all_document_links
-puts "\nDone\n"
+# puts "\nDone\n"
 
-# update_all_ticket_links
+update_all_ticket_links
 # puts "\nDone\n"
 #
 puts "\nAll done!\n"
