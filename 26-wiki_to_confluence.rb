@@ -190,8 +190,7 @@ def get_all_links
       }
     end
 
-    # <pre><code>...</code></pre>
-    # content.scan(%r{<pre><code>(.*?)</code></pre>}).each do |m|
+    # <pre>...</pre>
     content.scan(%r{<pre>(.*?)</pre>}).each do |m|
       value = m[0]
       text = m[1]
@@ -241,7 +240,9 @@ def create_page_item(id, offset)
   title = page['page_name']
   body = page['contents']
   if body.nil? || body.strip.length.zero?
+    # rubocop:disable LineLength
     body = '<p><ac:structured-macro ac:name="pagetree" ac:schema-version="1" ac:macro-id="caf6610e-f939-4ef9-b748-2121668fcf46"><ac:parameter ac:name="expandCollapseAll">true</ac:parameter><ac:parameter ac:name="root"><ac:link><ri:page ri:content-title="@self" /></ac:link></ac:parameter><ac:parameter ac:name="searchBox">true</ac:parameter></ac:structured-macro></p>'
+    # rubocop:enable LineLength
   end
   title_stripped = title.tr('_', ' ')
 
@@ -447,7 +448,7 @@ end
 # --- Markdowns --- #
 @all_markdowns = @all_links.select { |link| link['tag'] == 'markdown' }
 @wiki_documents = csv_to_array(WIKI_DOCUMENTS_CSV)
-puts "\n--- Markdown: #{@all_markdowns.length} ---"
+puts "\n--- All markdowns: #{@all_markdowns.length} ---"
 verify_proc = lambda do |value|
   if value.start_with?('image:')
     image = value.sub(/^image:/, '').sub(/\|.*$/, '')
@@ -465,17 +466,11 @@ show_all_items(@all_markdowns, verify_proc)
 
 @all_codes = @all_links.select { |link| link['tag'] == 'code' }
 puts "\n--- Codes: #{@all_codes.length} ---"
-verify_proc = lambda do |value|
-  return true
-end
-show_all_items(@all_codes, verify_proc)
+show_all_items(@all_codes)
 
 @all_urls = @all_links.select { |link| link['tag'] == 'url' }
-puts "\n--- Urls: #{@all_urls.length} ---"
-verify_proc = lambda do |value|
-  return true
-end
-show_all_items(@all_urls, verify_proc)
+puts "\n--- Markdown urls: #{@all_urls.length} ---"
+show_all_items(@all_urls)
 
 @pages.each do |id, value|
   parent_id = value[:page]['parent_id']
@@ -533,6 +528,9 @@ csv_to_array(CREATED_PAGES_CSV).each do |page|
 end
 
 def upload_all_images
+
+  puts "\n--- Upload all images ---\n"
+
   # result, page_id, id, offset, title, author, created_at, body, error
   @created_pages = csv_to_array(CREATED_PAGES_CSV)
 
@@ -611,7 +609,7 @@ def upload_all_documents
   @created_pages = csv_to_array(CREATED_PAGES_CSV)
 
   total_documents = @all_documents.length
-  puts "\n--- Upload documents: #{total_documents} ---\n"
+  puts "\n--- Upload all documents: #{total_documents} ---\n"
 
   # id,counter,title,tag,value,text
   @uploaded_documents = []
@@ -681,7 +679,11 @@ end
 # Convert all <img src="link_url" ... > to
 # <ac:image ac:height="250"><ri:attachment ri:filename="{image}" ri:version-at-save="1" /></ac:image>
 def update_all_image_links
+
+  puts "\n--- Update all image links ---\n"
+
   confluence_page_ids = {}
+
   # result,confluence_image_id,wiki_image_id,confluence_page_id,link_url
   @uploaded_images = csv_to_array(UPLOADED_IMAGES_CSV)
   @uploaded_images.each do |image|
@@ -770,7 +772,11 @@ end
 # <ac:link><ri:page ri:content-title="(title2)" ri:version-at-save="1" /></ac:link>
 # where title2 = title1.tr('_', ' ')
 def update_all_page_links
+
+  puts "\n--- Update all page links ---\n"
+
   confluence_page_ids = {}
+
   # id,counter,title,tag,value,text
   @all_wikis.each do |wiki|
     wiki_page_id = wiki['id']
@@ -819,6 +825,9 @@ end
 # <ac:link><ri:page ri:content-title="(title2)" ri:version-at-save="1" /></ac:link>
 # where title2 = title1.tr('_', ' ')
 def update_all_md_page_links
+
+  puts "\n--- Update all markdown page links ---\n"
+
   confluence_page_ids = {}
 
   # result,page_id,id,offset,title,author,created_at,body,error
@@ -894,7 +903,6 @@ def update_all_md_page_links
     end
     confluence_update_page(@space['key'], c_page_id, c_page_title, @content, counter, total)
   end
-
 end
 
 def update_all_document_links
@@ -928,7 +936,6 @@ def update_all_document_links
       puts "* confluence_document_id='#{confluence_document_id}' wiki_document_id='#{wiki_document_id}' basename='#{basename}' link_url='#{link_url}'"
     end
   end
-
   puts "\nIMPORTANT: Update all document links manually by replacing them using insert link attachment\n"
 end
 
@@ -1002,54 +1009,23 @@ def update_all_ticket_links
       next unless result == 'OK'
 
       if @content.match?(%r{<a(.*?)? href="#{value}"([^>]*?)>#{text}</a>})
-        # TODO
-        # @content.sub!(%r{<a(.*?)? href="#{value}"([^>]*?)>#{text}</a>}, jira_issue_key)
+        @content.sub!(%r{<a(.*?)? href="#{value}"([^>]*?)>#{text}</a>}, jira_issue_key)
         res = 'OK'
       else
         res = 'NOK'
       end
-        # TODO
-        # confluence_update_page(@space['key'], c_page_id, c_page_title, @content, counter, total)
     end
+    confluence_update_page(@space['key'], c_page_id, c_page_title, @content, counter, total)
   end
-
-  puts "\nIMPORTANT: Update all ticket links manually\n"
 end
 
-# TODO
-# puts "\n--- Upload all pages ---\n"
 # upload_all_pages
-# puts "\nDone\n"
-
-# TODO
-# puts "\n--- Update all page links ---\n"
 # update_all_page_links
-# puts "\nDone\n"
-
-# TODO
-# puts "\n--- Upload all images ---\n"
 # upload_all_images
-# puts "\nDone\n"
-
-# TODO
-# puts "\n--- Update all image links ---\n"
 # update_all_image_links
-# puts "\nDone\n"
-
-# TODO
-# puts "\n--- Update all markdown page links ---\n"
 # update_all_md_page_links
-# puts "\nDone\n"
-
-# TODO
+# update_all_md_url_links
 # upload_all_documents
-# puts "\nDone\n"
-
-# TODO
 # update_all_document_links
-# puts "\nDone\n"
-
-update_all_ticket_links
-# puts "\nDone\n"
-#
+# update_all_ticket_links
 puts "\nAll done!\n"
