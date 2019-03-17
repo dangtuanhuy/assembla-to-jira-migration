@@ -1169,7 +1169,7 @@ end
 # update_all_md_page_links
 # update_all_md_url_links
 # upload_all_documents
-update_all_document_links
+# update_all_document_links
 # update_all_ticket_links
 
 puts "\nAll done!\n"
