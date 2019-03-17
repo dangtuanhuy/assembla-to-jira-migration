@@ -1037,16 +1037,40 @@ def update_all_document_links
 
   puts "\n--- Update all document links: #{total} ---\n"
 
-  confluence_page_ids.each do |c_page_id, items|
+  total = confluence_page_ids.length
+  counter = 0
+  confluence_page_ids.each do |c_page_id, documents|
+    counter += 1
+
     c_page_title = @c_page_id_to_title[c_page_id]
-    puts "confluence_page_id='#{c_page_id}' title='#{c_page_title}' => #{items.length}"
-    items.each do |item|
-      confluence_document_id = item[:confluence_document_id]
-      wiki_document_id = item[:wiki_document_id]
-      basename = item[:basename]
-      link_url = item[:link_url]
-      puts "* confluence_document_id='#{confluence_document_id}' wiki_document_id='#{wiki_document_id}' basename='#{basename}' link_url='#{link_url}'"
+    msg = "confluence_page_id='#{c_page_id}' title='#{c_page_title}'"
+
+    @content = confluence_get_content(c_page_id, counter, total)
+    if @content.nil? || @content.strip.length.zero?
+      puts "#{msg} content is empty => SKIP"
+      next
+    elsif documents.length.zero?
+      puts "#{msg} no documents => SKIP"
+      next
     end
+
+    puts "#{msg} => #{documents.length}"
+
+    documents.each do |document|
+      confluence_document_id = document[:confluence_document_id]
+      wiki_document_id = document[:wiki_document_id]
+      basename = document[:basename]
+      link_url = document[:link_url]
+      if @content.match?(/#{link_url}/)
+        anchor = build_document_link(basename)
+        @content.sub!(/#{link_url}/, anchor)
+        res = 'OK'
+      else
+        res = 'NOK'
+      end
+      puts "* document_id='#{confluence_document_id}' filename='#{basename}' link_url='#{link_url}'"
+    end
+    # confluence_update_page(@space['key'], c_page_id, c_page_title, @content, counter, total)
   end
 
   puts "\nIMPORTANT: Update all document links manually by replacing them using insert link attachment\n"
@@ -1145,7 +1169,7 @@ end
 # update_all_md_page_links
 # update_all_md_url_links
 # upload_all_documents
-# update_all_document_links
+update_all_document_links
 # update_all_ticket_links
 
 puts "\nAll done!\n"
