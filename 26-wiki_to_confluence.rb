@@ -462,11 +462,13 @@ verify_proc = lambda do |value|
     return @wiki_assembla.detect { |w| w['page_name'].casecmp(value.tr(' ', '_').sub(/\|.*$/, '')).zero? }
   end
 end
-show_all_items(@all_markdowns, verify_proc)
+# TODO
+# show_all_items(@all_markdowns, verify_proc)
 
 @all_codes = @all_links.select { |link| link['tag'] == 'code' }
 puts "\n--- Codes: #{@all_codes.length} ---"
-show_all_items(@all_codes)
+# TODO
+# show_all_items(@all_codes)
 
 @all_urls = @all_links.select { |link| link['tag'] == 'url' }
 puts "\n--- Markdown urls: #{@all_urls.length} ---"
@@ -483,23 +485,25 @@ end
 
 # Parent pages sorted by created_at
 @parent_pages = @pages.reject { |_, value| value[:page]['parent_id'] }.sort_by { |_, value| value[:page]['created_at'] }
-puts "\n--- Parents: #{@parent_pages.length} ---\n"
-@parent_pages.each { |id, _| show_page(id) }
-puts "\nDone\n"
+# TODO
+# puts "\n--- Parents: #{@parent_pages.length} ---\n"
+# @parent_pages.each { |id, _| show_page(id) }
+# puts "\nDone\n"
 
 # Child pages sorted by created_at
 @child_pages = @pages.select { |_, value| value[:page]['parent_id'] }.sort_by { |_, value| value[:page]['created_at'] }
-puts "\n--- Children: #{@child_pages.length} ---\n"
-@child_pages.each { |id, _| show_page(id) }
-puts "\nDone\n"
+# TODO
+# puts "\n--- Children: #{@child_pages.length} ---\n"
+# @child_pages.each { |id, _| show_page(id) }
+# puts "\nDone\n"
 
-puts "\n--- Page Tree: #{@pages.length} ---\n"
-
-count = 0
-@parent_pages.each do |id, _|
-  show_page_tree(id, [count])
-  count += 1
-end
+# TODO
+# puts "\n--- Page Tree: #{@pages.length} ---\n"
+# count = 0
+# @parent_pages.each do |id, _|
+#   show_page_tree(id, [count])
+#   count += 1
+# end
 
 def upload_all_pages
   puts "\n--- Create pages: #{@total_wiki_pages} ---\n"
@@ -905,6 +909,114 @@ def update_all_md_page_links
   end
 end
 
+# Convert all [text](url) to
+# <a href="url">text</a>
+def update_all_md_url_links
+
+  puts "\n--- Update all markdown url links ---\n"
+
+  confluence_page_ids = {}
+
+  # result,confluence_document_id,wiki_document_id,basename,confluence_page_id,link_url
+  uploaded_documents = csv_to_array(UPLOADED_DOCUMENTS_CSV)
+
+  # result,page_id,id,offset,title,author,created_at,body,error
+  created_pages = csv_to_array(CREATED_PAGES_CSV)
+
+  # id,counter,title,tag,value,text
+  csv_to_array(LINKS_CSV).select { |link| link['tag'] == 'url' }.each do |url|
+    value = url['value']
+    text = url['text']
+    wiki_page_id = url['id']
+    confluence_page_id = @w_to_c_page_id[wiki_page_id]
+    confluence_page_ids[confluence_page_id] = [] unless confluence_page_ids[confluence_page_id]
+    confluence_page_ids[confluence_page_id] << { value: value, text: text }
+  end
+
+  total = confluence_page_ids.length
+  counter = 0
+  nok = []
+  confluence_page_ids.each do |c_page_id, urls|
+    counter += 1
+
+    c_page_title = @c_page_id_to_title[c_page_id]
+    msg = "confluence_page_id='#{c_page_id}' title='#{c_page_title}'"
+
+    @content = confluence_get_content(c_page_id, counter, total)
+    if @content.nil? || @content.strip.length.zero?
+      puts "#{msg} content is empty => SKIP"
+      next
+    elsif urls.length.zero?
+      puts "#{msg} no urls => SKIP"
+      next
+    end
+
+    puts "#{msg} => #{urls.length}"
+
+    urls.each do |url|
+      value = url[:value]
+      text = url[:text]
+      m = nil
+      regexp_error = false
+      begin
+        m = /\[#{value}\]\(#{text}\)/.match(@content)
+      rescue RegexpError => e
+        regexp_error = true
+      end
+      if m
+        anchor = nil
+        if text.match?(%r{/wiki/})
+          title = File.basename(text).tr('_', ' ')
+          found = created_pages.detect { |page| page['result'] == 'OK' && page['title'].casecmp(title).zero? }
+          if found
+            page_id = found['id']
+            result_get_version = confluence_get_version(page_id)
+            if result_get_version
+              version = result_get_version['version']['number']
+              found_title = found['title']
+              anchor = "<ac:link><ri:page ri:content-title=\"#{found_title}\" ri:version-at-save=\"#{version}\" /></ac:link>"
+            else
+              puts "Cannot find version for page_id='#{page_id}'"
+            end
+          else
+            puts "Cannot find page with title='#{title}'"
+          end
+        elsif text.match?(%r{/documents/})
+          wiki_document_id = File.basename(text)
+          found = uploaded_documents.detect { |document| document['wiki_document_id'] }
+          if found
+            confluence_page_id = found ['confluence_page_id']
+            confluence_document_id = found['confluence_document_id']
+            anchor = build_document_link(confluence_document_id)
+          else
+            puts "Cannot find document with wiki_document_id='#{wiki_document_id}'"
+          end
+        end
+        anchor ||= "<a href=\"#{text}\">#{value}</a>"
+        @content.sub!(/\[#{value}\]\(#{text}\)/, anchor)
+        # puts "* value='#{value}' text='#{text}' before='#{m[0]}' after='#{anchor}' => OK"
+        puts "* value='#{value}' text='#{text}' => OK"
+      else
+        nok << {
+          page_id: c_page_id,
+          title: @c_page_id_to_title[c_page_id],
+          value: value,
+          text: text
+        }
+        puts "* value='#{value}' text='#{text}' #{regexp_error ? 'regexp error ' : ''}=> NOK"
+      end
+    end
+    confluence_update_page(@space['key'], c_page_id, c_page_title, @content, counter, total)
+  end
+
+  if nok.length
+    puts "Failed urls: #{nok.length}"
+    nok.each do |j|
+      puts "* page_id='#{j[:page_id]}' title='#{j[:title]}' text='#{j[:value]}' url='#{j[:text]}'"
+    end
+  end
+end
+
 def update_all_document_links
   confluence_page_ids = {}
   total = 0
@@ -936,7 +1048,14 @@ def update_all_document_links
       puts "* confluence_document_id='#{confluence_document_id}' wiki_document_id='#{wiki_document_id}' basename='#{basename}' link_url='#{link_url}'"
     end
   end
+
   puts "\nIMPORTANT: Update all document links manually by replacing them using insert link attachment\n"
+end
+
+def build_document_link(filename)
+  # rubocop:disable LineLength
+  "<ac:structured-macro ac:name=\"view-file\" ac:schema-version=\"1\" ac:macro-id=\"67cbeb86-e40d-4216-ada2-d20e7e019ccb\"><ac:parameter ac:name=\"name\"><ri:attachment ri:filename=\"#{filename}\" ri:version-at-save=\"1\" /></ac:parameter><ac:parameter ac:name=\"height\">250</ac:parameter></ac:structured-macro>"
+  # rubocop:enable LineLength
 end
 
 def update_all_ticket_links
@@ -1028,4 +1147,5 @@ end
 # upload_all_documents
 # update_all_document_links
 # update_all_ticket_links
+
 puts "\nAll done!\n"
