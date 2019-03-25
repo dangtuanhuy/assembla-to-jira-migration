@@ -39,6 +39,7 @@ UPDATED_PAGES_CSV = "#{DATA}/updated-pages.csv"
 WIKI_FIXED_CSV = "#{DATA}/wiki-pages-fixed.csv"
 WIKI_DOCUMENTS_CSV = "#{DATA}/wiki-documents.csv"
 WIKI_TICKETS_CSV = "#{DATA}/wiki-tickets.csv"
+CHECK_TICKETS_CSV = "#{DATA}/check-tickets.csv"
 
 # Display environment
 puts

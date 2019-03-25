@@ -88,7 +88,7 @@ users_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/users.csv"
 @created_pages = []
 
 @total_wiki_pages = @wiki_assembla.length
-puts "\n--- Wiki pages: #{@total_wiki_pages} ---\n"
+# puts "\n--- Wiki pages: #{@total_wiki_pages} ---\n"
 
 @wiki_assembla.each do |wiki|
   id = wiki['id']
@@ -236,10 +236,11 @@ end
 def create_page_item(id, offset)
   pages_id = @pages[id]
   page = pages_id[:page]
+  children_ids = pages_id[:children_ids]
   page_id = page['id']
   title = page['page_name']
   body = page['contents']
-  if body.nil? || body.strip.length.zero?
+  if (body.nil? || body.strip.length.zero?) && children_ids.length.positive?
     # rubocop:disable LineLength
     body = '<p><ac:structured-macro ac:name="pagetree" ac:schema-version="1" ac:macro-id="caf6610e-f939-4ef9-b748-2121668fcf46"><ac:parameter ac:name="expandCollapseAll">true</ac:parameter><ac:parameter ac:name="root"><ac:link><ri:page ri:content-title="@self" /></ac:link></ac:parameter><ac:parameter ac:name="searchBox">true</ac:parameter></ac:structured-macro></p>'
     # rubocop:enable LineLength
@@ -397,7 +398,7 @@ end
 # TODO
 # get_all_links
 @all_links = csv_to_array(LINKS_CSV)
-puts "\n--- Links: #{@all_links.length} ---"
+# puts "\n--- Links: #{@all_links.length} ---"
 
 # --- Images --- #
 @all_images = @all_links.select { |link| link['tag'] == 'image' }
@@ -408,7 +409,7 @@ puts "\n--- Links: #{@all_links.length} ---"
 
 # --- Anchors (documents + wiki pages) #
 @all_anchors = csv_to_array(LINKS_CSV).select { |link| link['tag'] == 'anchor' }.sort_by { |wiki| wiki['value'] }
-puts "\n--- Anchors: #{@all_anchors.length} ---"
+# puts "\n--- Anchors: #{@all_anchors.length} ---"
 
 # --- Documents --- #
 @all_documents = @all_anchors.select { |anchor| anchor['value'].match(%r{/documents/}) }
@@ -422,7 +423,7 @@ puts "\n--- Anchors: #{@all_anchors.length} ---"
 
 # --- Tickets --- #
 @all_tickets = @all_anchors.select { |anchor| anchor['value'].match(%r{/tickets/}) }
-puts "\n--- Tickets: #{@all_tickets.length} ---"
+# puts "\n--- Tickets: #{@all_tickets.length} ---"
 verify_proc = lambda do |value|
   m = value.match(%r{(?:/tickets/|ticket=)(\d+)})
   return false unless m && m[1]
@@ -438,7 +439,7 @@ end
 
 # --- Wikis --- #
 @all_wikis = @all_anchors.select { |anchor| anchor['value'].match(%r{/wiki/}) }
-puts "\n--- Wikis: #{@all_wikis.length} ---"
+# puts "\n--- Wikis: #{@all_wikis.length} ---"
 verify_proc = lambda do |value|
   page_name = value.match(%r{/([^/]*)$})[1]
   @wiki_assembla.detect { |w| w['page_name'] == page_name }
@@ -448,7 +449,7 @@ end
 # --- Markdowns --- #
 @all_markdowns = @all_links.select { |link| link['tag'] == 'markdown' }
 @wiki_documents = csv_to_array(WIKI_DOCUMENTS_CSV)
-puts "\n--- All markdowns: #{@all_markdowns.length} ---"
+# puts "\n--- All markdowns: #{@all_markdowns.length} ---"
 verify_proc = lambda do |value|
   if value.start_with?('image:')
     image = value.sub(/^image:/, '').sub(/\|.*$/, '')
@@ -466,13 +467,13 @@ end
 # show_all_items(@all_markdowns, verify_proc)
 
 @all_codes = @all_links.select { |link| link['tag'] == 'code' }
-puts "\n--- Codes: #{@all_codes.length} ---"
+# puts "\n--- Codes: #{@all_codes.length} ---"
 # TODO
 # show_all_items(@all_codes)
 
 @all_urls = @all_links.select { |link| link['tag'] == 'url' }
-puts "\n--- Markdown urls: #{@all_urls.length} ---"
-show_all_items(@all_urls)
+# puts "\n--- Markdown urls: #{@all_urls.length} ---"
+# show_all_items(@all_urls)
 
 @pages.each do |id, value|
   parent_id = value[:page]['parent_id']
@@ -755,9 +756,6 @@ def update_all_image_links
           puts "#{msg} cannot find image filename='#{filename}'"
         end
       end
-
-      # TODO
-      # next unless m
 
       # Important: escape any '?', e.g. 'download?filename=blog.png' => 'download\?filename=blog.png'
       if @content.match?(/<img(.*)? src="#{link_url_escaped}"([^>]*?)>/)
@@ -1150,9 +1148,12 @@ def update_all_ticket_links
       jira_issue_key = ticket[:jira_issue_key]
       puts "* value='#{value}' text='#{text}' assembla_ticket_nr='#{assembla_ticket_nr}' jira_issue_key='#{jira_issue_key}' => #{result}"
       next unless result == 'OK'
-
       if @content.match?(%r{<a(.*?)? href="#{value}"([^>]*?)>#{text}</a>})
         @content.sub!(%r{<a(.*?)? href="#{value}"([^>]*?)>#{text}</a>}, jira_issue_key)
+        # @content.sub!(
+        #   jira_issue_key,
+        #   "<a href=\"https://measurabl.atlassian.net/projects/MP/issues/#{jira_issue_key}\" target=\"_blank\">#{jira_issue_key}</a>"
+        # )
         res = 'OK'
       else
         res = 'NOK'
@@ -1162,14 +1163,126 @@ def update_all_ticket_links
   end
 end
 
+def check_for_regexes (regexes)
+  pages = csv_to_array(CREATED_PAGES_CSV)
+  total = pages.length
+  pages.each_with_index do |page, index|
+    page_id = page['id']
+    page_title = @c_page_id_to_title[page_id]
+    puts "confluence_page_id='#{page_id}' title='#{page_title}'"
+    content = confluence_get_content(page_id, index + 1, total)
+    regexes.each do |regex|
+      content.scan(regex).each do |m|
+        puts "* #{m}"
+      end
+    end
+
+  end
+end
+
+def check_for_header_lines
+  pages = csv_to_array(CREATED_PAGES_CSV)
+  total = pages.length
+  pages.each_with_index do |page, index|
+    page_id = page['id']
+    page_title = @c_page_id_to_title[page_id]
+    puts "confluence_page_id='#{page_id}' title='#{page_title}'"
+    content = confluence_get_content(page_id, index + 1, total)
+    content.each_line do |line|
+      puts "* #{line}" if /^#+ /.match?(line)
+    end
+  end
+end
+
+def check_for_tickets
+  # list = []
+  # pages = csv_to_array(CREATED_PAGES_CSV)
+  # total = pages.length
+  # pages.each_with_index do |page, index|
+  #   page_id = page['id']
+  #   page_title = @c_page_id_to_title[page_id]
+  #   puts "page_id='#{page_id}' title='#{page_title}'"
+  #   content = confluence_get_content(page_id, index + 1, total)
+  #   content.scan(/(?:ticket )?#(\d+)/i).each do |m|
+  #     ticket_nr = m[0]
+  #     issue_key = @assembla_nr_to_jira_key[ticket_nr] || 'unknown'
+  #     puts "* #{ticket_nr} => #{issue_key}"
+  #     list << {
+  #       ticket_nr: ticket_nr,
+  #       issue_key: issue_key,
+  #       page_id: page_id,
+  #       page_title: page_title
+  #     }
+  #   end
+  # end
+  #
+  # write_csv_file(CHECK_TICKETS_CSV, list)
+
+  # ticket_nr, issue_key, page_id, page_title
+  puts "\nUnknown tickets"
+  csv_to_array(CHECK_TICKETS_CSV).select { |item| item['issue_key'] == 'unknown' }.each do |item|
+    puts "ticket_nr='#{item['ticket_nr']}' page_id='#{item['page_id']}' page_title='#{item['page_title']}'"
+  end
+
+  puts "\nSkip tickets"
+  csv_to_array(CHECK_TICKETS_CSV).select { |item| item['issue_key'] != 'unknown' && item['ticket_nr'].length < 3 }.each do |item|
+    puts "ticket_nr='#{item['ticket_nr']}' issue_key='#{item['issue_key']}' page_id='#{item['page_id']}' page_title='#{item['page_title']}'"
+  end
+
+  puts "\nOk tickets"
+  page_ids = {}
+  csv_to_array(CHECK_TICKETS_CSV).select { |item| item['issue_key'] != 'unknown' && item['ticket_nr'].length > 2 }.each do |item|
+    page_id = item['page_id']
+    page_title = item['page_title']
+    key = "#{page_id}|#{page_title}"
+    page_ids[key] = [] unless page_ids[key]
+    page_ids[key] << {
+      ticket_nr: item['ticket_nr'],
+      issue_key: item['issue_key']
+    }
+
+    # puts "ticket_nr='#{item['ticket_nr']}' issue_key='#{item['issue_key']}' page_id='#{item['page_id']}' page_title='#{item['page_title']}'"
+  end
+
+  count = 0
+  total_pages = page_ids.length
+  page_ids.each do |key, values|
+    count += 1
+    page_id, page_title = key.split('|')
+    total_values = values.length
+    puts "page_id='#{page_id}' page_title='#{page_title}' => #{total_values}"
+    content = confluence_get_content(page_id, count, total_pages)
+    values.each do |value|
+      ticket_nr = value[:ticket_nr]
+      issue_key = value[:issue_key]
+      if content.match?(/##{ticket_nr}/)
+        content.sub!(/##{ticket_nr}/, "<a href=\"https://measurabl.atlassian.net/projects/MP/issues/#{issue_key}\">#{issue_key}</a>")
+        result = 'OK'
+      else
+        result = 'NOK'
+      end
+      puts "* #{ticket_nr} to #{issue_key} => #{result}"
+    end
+    puts '---'
+    puts content
+    puts '---'
+  end
+
+end
+
 # upload_all_pages
 # update_all_page_links
 # upload_all_images
 # update_all_image_links
 # update_all_md_page_links
 # update_all_md_url_links
-# upload_all_documents
+#  upload_all_documents
 # update_all_document_links
 # update_all_ticket_links
+
+# check_for_regexes([/#\d+/, /\[.*?\]\(.*?\)/, /<code>.*?<\/code>/])
+# check_for_header_lines
+check_for_tickets
+
 
 puts "\nAll done!\n"
