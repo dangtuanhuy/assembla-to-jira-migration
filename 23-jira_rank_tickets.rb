@@ -17,11 +17,11 @@ tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 end
 
 # TEST
-tickets_jira_csv_org = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
-csv_to_array(tickets_jira_csv_org).select { |ticket| ticket['result'] == 'OK' }.each do |t|
-  @tickets_jira.push(t)
-end
-@total_jira_tickets = @tickets_jira.length
+# tickets_jira_csv_org = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv.org"
+# csv_to_array(tickets_jira_csv_org).select { |ticket| ticket['result'] == 'OK' }.each do |t|
+#   @tickets_jira.push(t)
+# end
+# @total_jira_tickets = @tickets_jira.length
 # TEST
 
 # PUT /rest/agile/1.0/issue/rank

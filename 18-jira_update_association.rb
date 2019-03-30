@@ -28,25 +28,25 @@ end
 @tickets_jira = nil
 
 # TEST
-tickets_jira_csv_org = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
-@tickets_jira_org = csv_to_array(tickets_jira_csv_org).select { |ticket| ticket['result'] == 'OK' }
-
-@tickets_jira_org.each do |ticket|
-  jira_id = ticket['jira_ticket_id']
-  assembla_id = ticket['assembla_ticket_id']
-  if @assembla_id_to_jira[assembla_id]
-    warning("assembla_id='#{assembla_id}' already present")
-  else
-    @assembla_id_to_jira[assembla_id] = jira_id
-  end
-  if @jira_id_to_login[jira_id]
-    warning("jira_id='#{jira_id}' already present")
-  else
-    @jira_id_to_login[jira_id] = ticket['reporter_name']
-  end
-end
-
-@tickets_jira_org = nil
+# tickets_jira_csv_org = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv.org"
+# @tickets_jira_org = csv_to_array(tickets_jira_csv_org).select { |ticket| ticket['result'] == 'OK' }
+#
+# @tickets_jira_org.each do |ticket|
+#   jira_id = ticket['jira_ticket_id']
+#   assembla_id = ticket['assembla_ticket_id']
+#   if @assembla_id_to_jira[assembla_id]
+#     warning("assembla_id='#{assembla_id}' already present")
+#   else
+#     @assembla_id_to_jira[assembla_id] = jira_id
+#   end
+#   if @jira_id_to_login[jira_id]
+#     warning("jira_id='#{jira_id}' already present")
+#   else
+#     @jira_id_to_login[jira_id] = ticket['reporter_name']
+#   end
+# end
+#
+# @tickets_jira_org = nil
 # TEST
 
 # Assembla tickets
