@@ -61,15 +61,14 @@ end
 # 1 => text
 # 3 => html
 
-# TODO: uncomment the following lines when ready
-# wiki_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/wiki-pages.csv"
-# @wiki_assembla = []
-# csv_to_array(wiki_assembla_csv).each do |wiki|
-#   wiki['contents'] = wiki['wiki_format'].to_i == 3 ? fix_html(wiki['contents']) : fix_text(wiki['contents'])
-#   @wiki_assembla << wiki
-# end
-#
-# write_csv_file(WIKI_FIXED_CSV, @wiki_assembla)
+wiki_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/wiki-pages.csv"
+@wiki_assembla = []
+csv_to_array(wiki_assembla_csv).each do |wiki|
+  wiki['contents'] = wiki['wiki_format'].to_i == 3 ? fix_html(wiki['contents']) : fix_text(wiki['contents'])
+  @wiki_assembla << wiki
+end
+
+write_csv_file(WIKI_FIXED_CSV, @wiki_assembla)
 
 @wiki_assembla = csv_to_array(WIKI_FIXED_CSV)
 
@@ -309,8 +308,8 @@ def get_document_by_id(space_id, id, counter, total)
   document = nil
 
   pct = percentage(counter, total)
+  url = "#{ASSEMBLA_API_HOST}/spaces/#{space_id}/documents/#{id}"
   begin
-    url = "#{ASSEMBLA_API_HOST}/spaces/#{space_id}/documents/#{id}"
     result = RestClient::Request.execute(method: :get, url: url, headers: ASSEMBLA_HEADERS)
     document = JSON.parse(result) if result
     puts "#{pct} GET url=#{url} => OK"
@@ -395,31 +394,26 @@ end
 
 # --- Links --- #
 # id,counter,title,tag,value,text
-# TODO
-# get_all_links
+get_all_links
 @all_links = csv_to_array(LINKS_CSV)
-# puts "\n--- Links: #{@all_links.length} ---"
+puts "\n--- Links: #{@all_links.length} ---"
 
 # --- Images --- #
 @all_images = @all_links.select { |link| link['tag'] == 'image' }
-# TODO
-# download_all_images
-# puts "\n--- Images: #{@all_images.length} ---"
-# show_all_items(@all_images, ->(value) { File.exist?("#{IMAGES}/#{File.basename(value)}") })
+download_all_images
+puts "\n--- Images: #{@all_images.length} ---"
+show_all_items(@all_images, ->(value) { File.exist?("#{IMAGES}/#{File.basename(value)}") })
 
 # --- Anchors (documents + wiki pages) #
 @all_anchors = csv_to_array(LINKS_CSV).select { |link| link['tag'] == 'anchor' }.sort_by { |wiki| wiki['value'] }
-# puts "\n--- Anchors: #{@all_anchors.length} ---"
+puts "\n--- Anchors: #{@all_anchors.length} ---"
 
 # --- Documents --- #
 @all_documents = @all_anchors.select { |anchor| anchor['value'].match(%r{/documents/}) }
-# TODO
-# download_all_documents
-# puts "\n--- Documents: #{@all_documents.length} ---"
-# show_all_items(@all_documents, ->(value) { File.exist?("#{DOCUMENTS}/#{File.basename(value)}") })
-
-# TODO
-# write_csv_file(WIKI_DOCUMENTS_CSV, @all_documents)
+download_all_documents
+puts "\n--- Documents: #{@all_documents.length} ---"
+show_all_items(@all_documents, ->(value) { File.exist?("#{DOCUMENTS}/#{File.basename(value)}") })
+write_csv_file(WIKI_DOCUMENTS_CSV, @all_documents)
 
 # --- Tickets --- #
 @all_tickets = @all_anchors.select { |anchor| anchor['value'].match(%r{/tickets/}) }
@@ -431,11 +425,8 @@ verify_proc = lambda do |value|
   ticket_nr = m[1]
   @tickets_assembla.detect { |t| t['number'] == ticket_nr }
 end
-# TODO
-# show_all_items(@all_tickets, verify_proc)
-
-# TODO
-# write_csv_file(WIKI_TICKETS_CSV, @all_tickets)
+show_all_items(@all_tickets, verify_proc)
+write_csv_file(WIKI_TICKETS_CSV, @all_tickets)
 
 # --- Wikis --- #
 @all_wikis = @all_anchors.select { |anchor| anchor['value'].match(%r{/wiki/}) }
@@ -444,7 +435,7 @@ verify_proc = lambda do |value|
   page_name = value.match(%r{/([^/]*)$})[1]
   @wiki_assembla.detect { |w| w['page_name'] == page_name }
 end
-# show_all_items(@all_wikis, verify_proc)
+show_all_items(@all_wikis, verify_proc)
 
 # --- Markdowns --- #
 @all_markdowns = @all_links.select { |link| link['tag'] == 'markdown' }
@@ -463,17 +454,15 @@ verify_proc = lambda do |value|
     return @wiki_assembla.detect { |w| w['page_name'].casecmp(value.tr(' ', '_').sub(/\|.*$/, '')).zero? }
   end
 end
-# TODO
-# show_all_items(@all_markdowns, verify_proc)
+show_all_items(@all_markdowns, verify_proc)
 
 @all_codes = @all_links.select { |link| link['tag'] == 'code' }
-# puts "\n--- Codes: #{@all_codes.length} ---"
-# TODO
-# show_all_items(@all_codes)
+puts "\n--- Codes: #{@all_codes.length} ---"
+show_all_items(@all_codes)
 
 @all_urls = @all_links.select { |link| link['tag'] == 'url' }
-# puts "\n--- Markdown urls: #{@all_urls.length} ---"
-# show_all_items(@all_urls)
+puts "\n--- Markdown urls: #{@all_urls.length} ---"
+show_all_items(@all_urls)
 
 @pages.each do |id, value|
   parent_id = value[:page]['parent_id']
@@ -486,25 +475,22 @@ end
 
 # Parent pages sorted by created_at
 @parent_pages = @pages.reject { |_, value| value[:page]['parent_id'] }.sort_by { |_, value| value[:page]['created_at'] }
-# TODO
-# puts "\n--- Parents: #{@parent_pages.length} ---\n"
-# @parent_pages.each { |id, _| show_page(id) }
-# puts "\nDone\n"
+puts "\n--- Parents: #{@parent_pages.length} ---\n"
+@parent_pages.each { |id, _| show_page(id) }
+puts "\nDone\n"
 
 # Child pages sorted by created_at
 @child_pages = @pages.select { |_, value| value[:page]['parent_id'] }.sort_by { |_, value| value[:page]['created_at'] }
-# TODO
-# puts "\n--- Children: #{@child_pages.length} ---\n"
-# @child_pages.each { |id, _| show_page(id) }
-# puts "\nDone\n"
+puts "\n--- Children: #{@child_pages.length} ---\n"
+@child_pages.each { |id, _| show_page(id) }
+puts "\nDone\n"
 
-# TODO
-# puts "\n--- Page Tree: #{@pages.length} ---\n"
-# count = 0
-# @parent_pages.each do |id, _|
-#   show_page_tree(id, [count])
-#   count += 1
-# end
+puts "\n--- Page Tree: #{@pages.length} ---\n"
+count = 0
+@parent_pages.each do |id, _|
+  show_page_tree(id, [count])
+  count += 1
+end
 
 def upload_all_pages
   puts "\n--- Create pages: #{@total_wiki_pages} ---\n"
@@ -629,6 +615,8 @@ def upload_all_documents
     # original assembla document id which was hopefully saved in the wiki-document-csv log during
     # downloading of all of the attachments.
     m = /download\?filename=(.*)$/.match(basename)
+    original_name = nil
+    content_type = nil
     if m
       filename = m[1]
       found = wiki_documents.detect { |img| img['name'] == filename }
@@ -879,6 +867,7 @@ def update_all_md_page_links
 
     versions = {}
     pages.each do |page|
+      version = nil
       value = page[:value]
       title = page[:title]
       page_id = page[:page_id]
@@ -983,7 +972,6 @@ def update_all_md_url_links
           wiki_document_id = File.basename(text)
           found = uploaded_documents.detect { |document| document['wiki_document_id'] }
           if found
-            confluence_page_id = found ['confluence_page_id']
             confluence_document_id = found['confluence_document_id']
             anchor = build_document_link(confluence_document_id)
           else
@@ -1056,7 +1044,6 @@ def update_all_document_links
 
     documents.each do |document|
       confluence_document_id = document[:confluence_document_id]
-      wiki_document_id = document[:wiki_document_id]
       basename = document[:basename]
       link_url = document[:link_url]
       if @content.match?(/#{link_url}/)
@@ -1068,7 +1055,7 @@ def update_all_document_links
       end
       puts "* document_id='#{confluence_document_id}' filename='#{basename}' link_url='#{link_url}'"
     end
-    # confluence_update_page(@space['key'], c_page_id, c_page_title, @content, counter, total)
+    confluence_update_page(@space['key'], c_page_id, c_page_title, @content, counter, total)
   end
 
   puts "\nIMPORTANT: Update all document links manually by replacing them using insert link attachment\n"
@@ -1195,28 +1182,28 @@ def check_for_header_lines
 end
 
 def check_for_tickets
-  # list = []
-  # pages = csv_to_array(CREATED_PAGES_CSV)
-  # total = pages.length
-  # pages.each_with_index do |page, index|
-  #   page_id = page['id']
-  #   page_title = @c_page_id_to_title[page_id]
-  #   puts "page_id='#{page_id}' title='#{page_title}'"
-  #   content = confluence_get_content(page_id, index + 1, total)
-  #   content.scan(/(?:ticket )?#(\d+)/i).each do |m|
-  #     ticket_nr = m[0]
-  #     issue_key = @assembla_nr_to_jira_key[ticket_nr] || 'unknown'
-  #     puts "* #{ticket_nr} => #{issue_key}"
-  #     list << {
-  #       ticket_nr: ticket_nr,
-  #       issue_key: issue_key,
-  #       page_id: page_id,
-  #       page_title: page_title
-  #     }
-  #   end
-  # end
-  #
-  # write_csv_file(CHECK_TICKETS_CSV, list)
+  list = []
+  pages = csv_to_array(CREATED_PAGES_CSV)
+  total = pages.length
+  pages.each_with_index do |page, index|
+    page_id = page['id']
+    page_title = @c_page_id_to_title[page_id]
+    puts "page_id='#{page_id}' title='#{page_title}'"
+    content = confluence_get_content(page_id, index + 1, total)
+    content.scan(/(?:ticket )?#(\d+)/i).each do |m|
+      ticket_nr = m[0]
+      issue_key = @assembla_nr_to_jira_key[ticket_nr] || 'unknown'
+      puts "* #{ticket_nr} => #{issue_key}"
+      list << {
+        ticket_nr: ticket_nr,
+        issue_key: issue_key,
+        page_id: page_id,
+        page_title: page_title
+      }
+    end
+  end
+
+  write_csv_file(CHECK_TICKETS_CSV, list)
 
   # ticket_nr, issue_key, page_id, page_title
   puts "\nUnknown tickets"
@@ -1240,8 +1227,7 @@ def check_for_tickets
       ticket_nr: item['ticket_nr'],
       issue_key: item['issue_key']
     }
-
-    # puts "ticket_nr='#{item['ticket_nr']}' issue_key='#{item['issue_key']}' page_id='#{item['page_id']}' page_title='#{item['page_title']}'"
+    puts "ticket_nr='#{item['ticket_nr']}' issue_key='#{item['issue_key']}' page_id='#{item['page_id']}' page_title='#{item['page_title']}'"
   end
 
   count = 0
@@ -1250,39 +1236,37 @@ def check_for_tickets
     count += 1
     page_id, page_title = key.split('|')
     total_values = values.length
-    puts "page_id='#{page_id}' page_title='#{page_title}' => #{total_values}"
     content = confluence_get_content(page_id, count, total_pages)
+    puts "page_id='#{page_id}' page_title='#{page_title}' => #{total_values}"
     values.each do |value|
       ticket_nr = value[:ticket_nr]
       issue_key = value[:issue_key]
       if content.match?(/##{ticket_nr}/)
         content.sub!(/##{ticket_nr}/, "<a href=\"https://measurabl.atlassian.net/projects/MP/issues/#{issue_key}\">#{issue_key}</a>")
-        result = 'OK'
+        puts "* #{ticket_nr} => #{issue_key}"
       else
-        result = 'NOK'
+        puts "* #{ticket_nr} => #{issue_key} NOK"
       end
-      puts "* #{ticket_nr} to #{issue_key} => #{result}"
     end
-    puts '---'
-    puts content
-    puts '---'
+    # Uncomment the following line if you are sure you really want to fix these ticket links.
+    # confluence_update_page(@space['key'], page_id, page_title, content, count, total_pages)
   end
 
 end
 
-# upload_all_pages
-# update_all_page_links
-# upload_all_images
-# update_all_image_links
-# update_all_md_page_links
-# update_all_md_url_links
-#  upload_all_documents
-# update_all_document_links
-# update_all_ticket_links
+upload_all_pages
+update_all_page_links
+upload_all_images
+update_all_image_links
+update_all_md_page_links
+update_all_md_url_links
+upload_all_documents
+update_all_document_links
+update_all_ticket_links
 
+# The following lines can be uncommented to run extra checks.
 # check_for_regexes([/#\d+/, /\[.*?\]\(.*?\)/, /<code>.*?<\/code>/])
 # check_for_header_lines
-check_for_tickets
-
+#check_for_tickets
 
 puts "\nAll done!\n"
