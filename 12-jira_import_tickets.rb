@@ -580,8 +580,6 @@ end
   @all_custom_field_names << name
 end
 
-# @all_custom_field_names << "Assembla-#{ASSEMBLA_CUSTOM_FIELD}" unless ASSEMBLA_CUSTOM_FIELD.empty?
-#
 @customfield_name_to_id = {}
 @customfield_id_to_name = {}
 

@@ -22,6 +22,7 @@ This is by far the best Assembla to Jira migration toolset around. Here are some
 * Populate the backlog, future and current sprints.
 * Assign stories to epics.
 * Resolve cross linking between external projects.
+* Export wiki to Confluence space (new!)
 * Account for the API differences between hosted and cloud.
 * Tons of great documentation and trouble-shooting guide.
 
@@ -115,7 +116,7 @@ Now that all of the Assembla data is available, we can now take this and import 
 13. Resolve/update ticket links
 14. Import ticket comments
 15. Import ticket attachments
-16. UPdate attachment links
+16. Update attachment links
 17. Update ticket status (resolutions)
 18. Update ticket associations
 19. Update ticket watchers
@@ -179,14 +180,18 @@ DEBUG=false
 ASSEMBLA_API_HOST=https://api.assembla.com/v1
 ASSEMBLA_API_KEY=api-key
 ASSEMBLA_API_SECRET=api-secret
-ASSEMBLA_URL_TICKETS=https://app.assembla.com/spaces/:space-name/tickets
-ASSEMBLA_SPACE=space
+ASSEMBLA_URL_TICKETS=https://app.assembla.com/spaces/[:space-name]/tickets
+ASSEMBLA_SPACE=[:space-name]
+ASSEMBLA_WIKI=https://[:company-name].assembla.com/spaces/[:space-name]/wiki
+ASSEMBLA_WIKI_NAME=[:space-name]
 ASSEMBLA_SKIP_ASSOCIATIONS=parent,child,story,subtask
 # Ticket types extracted from ticket summary, e.g. starting with 'Spike: '
 ASSEMBLA_TYPES_EXTRA=spike,bug
 ASSEMBLA_CUSTOM_FIELD=field-name
 
 # --- Jira API settings --- #/
+# Server type must be 'hosted' or 'cloud'
+JIRA_SERVER_TYPE=cloud
 # Base must start with 'https?://'
 JIRA_API_BASE=https://jira.example.org
 JIRA_API_HOST=rest/api/2
@@ -200,6 +205,9 @@ JIRA_API_UNKNOWN_USER=unknown.user
 JIRA_API_DEFAULT_EMAIL=example.org
 JIRA_API_IMAGES_THUMBNAIL=description:false,comments:true
 JIRA_API_SKIP_EMPTY_COMMENTS=true
+JIRA_API_SKIP_COMMIT_COMMENTS=true
+
+JIRA_API_STATUSES=New:To Do,In Progress,Code Review:Review,Test,Test: In Progress:Test,Ready for Deploy:Ready,Re-opened:To Do,Fixed/Closed:Done,Deferred:To Do,Invalid/Duplicate:Done
 
 # Cross project ticket linking
 JIRA_API_SPACE_TO_PROJECT=space1-name:project1-key,space2-name:project2-name
@@ -531,6 +539,38 @@ The same applies to the `Configure Screen Page` for the following additional (de
 
 ![](images/jira-configure-screen.png)
 
+### Import custom fields
+
+Assembla allows the use of a number of user-defined field types, namely: `List`, `Team List`, `Numeric` and `Text`.
+
+These need to be mapped properly to the relevant Jira custom fields implemented as Jira plugins `com.atlassian.jira.plugin.system.customfieldtypes:<type>`
+as follows:
+
+| Assembla type | Jira plugin <type> | Searcher key
+| ------------- | ------------------ | ------------
+| List          | select             | multiselectsearcher
+| Team List     | userpicker         | userpickergroupsearcher
+| Numeric       | float              | exactnumber
+| Text          | textfield          | textsearcher
+
+```
+POST /rest/api/2/screens/{screenId}/tabs/{tabId}/fields
+{
+  "name": name,
+  "description": description,
+  "type": type,
+  "searcherKey": searcherKey
+}
+```
+
+Execute the following script to have this done:
+
+```
+$ ruby 11-jira_import_custom_fields.rb
+```
+
+If any custom fields fail to be created, a list will be generated which you can use to fix manually to the Jira project.
+
 ### Import tickets
 
 Alright, this is the moment we've all been waiting for! It's time to import the Assembla tickets and create the matching Jira issues. Here we go.
@@ -576,7 +616,7 @@ end
 Now you are ready to import all of the tickets. Execute the following command:
 
 ```
-$ ruby 11-jira_import_tickets.rb # => data/jira/:space/jira-tickets.csv
+$ ruby 12-jira_import_tickets.rb # => data/jira/:space/jira-tickets.csv
 ```
 
 Results are saved in the output file `data/jira/:space/jira-tickets.csv` with the following columns:
@@ -610,7 +650,7 @@ The output file `data/jira/:space/jira-ticket-links.csv` generated in the previo
 Run the following command in order to do this:
 
 ```
-$ ruby 12-jira_update_ticket_links.rb
+$ ruby 13-jira_update_ticket_links.rb
 ```
 
 Note: for one reason or another, not all Assembla links point to valid tickets (deleted, moved or whatever), so these will be marked as invalid by strikethru, e.g. -#123-.
@@ -627,7 +667,7 @@ POST /rest/api/2/issue/{issueIdOrKey}/comment
 Now you are ready to import all of the comments. Execute the following command:
 
 ```
-$ ruby 13-jira_import_comments.rb # => data/jira/:space/jira-comments.csv
+$ ruby 14-jira_import_comments.rb # => data/jira/:space/jira-comments.csv
 ```
 
 Results are saved in the output file `data/jira/:space/jira-comments.csv` with the following columns:
@@ -656,7 +696,7 @@ curl -D- -u admin:admin -X POST -H "X-Atlassian-Token: no-check" -F "file=@myfil
 Now you are ready to import all of the attachments that were downloaded earlier. Execute the following command:
 
 ```
-$ ruby 14-jira_import_attachments.rb [restart_offset] # => \
+$ ruby 15-jira_import_attachments.rb [restart_offset] # => \
     data/jira/:space/jira-attachments-import-ok.csv
     data/jira/:space/jira-attachments-import-nok.csv
 ```
@@ -704,7 +744,7 @@ These markdown links can appear in both the `issue description` or in the `comme
 You will now need to execute the following script:
 
 ```
-$ ruby 14-jira_update_attachment_links.rb
+$ ruby 16-jira_update_attachment_links.rb
 ```
 
 ### Update ticket status
@@ -712,7 +752,7 @@ $ ruby 14-jira_update_attachment_links.rb
 Now you are ready to update the Jira tickets in line with the original Assembla state. Execute the following command:
 
 ```
-$ ruby 15-jira_update_status.rb # => data/jira/:space/jira-update-status.csv
+$ ruby 17-jira_update_status.rb # => data/jira/:space/jira-update-status.csv
 ```
 
 If there are any status types which are missing, the script will abort and display a list of status names that you will have to add manually to Jira.
@@ -784,7 +824,7 @@ If for some reason you do not want to do this, simply comment out the line, or i
 Now you are ready to update the Jira tickets to reflect the original Assembla associations. Execute the following command:
 
 ```
-$ ruby 16-jira_update_association.rb # => data/jira/:space/jira-update-associations.csv
+$ ruby 18-jira_update_association.rb # => data/jira/:space/jira-update-associations.csv
 ```
 
 Important: the Jira API requests MUST be made with an Authorization Header constructed with the `reporter_name` (issue creator), otherwise a `403 Forbidden` error will be returned.
@@ -799,7 +839,7 @@ POST /rest/api/2/issue/{issueIdOrKey}/watchers
 Now you are ready to convert the Assembla followers list to the Jira issue watchers list. Execute the following command:
 
 ```
-$ ruby 17-jira_update_watchers.rb # => data/jira/:space/jira-update-watchers.csv
+$ ruby 19-jira_update_watchers.rb # => data/jira/:space/jira-update-watchers.csv
 ```
 
 Important: the Jira API requests MUST be made with an Authorization Header constructed with the `username` (watcher), otherwise a `403 Forbidden` error will be returned.
@@ -861,7 +901,7 @@ comment => /browse/[JIRA_ISSUE_KEY]?focusedCommentId=[JIRA_COMMENT_ID]&page= \
 Execute the following command to update all external links:
 
 ```
-$ ruby 18-jira_update_ext_links.rb => jira-links-external-all.csv
+$ ruby 20-jira_update_ext_links.rb => jira-links-external-all.csv
                                       jira-links-external-updated.csv
 ```
 
@@ -888,7 +928,7 @@ The Jira stories originally belonging to an epic in Assembla now need to be adde
 In order to do this you need to execute the following command.
 
 ```
-$ ruby 19-jira_update_epics.rb
+$ ruby 21-jira_update_epics.rb
 ```
 
 The results are saved in the `jira-update-epics.csv` output file.
@@ -898,7 +938,7 @@ Check this output file for the epics that resulted in errors, e.g. result `NOK`.
 If errors occur, e.g. `Issue 'EC-71' is an epic and therefore cannot be associated to another epic`, you should run the following recovery script which will attempt to fix most of the problems:
 
 ```
-$ ruby 19-jira_update_epics_nok.rb
+$ ruby 22-jira_update_epics_nok.rb
 ```
 
 The results are saved in the `jira-update-epics_nok.csv` output file, a result of `NOK` meaning that you may attempt to fix it manually with the help of the `message` column giving the error text.
@@ -908,7 +948,7 @@ The results are saved in the `jira-update-epics_nok.csv` output file, a result o
 Only needed for the Jira server type is `cloud`. Since this was not possible during the ticket creation, now is the time to rank the imported issues using the original Assembla values.
 
 ```
-$ ruby 20-jira_rank_tickets.rb
+$ ruby 23-jira_rank_tickets.rb
 ```
 
 ## Scrum Board
@@ -930,7 +970,7 @@ When the scrum board was created with the project, all issues are assigned to th
 Now you are ready to setup the sprints by executing the following command:
 
 ```
-$ ruby 21-jira_create_sprints.rb # => data/jira/:space/jira-create-sprints.csv
+$ ruby 24-jira_create_sprints.rb # => data/jira/:space/jira-create-sprints.csv
 ```
 
 The issues are redistributed to the sprints they belong to and the most recent sprint is set as the `active` sprint.
@@ -954,7 +994,7 @@ The final step after the board and sprints have been created is to copy the Asse
 In order to achieve this, execute the following command:
 
 ```
-$ ruby 22-jira_update_board.rb
+$ ruby 25-jira_update_board.rb
 ```
 
 ```
@@ -1005,6 +1045,68 @@ JIRA_API_STATUSES=New:To Do,In Progress,Blocked,Testable,Ready for Acceptance, \
 
 ![](images/jira-create-workflow.png)
 
+### Import Assembla Wiki to Confluence
+
+This is a new script which allows one to take the previously generated Assembla wiki exported `wiki-pages.csv` file,
+and execute a best-effort import script to a given Confluence space.
+
+The `.env` file has been extended with the following extra items:
+
+```
+# --- Confluence settings --- #
+CONFLUENCE_API=https://[:company-name].atlassian.net/wiki/rest/api
+CONFLUENCE_SPACE=[:space-name]
+CONFLUENCE_EMAIL=john.doe@example.org
+CONFLUENCE_PASSWORD=secret
+```
+
+These values need to be updated to the once you will be using for the Wiki migration.
+
+First create the new Confluence space by going to the `https://[:company-name].atlassian.net/wiki/` page and clicking
+the `Create Space`-button at the top right of the page.
+
+Select the `Blank space` option and enter the `Space name` corresponding to the value of `[:space-name]` in the `.env`
+file and optionally the `Space key` if you desire one other than the generated default.
+
+Once the page has been created you can go ahead and run the script:
+
+```
+$ ruby 26-wiki_to_confluence.rb
+```
+
+The script attempts to do the following tasks:
+
+* upload all pages
+* update all page links
+* upload all images
+* update all image links
+* update all markdown page links
+* update all markdown url links
+* upload all documents
+* update all document links
+* update all ticket links
+
+Dowloaded documents can be found in the `confluence/documents` directory and the downloaded images in the `confluence/images`
+directory.
+
+The generated csv-files are saved in the `confluence` directory. These are used within the script but can also be reviewed to detect
+any warning or errors.
+
+Additionally, a number of (commented out) scripts at the end are provided to assist you with trouble-shooting and analyzing
+possible missing or incorrect attachment, ticket or image links.
+
+```
+check_for_regexes([/#\d+/, /\[.*?\]\(.*?\)/, /<code>.*?<\/code>/])
+check_for_header_lines
+check_for_tickets
+```
+
+The import of wiki pages into confluence involves a complex set of text transformation in which a best effort is attempted to convert the 
+wiki html, markdown and plain text formats into the appropriate Confluence XHTML format.
+
+This is very challenged and there will be some anomolies in the resulting transformations, so one is advised to double-check the results as
+best as possible. 
+
 ### Cleanup
 
 Finally, cleanup actions need to be taken to finish things off.
@@ -1053,32 +1155,35 @@ It can be slightly tedious running scripts that take a long time to complete and
 
 In order to make this easier for you to track, here is a simple checklist where you can sign off each step and remember where you are.
 
-| Step | Actions  | Item          | Dir | Start | Done |
-| ---- | -------  | -----         | --- | ----- | ---- |
-|  01  | Assembla | Space         | dn  |       |      |
-|  02  | Assembla | Tickets       | dn  |       |      |
-|  03  | Assembla | Users         | na  |       |      |
-|  04  | Assembla | Reports       | na  |       |      |
-|  05  | Jira     | Projects      | up  |       |      |
-|  06  | Jira     | Issue links   | na  |       |      |
-|  07  | Jira     | General info  | na  |       |      |
-|  08  | Jira     | Users         | up  |       |      |
-|  09  | Jira     | Attachments   | dn  |       |      |
-|  10  | Jira     | Custom fields | up  |       |      |
-|  11  | Jira     | Tickets       | up  |       |      |
-|  12  | Jira     | Ticket links  | up  |       |      |
-|  13  | Jira     | Comments      | up  |       |      |
-|  14  | Jira     | Attachments   | up  |       |      |
-|  15  | Jira     | Status        | up  |       |      |
-|  16  | Jira     | Associations  | up  |       |      |
-|  17  | Jira     | Watchers      | up  |       |      |
-|  18  | Jira (1) | Ext links     | up  |       |      |
-|  19  | Jira     | Epics         | up  |       |      |
-|      | Jira (2) | Epics NOK     | up  |       |      |
-|  20  | Jira (3) | Ranking       | up  |       |      |
-|  21  | Board    | Sprints       | up  |       |      |
-|  22  | Board    | Update        | up  |       |      |
-|  23  | Cleanup  | See list      | na  |       |      |
+| Step | Actions  | Item                 | Dir | Start | Done |
+| ---- | -------  | -----                | --- | ----- | ---- |
+|  01  | Assembla | Space                | dn  |       |      |
+|  02  | Assembla | Tickets              | dn  |       |      |
+|  03  | Assembla | Users                | na  |       |      |
+|  04  | Assembla | Reports              | na  |       |      |
+|  05  | Jira     | Projects             | up  |       |      |
+|  06  | Jira     | Issue links          | na  |       |      |
+|  07  | Jira     | General info         | na  |       |      |
+|  08  | Jira     | Users                | up  |       |      |
+|  09  | Jira     | Attachments          | dn  |       |      |
+|  10  | Jira     | Create custom fields | dn  |       |      |
+|  11  | Jira     | Import Custom fields | up  |       |      |
+|  12  | Jira     | Tickets              | up  |       |      |
+|  13  | Jira     | Ticket links         | up  |       |      |
+|  14  | Jira     | Comments             | up  |       |      |
+|  15  | Jira     | Attachments          | up  |       |      |
+|  16  | Jira     | Attachment links     | up  |       |      |
+|  17  | Jira     | Status               | up  |       |      |
+|  18  | Jira     | Associations         | up  |       |      |
+|  19  | Jira     | Watchers             | up  |       |      |
+|  20  | Jira (1) | Ext links            | up  |       |      |
+|  21  | Jira     | Epics                | up  |       |      |
+|  22  | Jira (2) | Epics NOK            | up  |       |      |
+|  23  | Jira (3) | Ranking              | up  |       |      |
+|  24  | Board    | Sprints              | up  |       |      |
+|  25  | Board    | Update               | up  |       |      |
+|  26  | Wiki     | Import               | up  |       |      |
+|  27  | Cleanup  | See list             | na  |       |      |
 
 (1) first complete all projects up to this point before continuing (in order to ensure that all of the external links are resolved correctly).
 
@@ -1250,6 +1355,25 @@ Most of the ticket fields are converted from Assembla to Jira via a one-to-one m
 * 10304 Capture for Jira screen resolution
 * 10305 Capture for Jira jQuery version
 * **10400 Assembla**
+
+### Confluence
+
+In the `data/confluence` directory:
+
+* check-tickets.csv
+* created-pages.csv
+* created-pages-nok.csv
+* links.csv
+* uploaded-documents.csv
+* uploaded-images.csv
+* wiki-documents.csv
+* wiki-pages-fixed.csv
+* wiki-tickets.csv
+
+Downloaded files can be found in the following directories:
+
+* data/confluence/documents
+* data/confluence/images
 
 ### Authorization
 

@@ -1267,6 +1267,6 @@ update_all_ticket_links
 # The following lines can be uncommented to run extra checks.
 # check_for_regexes([/#\d+/, /\[.*?\]\(.*?\)/, /<code>.*?<\/code>/])
 # check_for_header_lines
-#check_for_tickets
+# check_for_tickets
 
 puts "\nAll done!\n"
