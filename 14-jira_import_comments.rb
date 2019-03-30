@@ -13,20 +13,6 @@ tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
   @is_ticket_id[ticket['assembla_ticket_id']] = true
 end
 
-# @missing = []
-# csv_to_array(tickets_jira_csv).select {|ticket| ticket['result'] == 'NOK'}.each do |t|
-#   @missing.push({
-#                     ticket_id: t['assembla_ticket_id'],
-#                     issue_type: t['issue_type_name'],
-#                     reporter: t['reporter_name'],
-#                     assignee: t['assignee_name'],
-#                     summary: t['summary'],
-#                     milestone: t['milestone_name'],
-#                     story_rank: t['story_rank']
-#                 })
-# end
-# write_csv_file("#{OUTPUT_DIR_JIRA}/jira-tickets-nok.csv", @missing)
-
 # Assembla comments
 # id,comment,user_id,created_on,updated_at,ticket_changes,user_name,user_avatar_url,ticket_id,ticket_number
 comments_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-comments.csv"
