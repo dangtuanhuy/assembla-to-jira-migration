@@ -533,9 +533,10 @@ On the `View Field Configuration Page` ensure the same for:
 The same applies to the `Configure Screen Page` for the following additional (default) fields:
 
 * Epic Name
-* Rank
-* Assignee
 * Labels
+* Assignee
+* Rank
+* Resolution
 
 ![](images/jira-configure-screen.png)
 
