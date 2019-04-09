@@ -530,7 +530,8 @@ On the `View Field Configuration Page` ensure the same for:
 
 ![](images/jira-view-field-configuration.png)
 
-The same applies to the `Configure Screen Page` for the following additional (default) fields:
+The same applies to the `Configure Screen Page` for BOTH the Scrum Bug and Scrum Default Issue pages, so include the 
+following additional (default) fields:
 
 * Epic Name
 * Labels
