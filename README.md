@@ -273,9 +273,9 @@ $ rvm use `cat .ruby-version`
 The output files are located in the directory `data/assembla/:space/` as follows:
 
 ```
-$ ruby 01-assembla_export_space.rb # => space_tools.csv, users.csv, user_roles.csv tags.csv \
+$ ruby 01-assembla_export_space.rb # => space-tools.csv, users.csv, user-roles.csv, ticket-tags.csv, \
     milestones-all.csv, tickets-statuses.csv, tickets-custom-fields.csv, documents.csv, \
-    wiki_pages.csv, tickets.csv
+    wiki-pages.csv, tickets.csv
 $ ruby 02-assembla_export_tickets.rb [type] # => ticket-comments.csv, ticket-attachments.csv, \
     ticket-tags.csv, ticket-associations.csv
 $ ruby 03-assembla_report_users.rb # => report-users.csv
@@ -290,7 +290,7 @@ $ ruby 01-assembla_export_space.rb users # => users.csv
 $ ruby 01-assembla_export_space.rb user_roles # => user-roles.csv
 $ ruby 01-assembla_export_space.rb tags # => ticket-tags.csv
 $ ruby 01-assembla_export_space.rb milestones/all # => milestones-all.csv
-$ ruby 01-assembla_export_space.rb ticket/statuses # => ticket-statuses.csv
+$ ruby 01-assembla_export_space.rb tickets/statuses # => tickets-statuses.csv
 $ ruby 01-assembla_export_space.rb tickets/custom_fields # => tickets-custom-fields.csv
 $ ruby 01-assembla_export_space.rb documents # => documents.csv
 $ ruby 01-assembla_export_space.rb wiki_pages # => wiki-pages.csv
