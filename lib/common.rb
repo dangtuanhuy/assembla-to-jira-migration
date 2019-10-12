@@ -237,7 +237,7 @@ JIRA_HEADERS_ADMIN = {
 # Assuming that the user name is the same as the user password
 # For the cloud we use the email otherwise login
 def headers_user_login(user_login, user_email)
-  return JIRA_HEADERS_ADMIN if JIRA_SERVER_TYPE == 'cloud'
+  return JIRA_HEADERS_ADMIN if JIRA_SERVER_TYPE == 'hosted'
   {'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json; charset=utf-8'}
 end
 

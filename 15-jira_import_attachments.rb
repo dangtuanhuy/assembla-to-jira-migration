@@ -90,7 +90,7 @@ end
   next if counter < restart_offset
 
   payload = { mulitpart: true, file: File.new(filepath, 'rb') }
-  base64_encoded = if JIRA_SERVER_TYPE == 'hosted'
+  base64_encoded = if created_by != JIRA_API_ADMIN_USER
                      Base64.encode64(created_by + ':' + created_by)
                    else
                      Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
