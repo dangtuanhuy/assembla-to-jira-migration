@@ -34,7 +34,8 @@ Have you ever wanted to use Jira instead of Assembla, but were afraid that the s
 
 Are you worried that your business-critical data in Assembla will get corrupted or even lost during the conversion?
 
-Jira already offers a number of standard add-ons to make certain migrations easier. Unfortunately, it does not yet offer a tool for migrating from Assembla (bummer).
+Jira already offers a number of standard add-ons to make certain migrations easier. Unfortunately, it does not offer a tool for migrating from Assembla. In fact, they have announced that they will [NOT 
+provide a native JIRA import from Assembla in the foreseeable future](https://jira.atlassian.com/browse/JRASERVER-64507), bummer.
 
 However, **you are now in luck!** By using this Assembla-to-Jira migration toolset, it is very easy to export all of the relevant Assembla data and import most (if not all) of it into a Jira project without loss or corruption of data.
 
