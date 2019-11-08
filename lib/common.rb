@@ -53,6 +53,8 @@ JIRA_API_PROJECT_TYPE = (ENV['JIRA_API_PROJECT_TYPE'] || 'scrum').freeze
 
 URL_JIRA_SERVERINFO = "#{JIRA_API_HOST}/serverInfo"
 URL_JIRA_PROJECTS = "#{JIRA_API_HOST}/project"
+URL_JIRA_USERS = "#{JIRA_API_HOST}/users"
+URL_JIRA_USER_ACCOUNT_ID = "#{JIRA_API_HOST}/user/bulk/migration"
 URL_JIRA_ISSUE_TYPES = "#{JIRA_API_HOST}/issuetype"
 URL_JIRA_PRIORITIES = "#{JIRA_API_HOST}/priority"
 URL_JIRA_RESOLUTIONS = "#{JIRA_API_HOST}/resolution"
@@ -225,11 +227,12 @@ end
 base64_admin = if JIRA_SERVER_TYPE == 'hosted'
                  Base64.encode64(JIRA_API_ADMIN_USER + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
                else
-                 Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
+                 # Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
+                 Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_KEY'])
                end
 
 JIRA_HEADERS_ADMIN = {
-    'Authorization': "Basic #{base64_admin}",
+    'Authorization': "Basic " + (ENV['JIRA_API_BASE64_ADMIN'] || base64_admin),
     'Content-Type': 'application/json; charset=utf-8',
     'Accept': 'application/json'
 }.freeze
@@ -466,6 +469,9 @@ def jira_create_project(project_name, project_type)
   goodbye("Invalid project type=#{project_type}, must be 'scrum' or 'kanban'") unless %w(scrum kanban).include?(project_type)
   result = nil
   key = jira_build_project_key(project_name)
+  account_id = jira_get_user_account_id(JIRA_API_ADMIN_USER)
+  puts account_id
+  exit
   payload = {
       key: key,
       name: project_name,
@@ -488,7 +494,26 @@ def jira_create_project(project_name, project_type)
   result
 end
 
+def jira_get_user_account_id(username)
+  result = nil
+  account_id = nil
+  url = "#{URL_JIRA_USER_ACCOUNT_ID}?username=#{username}"
+  begin
+    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
+    result = JSON.parse(response)
+    puts result.inspect
+    if result.kind_of?(Array) && result.length == 1
+      account_id = result[0]['accountId']
+      puts "GET #{url} => accountId='#{account_id}' OK"
+    end
+  rescue => e
+    puts "GET #{url} => NOK (#{e.message})"
+  end
+  account_id
+end
+
 def jira_get_projects
+  puts "jira_get_projects"
   result = nil
   begin
     response = RestClient::Request.execute(method: :get, url: URL_JIRA_PROJECTS, headers: JIRA_HEADERS_ADMIN)
