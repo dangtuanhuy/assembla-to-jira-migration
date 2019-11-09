@@ -39,6 +39,9 @@ end
 
 JIRA_API_HOST = "#{JIRA_API_BASE}/#{ENV['JIRA_API_HOST']}"
 JIRA_API_ADMIN_USER = ENV['JIRA_API_ADMIN_USER'].freeze
+JIRA_API_ADMIN_PASSWORD = ENV['JIRA_API_ADMIN_PASSWORD'].freeze
+JIRA_API_KEY = ENV['JIRA_API_KEY'].freeze
+JIRA_API_BASE64_ADMIN = ENV['JIRA_API_BASE64_ADMIN'].freeze
 JIRA_API_ADMIN_EMAIL = ENV['JIRA_API_ADMIN_EMAIL'].freeze
 JIRA_API_DEFAULT_EMAIL = (ENV['JIRA_API_DEFAULT_EMAIL'] || 'example.org').gsub(/^@/, '').freeze
 JIRA_API_UNKNOWN_USER = ENV['JIRA_API_UNKNOWN_USER'].freeze
@@ -225,17 +228,21 @@ unless /cloud|hosted/.match?(JIRA_SERVER_TYPE)
 end
 
 base64_admin = if JIRA_SERVER_TYPE == 'hosted'
-                 Base64.encode64(JIRA_API_ADMIN_USER + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
+                 Base64.encode64(JIRA_API_ADMIN_USER + ':' + JIRA_API_ADMIN_PASSWORD)
                else
-                 # Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
-                 Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_KEY'])
+                 # Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + JIRA_API_ADMIN_PASSWORD)
+                 Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + JIRA_API_KEY).strip.sub(/\n/,'')
                end
 
 JIRA_HEADERS_ADMIN = {
-    'Authorization': "Basic " + (ENV['JIRA_API_BASE64_ADMIN'] || base64_admin),
+    # 'Authorization': 'Basic a2lmZmluLmdpc2hAcGxhbmV0Lm5sOktsRmZoU1MxcDJBaklMOER6eEdTRTNFQQ==',
+    # 'Authorization': "Basic " + (JIRA_API_BASE64_ADMIN || base64_admin),
+    'Authorization': "Basic " + base64_admin,
     'Content-Type': 'application/json; charset=utf-8',
     'Accept': 'application/json'
 }.freeze
+
+
 
 # Assuming that the user name is the same as the user password
 # For the cloud we use the email otherwise login
@@ -470,15 +477,14 @@ def jira_create_project(project_name, project_type)
   result = nil
   key = jira_build_project_key(project_name)
   account_id = jira_get_user_account_id(JIRA_API_ADMIN_USER)
-  puts account_id
-  exit
   payload = {
       key: key,
       name: project_name,
       projectTypeKey: 'software',
       description: "Description of project '#{project_name}'",
       projectTemplateKey: "com.pyxis.greenhopper.jira:gh-#{project_type}-template",
-      lead: JIRA_API_ADMIN_USER
+      leadAccountId: account_id
+      # lead: JIRA_API_ADMIN_USER
   }.to_json
   begin
     response = RestClient::Request.execute(method: :post, url: URL_JIRA_PROJECTS, payload: payload, headers: JIRA_HEADERS_ADMIN)
@@ -501,19 +507,17 @@ def jira_get_user_account_id(username)
   begin
     response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response)
-    puts result.inspect
     if result.kind_of?(Array) && result.length == 1
       account_id = result[0]['accountId']
       puts "GET #{url} => accountId='#{account_id}' OK"
     end
   rescue => e
-    puts "GET #{url} => NOK (#{e.message})"
+    puts "GET #{url} => NOK (#{e.inspect})"
   end
   account_id
 end
 
 def jira_get_projects
-  puts "jira_get_projects"
   result = nil
   begin
     response = RestClient::Request.execute(method: :get, url: URL_JIRA_PROJECTS, headers: JIRA_HEADERS_ADMIN)
@@ -534,6 +538,7 @@ def jira_get_project_by_name(name)
   result = nil
   begin
     response = RestClient::Request.execute(method: :get, url: URL_JIRA_PROJECTS, headers: JIRA_HEADERS_ADMIN)
+    puts response.body
     body = JSON.parse(response.body)
     result = body.detect {|h| h['name'] == name}
     if result

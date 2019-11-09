@@ -28,4 +28,5 @@ a2lmZmluLmdpc2hAcGxhbmV0OktsRmZoU1MxcDJBaklMOER6eEdTRTNFQQ==
 $ curl --request GET --user 'kiffin.gish@planet.nl:KlFfhSS1p2AjIL8DzxGSE3EA' --header 'Accept: application/json' --url 'https://gishtech.atlassian.net/rest/api/2/user/bulk/migration?username=kiffin.gish'
 [{"username":"kiffin.gish","accountId":"5c1b0a2b81c1261667adbc97"}]✔ 
 
-$ curl --request GET --header 'Authorization: Basic a2lmZmluLmdpc2hAcGxhbmV0OktsRmZoU1MxcDJBaklMOER6eEdTRTNFQQ' --header 'Accept: application/json' --url 'https://gishtech.atlassian.net/rest/api/2/user/bulk/migration?username=kiffin.gish'
+$ curl -v --request GET --user 'kiffin.gish@planet.nl:KlFfhSS1p2AjIL8DzxGSE3EA' --header 'Accept: application/json' --url 'https://gishtech.atlassian.net/rest/api/2/user/bulk/migration?username=kiffin.gish'
+```

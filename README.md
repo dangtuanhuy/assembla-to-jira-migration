@@ -313,7 +313,15 @@ If you also want to capture the output, then you can run the above commands like
 
 ```
 $ ruby nn-assembla_xxx.rb | tee logs/nn-assembla_xxx.log
+```
 
+In other words:
+
+```
+$ ruby 01-assembla_export_space.rb | tee logs/01-assembla_export_space.log
+$ ruby 02-assembla_export_tickets.rb | tee logs/02-assembla_export_tickets.log
+$ ruby 03-assembla_report_users.rb | tee logs/03-assembla_report_users.log
+$ ruby 04-assembla_report_tickets.rb | tee logs/04-assembla_report_tickets.log
 ```
 
 And watch the progress as follows:
