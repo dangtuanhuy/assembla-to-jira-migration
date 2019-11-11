@@ -8,10 +8,10 @@ load './lib/users-jira.rb'
 # the `site-admins` and the `jira-administrators` groups.
 #
 @jira_administrators = jira_get_group('jira-administrators')
-admin_administrator = @jira_administrators.detect{|user| user['emailAddress'] == JIRA_API_ADMIN_EMAIL}
+admin_administrator = @jira_administrators.detect { |user| user['emailAddress'] == JIRA_API_ADMIN_EMAIL }
 
 @jira_site_admins = jira_get_group('site-admins')
-admin_site_admin = @jira_site_admins.detect{|user| user['emailAddress'] == JIRA_API_ADMIN_EMAIL}
+admin_site_admin = @jira_site_admins.detect { |user| user['emailAddress'] == JIRA_API_ADMIN_EMAIL }
 
 goodbye("Admin user with JIRA_API_ADMIN_EMAIL='#{JIRA_API_ADMIN_EMAIL}' does NOT exist or does NOT belong to both the 'jira-administrators' and the 'site-admins' groups.") unless admin_site_admin && admin_administrator
 
@@ -23,7 +23,14 @@ users_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/report-users.csv"
 goodbye('Cannot get users!') unless @users_assembla.length.nonzero?
 
 # name,key,accountId,emailAddress,displayName,active
-@existing_users_jira = jira_get_users
+# @existing_users_jira = jira_get_users
+# accountId,displayName,active
+@existing_users_jira = jira_get_all_users
+
+puts "Existings users: #{@existing_users_jira.length}"
+@existing_users_jira.each do |user|
+  puts "accountId='#{user['accountId']}' displayName='#{user['displayName']}' active='#{user['active']}'"
+end
 
 @users_jira = []
 # assembla => jira
@@ -44,23 +51,23 @@ goodbye('Cannot get users!') unless @users_assembla.length.nonzero?
     puts "username='#{username}' does NOT have a valid email => SKIP"
     next
   end
-  # u1 = jira_get_user_by_username(@existing_users_jira, username)
-  u1 = jira_get_user_by_email(@existing_users_jira, email)
+  u1 = jira_get_user_by_username(@existing_users_jira, username)
+  # u1 = jira_get_user_by_email(@existing_users_jira, email)
   if u1
     # User exists so add to list
     puts "username='#{username}', email='#{email}' already exists => SKIP"
-    @users_jira << { 'assemblaId': user['id'], 'assemblaLogin': user['login'] }.merge(u1)
+    @users_jira << { 'assemblaId': user['id'], 'assemblaLogin': user['login'], 'emailAddress': user['email'] }.merge(u1)
   else
     # User does not exist so create if possible and add to list
     puts "username='#{username}', email='#{email}' not found => CREATE"
     u2 = jira_create_user(user)
     if u2
-      @users_jira << { 'assemblaId': user['id'], 'assemblaLogin': user['login'] }.merge(u2)
+      @users_jira << { 'assemblaId': user['id'], 'assemblaLogin': user['login'], 'emailAddress': user['email'] }.merge(u2)
     end
   end
 end
 
-# jira-users.csv => assemblaid,assemblaloginkey,accountid,name,emailaddress,displayname,active
+# jira-users.csv => assemblaid,assemblalogin,emailAddress,accountid,name,displayname,active
 jira_users_csv = "#{OUTPUT_DIR_JIRA}/jira-users.csv"
 write_csv_file(jira_users_csv, @users_jira)
 

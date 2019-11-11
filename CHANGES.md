@@ -28,5 +28,24 @@ a2lmZmluLmdpc2hAcGxhbmV0OktsRmZoU1MxcDJBaklMOER6eEdTRTNFQQ==
 $ curl --request GET --user 'kiffin.gish@planet.nl:KlFfhSS1p2AjIL8DzxGSE3EA' --header 'Accept: application/json' --url 'https://gishtech.atlassian.net/rest/api/2/user/bulk/migration?username=kiffin.gish'
 [{"username":"kiffin.gish","accountId":"5c1b0a2b81c1261667adbc97"}]✔ 
 
+```
 $ curl -v --request GET --user 'kiffin.gish@planet.nl:KlFfhSS1p2AjIL8DzxGSE3EA' --header 'Accept: application/json' --url 'https://gishtech.atlassian.net/rest/api/2/user/bulk/migration?username=kiffin.gish'
 ```
+
+## Create User
+
+```
+curl --request POST \
+  --url 'https://gishtech.atlassian.net/rest/api/2/user' \
+  --user 'kiffin.gish@planet.nl:KlFfhSS1p2AjIL8DzxGSE3EA' \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+  "password": "abracadabra",
+  "emailAddress": "mia@atlassian.com",
+  "displayName": "Mia Krystof",
+  "name": ""
+}'
+```
+
+curl --request POST --url 'https://gishtech.atlassian.net/rest/api/2/user' --user 'kiffin.gish@planet.nl:KlFfhSS1p2AjIL8DzxGSE3EA' --header 'Accept: application/json' --header 'Content-Type: application/json' --data '{ "emailAddress": "unknown-1@example.org", "displayName": "Unknown #1" }'
