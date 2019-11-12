@@ -197,6 +197,7 @@ JIRA_SERVER_TYPE=cloud
 JIRA_API_BASE=https://jira.example.org
 JIRA_API_HOST=rest/api/2
 JIRA_API_PROJECT_NAME=Project Name
+JIRA_API_KEY=secret
 # Project type must be scrum (default) or kanban
 JIRA_API_PROJECT_TYPE=scrum
 JIRA_API_ADMIN_USER=john.doe
@@ -580,7 +581,7 @@ Execute the following script to have this done:
 $ ruby 11-jira_import_custom_fields.rb
 ```
 
-If any custom fields fail to be created, a list will be generated which you can use to fix manually to the Jira project. For example,
+If any custom fields fail to be created, a list will be generated which you can use to fix manually to the Jira project, something like this:
 
 ```
 IMPORTANT: the following custom JIRA fields MUST be linked to the Scrum Default and Scrum Bug screens.
@@ -593,11 +594,26 @@ IMPORTANT: The following custom JIRA fields are LISTS and you MUST configure the
 * Rates => ["1", "2", "3", "5", "8"]
 ```
 
-Select the given custom field.
+So clearly we have two IMPORTANT actions to take care of manually before we continue to the next step.
+
+1. The first action is to link the listed custom fields to the two screens mentioned above.
+
+Select the given screen name.
 ![](images/jira-import-custom-fields-1.png)
 
-Configure it to include the correct item(s).
+In the issues configure screen at the very bottom you will find a select field in which you can enter the name of the given custome field which needs to be added to the sreen..
 ![](images/jira-import-custom-fields-2.png)
+
+For every listed custome field, please repeat this twice, once for the scrum default issue screen and once for the scrum bug screen.
+
+2. The second action is to configure the the listed custom fields and add the options shown. 
+
+Select the given custom field.
+![](images/jira-import-custom-fields-3.png)
+
+Configure it to include the correct item(s).
+![](images/jira-import-custom-fields-4.png)
+
 
 ### Import tickets
 
