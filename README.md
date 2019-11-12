@@ -580,7 +580,24 @@ Execute the following script to have this done:
 $ ruby 11-jira_import_custom_fields.rb
 ```
 
-If any custom fields fail to be created, a list will be generated which you can use to fix manually to the Jira project.
+If any custom fields fail to be created, a list will be generated which you can use to fix manually to the Jira project. For example,
+
+```
+IMPORTANT: the following custom JIRA fields MUST be linked to the Scrum Default and Scrum Bug screens.
+* Coverage => type='List'
+* Rates => type='List'
+* Explanation => type='Text'
+
+IMPORTANT: The following custom JIRA fields are LISTS and you MUST configure them and add the given options.
+* Coverage => ["Low", "Medium", "High"]
+* Rates => ["1", "2", "3", "5", "8"]
+```
+
+Select the given custom field.
+![](images/jira-import-custom-fields-1.png)
+
+Configure it to include the correct item(s).
+![](images/jira-import-custom-fields-2.png)
 
 ### Import tickets
 
