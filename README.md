@@ -167,6 +167,10 @@ You will also need to configure the `issue type scheme` for the project like thi
 
 ![](images/jira-issue-type-schemes.png)
 
+Finally you will need to acquire an API token for authentication which will be as the value of `JIRA_API_KEY` (see below).
+
+Instructions how how to do that can be found [here](https://confluence.atlassian.com/cloud/api-tokens-938839638.html).
+
 ### Environment
 
 An example configuration file `.env.example` is provided for you to define a number environment parameters which affect the behavior.
@@ -260,7 +264,46 @@ end
 
 where the value of `response['deploymentType']` is used: `Server => hosted` or `Cloud => cloud`. This value is cached in the `jira-serverinfo.csv` dump file.
 
-Make sure you're using your Atlassian account email address and password for basic authentication, not your Jira username.
+Make sure you're using your Atlassian account email address and API token for basic authentication, not your Jira username.
+
+## Authentication
+
+All HTTP requests made to the server must be authenticated. This is taken care for you in the `common.rb` file loacted in the `lib` directory. For those interested in the
+nitty gritty details, this is what the code looks like for the cloud:
+
+```ruby
+JIRA_API_ADMIN_USER = ENV['JIRA_API_ADMIN_USER'].freeze
+JIRA_API_KEY = ENV['JIRA_API_KEY'].freeze
+
+base64_admin = Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + JIRA_API_KEY).gsub(/\n/, '')
+
+JIRA_HEADERS_ADMIN = {
+  'Authorization': "Basic " + base64_admin,
+  'Content-Type': 'application/json; charset=utf-8',
+  'Accept': 'application/json'
+}.freeze
+```
+
+Note: since `Base64.encode64` will automatically insert newlines for strings which are too long, we need to remove them with `gsub(/\n/, '')`.
+
+The API calls are all made using `rest-client` gem, something like this:
+
+```
+def jira_do_something(...)
+  url = "..."
+  payload = {
+    ...
+  }.json
+  begin
+    response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN)
+    result = JSON.parse(response.body)
+    puts "POST #{url} => OK"
+  rescue => e
+    puts "POST #{url} => NOK (#{e.message})"
+  end
+  result
+end
+```
 
 ## Export data from Assembla
 
