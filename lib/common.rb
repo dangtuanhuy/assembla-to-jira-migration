@@ -247,6 +247,7 @@ JIRA_HEADERS_ADMIN = {
 def headers_user_login(user_login, user_email)
   return JIRA_HEADERS_ADMIN if JIRA_SERVER_TYPE == 'hosted'
   { 'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json; charset=utf-8' }
+  # { 'Authorization': "Basic #{Base64.encode64(user_email + ':' + JIRA_API_KEY).gsub(/\n/, '')}", 'Content-Type': 'application/json; charset=utf-8' }
 end
 
 def get_hierarchy_type(n)

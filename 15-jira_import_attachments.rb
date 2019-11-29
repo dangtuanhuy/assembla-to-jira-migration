@@ -90,12 +90,13 @@ end
   next if counter < restart_offset
 
   payload = { mulitpart: true, file: File.new(filepath, 'rb') }
-  base64_encoded = if created_by != JIRA_API_ADMIN_USER
-                     Base64.encode64(created_by + ':' + created_by)
-                   else
-                     Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
-                   end
-  headers = { 'Authorization': "Basic #{base64_encoded}", 'X-Atlassian-Token': 'no-check' }
+  # base64_encoded = if created_by != JIRA_API_ADMIN_USER
+  #                    Base64.encode64(created_by + ':' + created_by)
+  #                  else
+  #                    Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
+  #                  end
+  # headers = { 'Authorization': "Basic #{base64_encoded}", 'X-Atlassian-Token': 'no-check' }
+  headers = JIRA_HEADERS_ADMIN.merge({'X-Atlassian-Token': 'no-check' })
   percentage = ((counter * 100) / @total_attachments).round.to_s.rjust(3)
 
   begin

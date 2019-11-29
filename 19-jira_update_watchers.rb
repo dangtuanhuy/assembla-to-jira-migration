@@ -67,7 +67,8 @@ end
 def jira_update_watcher(issue_id, watcher, counter)
   result = nil
   watcher_email = @jira_name_to_email[watcher]
-  headers = headers_user_login(watcher, watcher_email)
+  # headers = headers_user_login(watcher, watcher_email)
+  headers = JIRA_HEADERS_ADMIN
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/watchers"
   payload = "\"#{watcher}\""
   percentage = ((counter * 100) / @total_assembla_tickets).round.to_s.rjust(3)

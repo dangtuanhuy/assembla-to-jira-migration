@@ -133,7 +133,8 @@ def jira_get_transitions(issue_id)
   user_login = @jira_id_to_login[issue_id]
   user_login.sub!(/@.*$/, '')
   user_email = @user_login_to_email[user_login]
-  headers = headers_user_login(user_login, user_email)
+  # headers = headers_user_login(user_login, user_email)
+  headers = JIRA_HEADERS_ADMIN
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/transitions"
   begin
     response = RestClient::Request.execute(method: :get, url: url, headers: headers)
@@ -233,7 +234,8 @@ def jira_update_status(issue_id, assembla_status, counter)
   user_login = @jira_id_to_login[issue_id]
   user_login.sub!(/@.*$/, '')
   user_email = @user_login_to_email[user_login]
-  headers = headers_user_login(user_login, user_email)
+  # headers = headers_user_login(user_login, user_email)
+  headers = JIRA_HEADERS_ADMIN
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/transitions"
 
   percentage = ((counter * 100) / @total_assembla_tickets).round.to_s.rjust(3)
