@@ -81,6 +81,14 @@ $ bundle install
 
 At this point everything should be ready to use as explained in the following sections.
 
+## Supported API version
+
+Please note that only the following API versions are supported:
+
+* Assembla API v1 `api.assembla.com/v1`
+* JIRA API v2 `rest/api/2`
+
+
 ## Pipeline Steps
 
 The complete migration from start to finish consists of a series of scripts which are to be executed in order.
