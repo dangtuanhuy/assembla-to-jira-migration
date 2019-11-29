@@ -46,7 +46,7 @@ puts "Associations: #{@associations_assembla.length}"
 if tickets_created_on
   puts "\nFilter newer than: #{tickets_created_on}"
   tickets_initial = @tickets_assembla.length
-  @tickets_assembla.select! {|item| item_newer_than?(item, tickets_created_on)}
+  @tickets_assembla.select! { |item| item_newer_than?(item, tickets_created_on) }
   puts "Tickets: #{tickets_initial} => #{@tickets_assembla.length} ∆#{tickets_initial - @tickets_assembla.length}"
 else
   puts "\nTickets: #{@tickets_assembla.length}"
@@ -98,7 +98,7 @@ end
 @assembla_number_to_jira_key = {}
 
 def jira_get_field_by_name(name)
-  @fields_jira.find {|field| field['name'] == name}
+  @fields_jira.find { |field| field['name'] == name }
 end
 
 # 0 - Parent (ticket2 is parent of ticket1 and ticket1 is child of ticket2)
@@ -106,10 +106,10 @@ end
 def get_parent_issue(ticket)
   issue = nil
   ticket1_id = ticket['id']
-  association = @associations_assembla.find {|assoc| assoc['ticket1_id'] == ticket1_id && assoc['relationship_name'].match(/story|parent/)}
+  association = @associations_assembla.find { |assoc| assoc['ticket1_id'] == ticket1_id && assoc['relationship_name'].match(/story|parent/) }
   if association
     ticket2_id = association['ticket2_id']
-    issue = @jira_issues.find {|iss| iss[:assembla_ticket_id] == ticket2_id}
+    issue = @jira_issues.find { |iss| iss[:assembla_ticket_id] == ticket2_id }
   else
     puts "Could not find parent_id for ticket_id=#{ticket1_id}"
   end
@@ -129,22 +129,22 @@ end
 def get_milestone(ticket)
   id = ticket['milestone_id']
   name = id && id.length.positive? ? (@milestone_id_to_name[id] || id) : 'unknown milestone'
-  {id: id, name: name}
+  { id: id, name: name }
 end
 
 def get_issue_type(ticket)
   result = case ticket['hierarchy_type'].to_i
            when 1
-             {id: @issue_type_name_to_id['sub-task'], name: 'sub-task'}
+             { id: @issue_type_name_to_id['sub-task'], name: 'sub-task' }
            when 2
-             {id: @issue_type_name_to_id['story'], name: 'story'}
+             { id: @issue_type_name_to_id['story'], name: 'story' }
            when 3
-             {id: @issue_type_name_to_id['epic'], name: 'epic'}
+             { id: @issue_type_name_to_id['epic'], name: 'epic' }
            else
              if JIRA_ISSUE_DEFAULT_TYPE
-               {id: @issue_type_name_to_id[JIRA_ISSUE_DEFAULT_TYPE], name: JIRA_ISSUE_DEFAULT_TYPE}
+               { id: @issue_type_name_to_id[JIRA_ISSUE_DEFAULT_TYPE], name: JIRA_ISSUE_DEFAULT_TYPE }
              else
-               {id: @issue_type_name_to_id['task'], name: 'task'}
+               { id: @issue_type_name_to_id['task'], name: 'task' }
              end
            end
 
@@ -152,7 +152,7 @@ def get_issue_type(ticket)
   ASSEMBLA_TYPES_EXTRA.each do |s|
     # if ticket['summary'] =~ /^#{s}/i
     if /^#{s}/i.match?(ticket['summary'])
-      result = {id: @issue_type_name_to_id[s], name: s}
+      result = { id: @issue_type_name_to_id[s], name: s }
       break
     end
   end
@@ -165,6 +165,9 @@ def create_ticket_jira(ticket, counter, total)
   ticket_id = ticket['id']
   ticket_number = ticket['number']
   summary = reformat_markdown(ticket['summary'], logins: @assembla_login_to_jira_name, images: @list_of_images, content_type: 'summary', tickets: @assembla_number_to_jira_key)
+  if JIRA_API_ASSEMBLA_ID_IN_TITLE
+    summary = "##{ticket_number} #{summary}"
+  end
   created_on = ticket['created_on']
   completed_date = date_format_yyyy_mm_dd(ticket['completed_date'])
   reporter_id = ticket['reporter_id']
@@ -213,12 +216,12 @@ def create_ticket_jira(ticket, counter, total)
   payload = {
       'create': {},
       'fields': {
-          'project': {'id': project_id},
+          'project': { 'id': project_id },
           'summary': summary,
-          'issuetype': {'id': issue_type[:id]},
-          'reporter': {'name': reporter_name},
-          'assignee': {'name': assignee_name},
-          'priority': {'name': priority_name},
+          'issuetype': { 'id': issue_type[:id] },
+          'reporter': { 'name': reporter_name },
+          'assignee': { 'name': assignee_name },
+          'priority': { 'name': priority_name },
           'labels': labels,
           'description': description,
 
@@ -309,7 +312,7 @@ def create_ticket_jira(ticket, counter, total)
     else
       payload[:fields]["#{@customfield_name_to_id[k]}".to_sym] = value
     end
-      # puts "#{counter}: type='#{type}', key='#{k}', value='#{value}'"
+    # puts "#{counter}: type='#{type}', key='#{k}', value='#{value}'"
   end
 
   case issue_type[:name]
@@ -354,7 +357,7 @@ def create_ticket_jira(ticket, counter, total)
     ok = true
   rescue RestClient::ExceptionWithResponse => e
     error = JSON.parse(e.response)
-    message = error['errors'].map {|k, v| "#{k}: #{v}"}.join(' | ')
+    message = error['errors'].map { |k, v| "#{k}: #{v}" }.join(' | ')
     retries += 1
     recover = false
     if retries < MAX_RETRY
@@ -555,7 +558,7 @@ puts "\nJira fields:"
 @fields_jira = jira_get_fields
 goodbye('Cannot get fields!') unless @fields_jira
 
-@fields_jira.sort_by {|k| k['id']}.each do |field|
+@fields_jira.sort_by { |k| k['id'] }.each do |field|
   puts "#{field['id']} '#{field['name']}'" unless field['custom']
 end
 
@@ -563,7 +566,7 @@ end
 
 puts "\nJira custom fields:"
 
-@fields_jira.sort_by {|k| k['id']}.each do |field|
+@fields_jira.sort_by { |k| k['id'] }.each do |field|
   puts "#{field['id']} '#{field['name']}'" if field['custom'] && field['name'] !~ /Assembla/
 end
 
@@ -571,12 +574,12 @@ end
 
 puts "\nJira custom Assembla fields:"
 
-@fields_jira.sort_by {|k| k['id']}.each do |field|
+@fields_jira.sort_by { |k| k['id'] }.each do |field|
   puts "#{field['id']} '#{field['name']}'" if field['custom'] && field['name'] =~ /Assembla/
 end
 
 @all_custom_field_names = CUSTOM_FIELD_NAMES.dup
-@custom_fields_assembla.map {|field| field['title']}.each do |name|
+@custom_fields_assembla.map { |field| field['title'] }.each do |name|
   @all_custom_field_names << name
 end
 
@@ -617,7 +620,7 @@ end
 @total_tickets = @tickets_assembla.length
 
 # IMPORTANT: Make sure that the tickets are ordered chronologically from first (oldest) to last (newest)
-@tickets_assembla.sort! {|x, y| x['created_on'] <=> y['created_on']}
+@tickets_assembla.sort! { |x, y| x['created_on'] <=> y['created_on'] }
 
 @jira_issues = []
 @jira_ticket_links = []
@@ -674,7 +677,7 @@ tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 write_csv_file(tickets_jira_csv, @jira_issues)
 
 puts "Total unresolved ticket links: #{@jira_ticket_links.length}"
-puts "[#{@jira_ticket_links.map {|rec| rec[:jira_ticket_key]}.join(',')}]"
+puts "[#{@jira_ticket_links.map { |rec| rec[:jira_ticket_key] }.join(',')}]"
 ticket_links_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-ticket-links.csv"
 write_csv_file(ticket_links_jira_csv, @jira_ticket_links)
 

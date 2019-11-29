@@ -1,23 +1,15 @@
 # frozen_string_literal: true
 
 load './lib/common.rb'
-
 load './lib/users-jira.rb'
 
-def jira_delete_user(user)
-  url = "#{JIRA_API_HOST}/user?accountId=#{user['accountId']}"
-  begin
-    RestClient::Request.execute(method: :delete, url: url, headers: JIRA_HEADERS_ADMIN)
-    puts "DELETE #{url} username='#{user['name']}' => OK"
-  rescue => e
-    puts "DELETE #{url} username='#{user['name']}' => NOK (#{e})"
-  end
-end
+exit unless confirm('WARNING: You are about to delete all users, are you sure?')
 
-@jira_administrators = jira_get_group('jira-administrators')
+@jira_all_users = jira_get_all_users
 
-# name,key,accountId,emailAddress,displayName,active
-jira_get_users.each do |user|
-  next if user['emailAddress'] == JIRA_API_ADMIN_EMAIL
+# accountId,displayName,active
+@jira_all_users.each do |user|
+  display_name = user['displayName']
+  next if @jira_ignore_users.include?(display_name)
   jira_delete_user(user)
 end

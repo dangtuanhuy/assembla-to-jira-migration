@@ -197,6 +197,7 @@ JIRA_SERVER_TYPE=cloud
 JIRA_API_BASE=https://jira.example.org
 JIRA_API_HOST=rest/api/2
 JIRA_API_PROJECT_NAME=Project Name
+JIRA_API_KEY=secret
 # Project type must be scrum (default) or kanban
 JIRA_API_PROJECT_TYPE=scrum
 JIRA_API_ADMIN_USER=john.doe
@@ -205,6 +206,7 @@ JIRA_API_ADMIN_EMAIL=john.doe@example.org
 JIRA_API_UNKNOWN_USER=unknown.user
 JIRA_API_DEFAULT_EMAIL=example.org
 JIRA_API_IMAGES_THUMBNAIL=description:false,comments:true
+JIRA_API_ASSEMBLA_ID_IN_TITLE=true
 JIRA_API_SKIP_EMPTY_COMMENTS=true
 JIRA_API_SKIP_COMMIT_COMMENTS=true
 
@@ -313,7 +315,15 @@ If you also want to capture the output, then you can run the above commands like
 
 ```
 $ ruby nn-assembla_xxx.rb | tee logs/nn-assembla_xxx.log
+```
 
+In other words:
+
+```
+$ ruby 01-assembla_export_space.rb | tee logs/01-assembla_export_space.log
+$ ruby 02-assembla_export_tickets.rb | tee logs/02-assembla_export_tickets.log
+$ ruby 03-assembla_report_users.rb | tee logs/03-assembla_report_users.log
+$ ruby 04-assembla_report_tickets.rb | tee logs/04-assembla_report_tickets.log
 ```
 
 And watch the progress as follows:
@@ -572,7 +582,39 @@ Execute the following script to have this done:
 $ ruby 11-jira_import_custom_fields.rb
 ```
 
-If any custom fields fail to be created, a list will be generated which you can use to fix manually to the Jira project.
+If any custom fields fail to be created, a list will be generated which you can use to fix manually to the Jira project, something like this:
+
+```
+IMPORTANT: the following custom JIRA fields MUST be linked to the Scrum Default and Scrum Bug screens.
+* Coverage => type='List'
+* Rates => type='List'
+* Explanation => type='Text'
+
+IMPORTANT: The following custom JIRA fields are LISTS and you MUST configure them and add the given options.
+* Coverage => ["Low", "Medium", "High"]
+* Rates => ["1", "2", "3", "5", "8"]
+```
+
+So clearly we have two IMPORTANT actions to take care of manually before we continue to the next step.
+
+1. The first action is to link the listed custom fields to the two screens mentioned above.
+
+Select the given screen name.
+![](images/jira-import-custom-fields-1.png)
+
+In the issues configure screen at the very bottom you will find a select field in which you can enter the name of the given custome field which needs to be added to the sreen..
+![](images/jira-import-custom-fields-2.png)
+
+For every listed custome field, please repeat this twice, once for the scrum default issue screen and once for the scrum bug screen.
+
+2. The second action is to configure the the listed custom fields and add the options shown. 
+
+Select the given custom field.
+![](images/jira-import-custom-fields-3.png)
+
+Configure it to include the correct item(s).
+![](images/jira-import-custom-fields-4.png)
+
 
 ### Import tickets
 
@@ -615,6 +657,14 @@ if custom_field
   payload[:fields]["#{@customfield_name_to_id[assembla_custom_field]}".to_sym] = custom_field
 end
 ```
+
+
+If you would like to put the original Assembla ticket id in the Jira issue title, then make sure that the following line is present in the `.env` settings:
+
+```
+JIRA_API_ASSEMBLA_ID_IN_TITLE=true
+```
+The title will be formatted as `#1234 Title`.
 
 Now you are ready to import all of the tickets. Execute the following command:
 
@@ -814,7 +864,7 @@ POST /rest/api/2/issueLink
     id: ticket2_id
   }
 }
-```
+``` 
 
 However, since Jira already takes care of a number of issue links during issue creation (story, subtask, etc), we should disable them in the `.env` configuration file like this:
 

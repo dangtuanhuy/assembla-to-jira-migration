@@ -125,8 +125,14 @@ def jira_create_comment(issue_id, user_id, comment, counter)
   result = nil
   url = "#{URL_JIRA_ISSUES}/#{issue_id}/comment"
   user_login = @assembla_id_to_jira_name[user_id]
-  user_email = @user_id_to_email[user_id]
-  headers = headers_user_login_comment(user_login, user_email)
+  if user_login
+    user_email = @user_id_to_email[user_id]
+  else
+    user_login = JIRA_API_UNKNOWN_USER
+    user_email = user_login + '@' + JIRA_API_DEFAULT_EMAIL
+  end
+  # headers = headers_user_login_comment(user_login, user_email)
+  headers = JIRA_HEADERS_ADMIN
   reformatted_body = reformat_markdown(comment['comment'], logins: @assembla_login_to_jira_name,
                                        images: @list_of_images, content_type: 'comments', strikethru: true)
   body = "Created on #{date_time(comment['created_on'])}\n\n#{reformatted_body}"
