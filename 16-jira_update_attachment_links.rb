@@ -23,8 +23,8 @@ if tickets_created_on
   puts "Filter newer than: #{tickets_created_on}"
   tickets_initial = @tickets_assembla.length
   comments_initial = @comments_assembla.length
-  @tickets_assembla.select! {|item| item_newer_than?(item, tickets_created_on)}
-  @comments_assembla.select! {|item| item_newer_than?(item, tickets_created_on)}
+  @tickets_assembla.select! { |item| item_newer_than?(item, tickets_created_on) }
+  @comments_assembla.select! { |item| item_newer_than?(item, tickets_created_on) }
   puts "Tickets: #{tickets_initial} => #{@tickets_assembla.length} ∆#{tickets_initial - @tickets_assembla.length}"
   puts "Comments: #{comments_initial} => #{@comments_assembla.length} ∆#{comments_initial - @comments_assembla.length}"
 else
@@ -163,7 +163,7 @@ end
     assembla_attachment_filename = match[1] ? match[1][1..-1] : '(null)'
     jira_attachment_id = @attachment_a_id_to_j_id[assembla_attachment_id]
     jira_attachment_filename = @attachment_j_id_to_j_filename[jira_attachment_id]
-    @comments_with_links << { jira_comment_body: comment['body'], assembla_ticket_number: assembla_ticket_number, assembla_comment_id: assembla_comment_id,assembla_attachment_id: assembla_attachment_id, assembla_attachment_filename: assembla_attachment_filename, jira_issue_key: jira_issue_key, jira_comment_id: jira_comment_id, jira_attachment_id: jira_attachment_id, jira_attachment_filename: jira_attachment_filename }
+    @comments_with_links << { jira_comment_body: comment['body'], assembla_ticket_number: assembla_ticket_number, assembla_comment_id: assembla_comment_id, assembla_attachment_id: assembla_attachment_id, assembla_attachment_filename: assembla_attachment_filename, jira_issue_key: jira_issue_key, jira_comment_id: jira_comment_id, jira_attachment_id: jira_attachment_id, jira_attachment_filename: jira_attachment_filename }
   end
 end
 

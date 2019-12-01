@@ -458,7 +458,7 @@ end
 if @project
   puts "Found project '#{JIRA_API_PROJECT_NAME}' id='#{@project['id']}' key='#{@project['key']}'"
 else
-  @project = jira_create_project(JIRA_API_PROJECT_NAME, JIRA_API_PROJECT_TYPE)
+  @project = jira_create_project(JIRA_API_PROJECT_NAME, JIRA_PROJECT_KEY, JIRA_API_PROJECT_TYPE)
   if @project
     puts "Created project '#{JIRA_API_PROJECT_NAME}' id='#{@project['id']}' key='#{@project['key']}'"
   else

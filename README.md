@@ -204,7 +204,8 @@ JIRA_SERVER_TYPE=cloud
 # Base must start with 'https?://'
 JIRA_API_BASE=https://jira.example.org
 JIRA_API_HOST=rest/api/2
-JIRA_API_PROJECT_NAME=Project Name
+JIRA_API_PROJECT_NAME=name
+JIRA_API_PROJECT_KEY=key
 JIRA_API_KEY=secret
 # Project type must be scrum (default) or kanban
 JIRA_API_PROJECT_TYPE=scrum
@@ -1017,7 +1018,7 @@ $ ruby 23-jira_rank_tickets.rb
 You are now ready to setup the scrum board, create sprints, and assign issues to the correct sprints as well as the backlog. In the `.env` file, take notice of the following values:
 
 ```
-JIRA_API_PROJECT_NAME=Project Name
+JIRA_API_PROJECT_NAME=name
 JIRA_API_PROJECT_TYPE=scrum
 JIRA_BOARD_NAME=name:Scrum Board Name
 ```

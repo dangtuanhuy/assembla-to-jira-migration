@@ -49,6 +49,7 @@ JIRA_API_IMAGES_THUMBNAIL = (ENV['JIRA_API_IMAGES_THUMBNAIL'] || 'description:fa
 JIRA_API_USER_GROUPS = (ENV['JIRA_API_USER_GROUPS'] || 'jira-administrators,jira-core-users,site-admins,jira-software-users').freeze
 
 JIRA_API_PROJECT_NAME = ENV['JIRA_API_PROJECT_NAME'].freeze
+JIRA_API_PROJECT_KEY = ENV['JIRA_API_PROJECT_KEY'].freeze
 
 # Jira project type us 'scrum' by default
 JIRA_API_PROJECT_TYPE = (ENV['JIRA_API_PROJECT_TYPE'] || 'scrum').freeze
@@ -471,10 +472,10 @@ end
 #
 # where '#{type}' must be either 'scrum' or 'kanban'
 #
-def jira_create_project(project_name, project_type)
+def jira_create_project(project_name, project_key, project_type)
   goodbye("Invalid project type=#{project_type}, must be 'scrum' or 'kanban'") unless %w(scrum kanban).include?(project_type)
   result = nil
-  key = jira_build_project_key(project_name)
+  key = jira_build_project_key(project_key)
   account_id = jira_get_user_account_id(JIRA_API_ADMIN_USER)
   payload = {
     key: key,
