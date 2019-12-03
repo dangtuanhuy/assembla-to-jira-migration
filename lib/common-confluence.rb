@@ -25,6 +25,7 @@ DOCUMENTS = ENV['DOCUMENTS'] || 'data/confluence/documents'
 WIKI = ENV['ASSEMBLA_WIKI'] || throw('ASSEMBLA_WIKI must be defined')
 WIKI_NAME = ENV['ASSEMBLA_WIKI_NAME'] || throw('ASSEMBLA_WIKI_NAME must be defined')
 API = ENV['CONFLUENCE_API'] || throw('CONFLUENCE_API must be defined')
+API_KEY = ENV['CONFLUENCE_API_KEY'] || throw('CONFLUENCE_API_KEY must be defined')
 SPACE = ENV['CONFLUENCE_SPACE'] || throw('CONFLUENCE_SPACE must be defined')
 EMAIL = ENV['CONFLUENCE_EMAIL'] || throw('CONFLUENCE_EMAIL must be defined')
 PASSWORD = ENV['CONFLUENCE_PASSWORD'] || throw('CONFLUENCE_PASSWORD must be defined')
@@ -58,10 +59,12 @@ puts
 [DATA, IMAGES, DOCUMENTS].each { |dir| Dir.mkdir(dir) unless File.exist?(dir) }
 
 # Authentication header
+base64_admin = Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + JIRA_API_KEY).gsub(/\n/, '')
+
 HEADERS = {
-  'Authorization': "Basic #{Base64.encode64("#{EMAIL}:#{PASSWORD}")}",
-  'Content-Type': 'application/json; charset=utf-8',
-  'Accept': 'application/json'
+    'Authorization': "Basic #{base64_admin}",
+    'Content-Type': 'application/json; charset=utf-8',
+    'Accept': 'application/json'
 }.freeze
 
 def fix_text(text)
@@ -72,21 +75,21 @@ end
 # by the confluence api, e.g. avoid the dreaded 'error parsing xhtml' error.
 def fix_html(html)
   result = html.
-    gsub('<package>', '&lt;package&gt;').
-    # replace all strike-tags with del-tags.
-    gsub(/<strike[^>]*?>/, '<del>').
-    gsub('</strike>', '</del>').
-    # remove all span-, font- or colgroup-tags
-    gsub(%r{</?(span|font|colgroup)([^>]*?)>}, '').
-    # strip down all h-tags
-    gsub(/(<h[1-6])(.*?)>/, '\1>').
-    # fix all unclosed col- and img-tags
-    gsub(%r{(<(col|img)[^>]+)(?<!/)>}, '\1/>').
-    # strip down all li tags
-    gsub(/<li[^>]*?>/, '<li>').
-    # strip down all br-tags and ensure closed.
-    gsub(/<wbr(.*?)>/, '<wbr/>').
-    gsub(/<br(.*?)>/, '<br/>')
+      gsub('<package>', '&lt;package&gt;').
+      # replace all strike-tags with del-tags.
+      gsub(/<strike[^>]*?>/, '<del>').
+      gsub('</strike>', '</del>').
+      # remove all span-, font- or colgroup-tags
+      gsub(%r{</?(span|font|colgroup)([^>]*?)>}, '').
+      # strip down all h-tags
+      gsub(/(<h[1-6])(.*?)>/, '\1>').
+      # fix all unclosed col- and img-tags
+      gsub(%r{(<(col|img)[^>]+)(?<!/)>}, '\1/>').
+      # strip down all li tags
+      gsub(/<li[^>]*?>/, '<li>').
+      # strip down all br-tags and ensure closed.
+      gsub(/<wbr(.*?)>/, '<wbr/>').
+      gsub(/<br(.*?)>/, '<br/>')
   begin
     result = HtmlBeautifier.beautify(result)
   rescue RuntimeError => e

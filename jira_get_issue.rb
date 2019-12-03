@@ -2,12 +2,12 @@
 
 load './lib/common.rb'
 
-issue_id = 'TRAVELCOMM-431'
-fields = %w{summary description}
+fields = %w{summary description duedate}
 
 def jira_get_issue_fields(issue_id, fields)
   result = nil
   url = "#{URL_JIRA_ISSUES}/#{issue_id}?#{fields.join('&')}"
+  #url = "#{URL_JIRA_ISSUES}/#{issue_id}?fields=*all"
   begin
     response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
     result = JSON.parse(response.body)
@@ -31,4 +31,3 @@ if results
     puts "------"
   end
 end
-

@@ -19,23 +19,9 @@ end
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
 @jira_tickets_csv = csv_to_array(tickets_jira_csv).select { |ticket| ticket['result'] == 'OK' }
 
-tickets_jira_csv_org = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv.org"
-@jira_tickets_csv_org = csv_to_array(tickets_jira_csv_org).select { |ticket| ticket['result'] == 'OK' } if File.exist?(tickets_jira_csv_org)
-
 # Check for duplicates just in case.
 @assembla_nr_to_jira_key = {}
 duplicates = []
-if File.exist?(tickets_jira_csv_org)
-  @jira_tickets_csv_org.sort_by { |ticket| ticket['assembla_ticket_number'].to_i }.each do |ticket|
-    nr = ticket['assembla_ticket_number']
-    key = ticket['jira_ticket_key']
-    if @assembla_nr_to_jira_key[nr]
-      duplicates << { nr: nr, key: key }
-    else
-      @assembla_nr_to_jira_key[nr] = key
-    end
-  end
-end
 
 @jira_tickets_csv.sort_by { |ticket| ticket['assembla_ticket_number'].to_i }.each do |ticket|
   nr = ticket['assembla_ticket_number']
@@ -148,12 +134,12 @@ def get_all_links
 
       counter += 1
       links << {
-        id: id,
-        counter: counter,
-        title: title,
-        tag: 'image',
-        value: value,
-        text: ''
+          id: id,
+          counter: counter,
+          title: title,
+          tag: 'image',
+          value: value,
+          text: ''
       }
     end
 
@@ -165,12 +151,12 @@ def get_all_links
       text = m[1]
       counter += 1
       links << {
-        id: id,
-        counter: counter,
-        title: title,
-        tag: 'anchor',
-        value: value,
-        text: text
+          id: id,
+          counter: counter,
+          title: title,
+          tag: 'anchor',
+          value: value,
+          text: text
       }
     end
 
@@ -180,12 +166,12 @@ def get_all_links
       text = m[1]
       counter += 1
       links << {
-        id: id,
-        counter: counter,
-        title: title,
-        tag: 'markdown',
-        value: value,
-        text: text
+          id: id,
+          counter: counter,
+          title: title,
+          tag: 'markdown',
+          value: value,
+          text: text
       }
     end
 
@@ -195,12 +181,12 @@ def get_all_links
       text = m[1]
       counter += 1
       links << {
-        id: id,
-        counter: counter,
-        title: title,
-        tag: 'code',
-        value: value,
-        text: text
+          id: id,
+          counter: counter,
+          title: title,
+          tag: 'code',
+          value: value,
+          text: text
       }
     end
 
@@ -212,12 +198,12 @@ def get_all_links
       text = m[1]
       counter += 1
       links << {
-        id: id,
-        counter: counter,
-        title: title,
-        tag: 'url',
-        value: value,
-        text: text
+          id: id,
+          counter: counter,
+          title: title,
+          tag: 'url',
+          value: value,
+          text: text
       }
     end
   end
@@ -276,31 +262,31 @@ def create_page_item(id, offset)
                                          @created_pages.length + 1,
                                          @total_wiki_pages)
   @created_pages <<
-    if result
-      {
-        result: error ? 'NOK' : 'OK',
-        page_id: page_id,
-        id: result['id'],
-        offset: offset.join('-'),
-        title: title_stripped,
-        author: author,
-        created_at: created_at,
-        body: error ? body : '',
-        error: error || ''
-      }
-    else
-      {
-        result: 'NOK',
-        page_id: page_id,
-        id: 0,
-        offset: offset.join('-'),
-        title: title_stripped,
-        author: author,
-        created_at: created_at,
-        body: body,
-        error: error
-      }
-    end
+      if result
+        {
+            result: error ? 'NOK' : 'OK',
+            page_id: page_id,
+            id: result['id'],
+            offset: offset.join('-'),
+            title: title_stripped,
+            author: author,
+            created_at: created_at,
+            body: error ? body : '',
+            error: error || ''
+        }
+      else
+        {
+            result: 'NOK',
+            page_id: page_id,
+            id: 0,
+            offset: offset.join('-'),
+            title: title_stripped,
+            author: author,
+            created_at: created_at,
+            body: body,
+            error: error
+        }
+      end
 end
 
 # GET /v1/spaces/:space_id/documents/:id
@@ -511,11 +497,14 @@ end
 @c_to_w_page_id = {}
 @w_to_c_page_id = {}
 @c_page_id_to_title = {}
+
+def wiki_page_id_converter
 # result,page_id,id,offset,title,author,created_at,body,error
-csv_to_array(CREATED_PAGES_CSV).each do |page|
-  @c_to_w_page_id[page['id']] = page['page_id']
-  @w_to_c_page_id[page['page_id']] = page['id']
-  @c_page_id_to_title[page['id']] = page['title']
+  csv_to_array(CREATED_PAGES_CSV).each do |page|
+    @c_to_w_page_id[page['id']] = page['page_id']
+    @w_to_c_page_id[page['page_id']] = page['id']
+    @c_page_id_to_title[page['id']] = page['title']
+  end
 end
 
 def upload_all_images
@@ -574,12 +563,12 @@ def upload_all_images
         result = confluence_create_attachment(confluence_page_id, filepath, index + 1, total_images)
         confluence_image_id = result ? result['results'][0]['id'] : nil
         @uploaded_images << {
-          result: result ? 'OK' : 'NOK',
-          confluence_image_id: confluence_image_id,
-          wiki_image_id: wiki_image_id,
-          basename: basename,
-          confluence_page_id: confluence_page_id,
-          link_url: link_url
+            result: result ? 'OK' : 'NOK',
+            confluence_image_id: confluence_image_id,
+            wiki_image_id: wiki_image_id,
+            basename: basename,
+            confluence_page_id: confluence_page_id,
+            link_url: link_url
         }
         if result
           confluence_update_attachment(confluence_page_id, confluence_image_id, content_type, index + 1, total_images)
@@ -648,12 +637,12 @@ def upload_all_documents
         result = confluence_create_attachment(confluence_page_id, filepath, index + 1, total_documents)
         confluence_document_id = result ? result['results'][0]['id'] : nil
         @uploaded_documents << {
-          result: result ? 'OK' : 'NOK',
-          confluence_document_id: confluence_document_id,
-          wiki_document_id: wiki_document_id,
-          basename: basename,
-          confluence_page_id: confluence_page_id,
-          link_url: link_url
+            result: result ? 'OK' : 'NOK',
+            confluence_document_id: confluence_document_id,
+            wiki_document_id: wiki_document_id,
+            basename: basename,
+            confluence_page_id: confluence_page_id,
+            link_url: link_url
         }
         if result
           confluence_update_attachment(confluence_page_id, confluence_document_id, content_type, index + 1, total_documents)
@@ -674,6 +663,11 @@ end
 def update_all_image_links
 
   puts "\n--- Update all image links ---\n"
+
+  unless File.file?(UPLOADED_IMAGES_CSV)
+    puts "File '#{UPLOADED_IMAGES_CSV}' does not exist => SKIP"
+    return
+  end
 
   confluence_page_ids = {}
 
@@ -902,6 +896,11 @@ def update_all_md_url_links
 
   puts "\n--- Update all markdown url links ---\n"
 
+  unless File.file?(UPLOADED_DOCUMENTS_CSV)
+    puts "File '#{UPLOADED_DOCUMENTS_CSV}' does not exist => SKIP"
+    return
+  end
+
   confluence_page_ids = {}
 
   # result,confluence_document_id,wiki_document_id,basename,confluence_page_id,link_url
@@ -916,8 +915,12 @@ def update_all_md_url_links
     text = url['text']
     wiki_page_id = url['id']
     confluence_page_id = @w_to_c_page_id[wiki_page_id]
-    confluence_page_ids[confluence_page_id] = [] unless confluence_page_ids[confluence_page_id]
-    confluence_page_ids[confluence_page_id] << { value: value, text: text }
+    if confluence_page_id
+      confluence_page_ids[confluence_page_id] = [] unless confluence_page_ids[confluence_page_id]
+      confluence_page_ids[confluence_page_id] << { value: value, text: text }
+    else
+      puts "Cannot find confluence_page_id for wiki_page_id='#{wiki_page_id}' => SKIP"
+    end
   end
 
   total = confluence_page_ids.length
@@ -984,10 +987,10 @@ def update_all_md_url_links
         puts "* value='#{value}' text='#{text}' => OK"
       else
         nok << {
-          page_id: c_page_id,
-          title: @c_page_id_to_title[c_page_id],
-          value: value,
-          text: text
+            page_id: c_page_id,
+            title: @c_page_id_to_title[c_page_id],
+            value: value,
+            text: text
         }
         puts "* value='#{value}' text='#{text}' #{regexp_error ? 'regexp error ' : ''}=> NOK"
       end
@@ -1006,6 +1009,14 @@ end
 def update_all_document_links
   confluence_page_ids = {}
   total = 0
+
+  puts "\n--- Update all document links: #{total} ---\n"
+
+  unless File.file?(UPLOADED_DOCUMENTS_CSV)
+    puts "File '#{UPLOADED_DOCUMENTS_CSV}' does not exist => SKIP"
+    return
+  end
+
   # result,confluence_document_id,wiki_document_id,basename,confluence_page_id,link_url
   csv_to_array(UPLOADED_DOCUMENTS_CSV).each do |item|
     next unless item['result'] == 'OK'
@@ -1013,15 +1024,13 @@ def update_all_document_links
     confluence_page_id = item['confluence_page_id']
     confluence_page_ids[confluence_page_id] = [] unless confluence_page_ids[confluence_page_id]
     confluence_page_ids[confluence_page_id] << {
-      confluence_document_id: item['confluence_document_id'],
-      wiki_document_id: item['wiki_document_id'],
-      basename: item['basename'],
-      link_url: item['link_url']
+        confluence_document_id: item['confluence_document_id'],
+        wiki_document_id: item['wiki_document_id'],
+        basename: item['basename'],
+        link_url: item['link_url']
     }
     total += 1
   end
-
-  puts "\n--- Update all document links: #{total} ---\n"
 
   total = confluence_page_ids.length
   counter = 0
@@ -1097,11 +1106,11 @@ def update_all_ticket_links
     confluence_page_id = @w_to_c_page_id[ticket['id']]
     confluence_page_ids[confluence_page_id] = [] unless confluence_page_ids[confluence_page_id]
     confluence_page_ids[confluence_page_id] << {
-      result: result,
-      value: value,
-      text: text,
-      assembla_ticket_nr: assembla_ticket_nr,
-      jira_issue_key: jira_issue_key
+        result: result,
+        value: value,
+        text: text,
+        assembla_ticket_nr: assembla_ticket_nr,
+        jira_issue_key: jira_issue_key
     }
     total += 1
   end
@@ -1195,10 +1204,10 @@ def check_for_tickets
       issue_key = @assembla_nr_to_jira_key[ticket_nr] || 'unknown'
       puts "* #{ticket_nr} => #{issue_key}"
       list << {
-        ticket_nr: ticket_nr,
-        issue_key: issue_key,
-        page_id: page_id,
-        page_title: page_title
+          ticket_nr: ticket_nr,
+          issue_key: issue_key,
+          page_id: page_id,
+          page_title: page_title
       }
     end
   end
@@ -1224,8 +1233,8 @@ def check_for_tickets
     key = "#{page_id}|#{page_title}"
     page_ids[key] = [] unless page_ids[key]
     page_ids[key] << {
-      ticket_nr: item['ticket_nr'],
-      issue_key: item['issue_key']
+        ticket_nr: item['ticket_nr'],
+        issue_key: item['issue_key']
     }
     puts "ticket_nr='#{item['ticket_nr']}' issue_key='#{item['issue_key']}' page_id='#{item['page_id']}' page_title='#{item['page_title']}'"
   end
@@ -1255,6 +1264,7 @@ def check_for_tickets
 end
 
 upload_all_pages
+wiki_page_id_converter
 update_all_page_links
 upload_all_images
 update_all_image_links

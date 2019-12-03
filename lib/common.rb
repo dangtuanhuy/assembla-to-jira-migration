@@ -172,24 +172,24 @@ end
 
 # The following custom fields MUST be defined AND associated with the proper screens
 CUSTOM_FIELD_NAMES = [
-  'Assembla-Id',
-  'Assembla-Milestone',
-  'Assembla-Status',
-  'Assembla-Reporter',
-  'Assembla-Assignee',
-  'Assembla-Completed',
-  'Assembla-Estimate', # => 0=None, 1=Small, 3=Medium, 7=Large
-  'Assembla-Worked',
-  'Assembla-Remaining',
-  'Assignee',
-  'Epic Link',
-  'Epic Name',
-  'Labels',
-  'Rank',
-  'Resolution',
-  'Sprint',
-  'Story Points',
-  'Time Tracking'
+    'Assembla-Id',
+    'Assembla-Milestone',
+    'Assembla-Status',
+    'Assembla-Reporter',
+    'Assembla-Assignee',
+    'Assembla-Completed',
+    'Assembla-Estimate', # => 0=None, 1=Small, 3=Medium, 7=Large
+    'Assembla-Worked',
+    'Assembla-Remaining',
+    'Assignee',
+    'Epic Link',
+    'Epic Name',
+    'Labels',
+    'Rank',
+    'Resolution',
+    'Sprint',
+    'Story Points',
+    'Time Tracking'
 ].freeze
 
 JIRA_AGILE_HOST = "#{JIRA_API_BASE}/#{ENV['JIRA_AGILE_HOST']}"
@@ -238,9 +238,9 @@ base64_admin = if JIRA_SERVER_TYPE == 'hosted'
                end
 
 JIRA_HEADERS_ADMIN = {
-  'Authorization': "Basic #{base64_admin}",
-  'Content-Type': 'application/json; charset=utf-8',
-  'Accept': 'application/json'
+    'Authorization': "Basic #{base64_admin}",
+    'Content-Type': 'application/json; charset=utf-8',
+    'Accept': 'application/json'
 }.freeze
 
 # Assuming that the user name is the same as the user password
@@ -358,9 +358,9 @@ end
 
 def assembla_get_spaces
   response = http_request("#{ASSEMBLA_API_HOST}/spaces")
-  result = JSON.parse(response.body)
-  result&.each do |r|
-    r.delete_if { |k, _| k.to_s =~ /tabs_order/i }
+    result = JSON.parse(response.body)
+    result&.each do |r|
+      r.delete_if { |k, _| k.to_s =~ /tabs_order/i }
   end
   result
 end
@@ -395,14 +395,14 @@ def get_items(items, space)
       full_url = url
       full_url += "&page=#{page}" if more_pages
       response = http_request(full_url)
-      count = get_response_count(response)
-      if count.positive?
-        JSON.parse(response).each do |rec|
-          item[:results] << rec
-        end
-        if more_pages && count == per_page
-          page += 1
-          in_progress = true
+        count = get_response_count(response)
+        if count.positive?
+          JSON.parse(response).each do |rec|
+            item[:results] << rec
+          end
+          if more_pages && count == per_page
+            page += 1
+            in_progress = true
         end
       end
     end
@@ -478,14 +478,14 @@ def jira_create_project(project_name, project_key, project_type)
   key = jira_build_project_key(project_key)
   account_id = jira_get_user_account_id(JIRA_API_ADMIN_USER)
   payload = {
-    key: key,
-    name: project_name,
-    projectTypeKey: 'software',
-    description: "Description of project '#{project_name}'",
-    projectTemplateKey: "com.pyxis.greenhopper.jira:gh-#{project_type}-template",
-    # No longer supported.
-    # lead: JIRA_API_ADMIN_USER
-    leadAccountId: account_id
+      key: key,
+      name: project_name,
+      projectTypeKey: 'software',
+      description: "Description of project '#{project_name}'",
+      projectTemplateKey: "com.pyxis.greenhopper.jira:gh-#{project_type}-template",
+      # No longer supported.
+      # lead: JIRA_API_ADMIN_USER
+      leadAccountId: account_id
   }.to_json
   begin
     response = RestClient::Request.execute(method: :post, url: URL_JIRA_PROJECTS, payload: payload, headers: JIRA_HEADERS_ADMIN)
@@ -725,10 +725,10 @@ end
 def jira_create_custom_field(name, description, type, searcherKey)
   result = nil
   payload = {
-    name: name,
-    description: description,
-    type: type,
-    searcherKey: searcherKey
+      name: name,
+      description: description,
+      type: type,
+      searcherKey: searcherKey
   }.to_json
   begin
     response = RestClient::Request.execute(method: :post, url: URL_JIRA_FIELDS, payload: payload, headers: JIRA_HEADERS_ADMIN)
@@ -766,14 +766,14 @@ def jira_create_user(user)
   end
   displayName = user['name']
   payload = {
-    # name: username,
-    # password: username,
-    # TODO: Make the following configurable and not hard-coded.
-    emailAddress: email,
-    displayName: displayName,
-    # Only works if no password
-    # https://jira.atlassian.com/browse/JRACLOUD-67680
-    notification: false
+      # name: username,
+      # password: username,
+      # TODO: Make the following configurable and not hard-coded.
+      emailAddress: email,
+      displayName: displayName,
+      # Only works if no password
+      # https://jira.atlassian.com/browse/JRACLOUD-67680
+      notification: false
   }.to_json
   begin
     response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: JIRA_HEADERS_ADMIN, timeout: 30)
@@ -866,7 +866,7 @@ end
 def jira_get_board_by_project_name(project_name)
   result = nil
   url = URL_JIRA_BOARDS
-  key = jira_build_project_key(project_name)
+  key = JIRA_API_PROJECT_KEY
   begin
     response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
     body = JSON.parse(response.body)
@@ -985,15 +985,15 @@ def reformat_markdown(content, opts = {})
     end
     line.gsub!(/#(\d+)\b/) { |ticket| markdown_ticket_link(ticket, tickets, strikethru) } if tickets
     markdown << line.
-      gsub(/<pre><code>/i, '{code:java}').
-      gsub(/<\/code><\/pre>/i, '{code}').
-      gsub(/\[\[url:(.*?)\|(.*?)\]\]/i, '[\2|\1]').
-      gsub(/\[\[url:(.*?)\]\]/i, '[\1|\1]').
-      gsub(/<code>(.*?)<\/code>/i, '{{\1}}').
-      gsub(/@([^@]*)@( |$)/, '{{\1}}\2').
-      gsub(/@([a-z._-]*)/i) { |name| markdown_name(name, logins) }.
-      gsub(/\[\[user:(.*?)(\|(.*?))?\]\]/i) { |name| markdown_name(name, logins) }.
-      gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, content_type) }
+        gsub(/<pre><code>/i, '{code:java}').
+        gsub(/<\/code><\/pre>/i, '{code}').
+        gsub(/\[\[url:(.*?)\|(.*?)\]\]/i, '[\2|\1]').
+        gsub(/\[\[url:(.*?)\]\]/i, '[\1|\1]').
+        gsub(/<code>(.*?)<\/code>/i, '{{\1}}').
+        gsub(/@([^@]*)@( |$)/, '{{\1}}\2').
+        gsub(/@([a-z._-]*)/i) { |name| markdown_name(name, logins) }.
+        gsub(/\[\[user:(.*?)(\|(.*?))?\]\]/i) { |name| markdown_name(name, logins) }.
+        gsub(/\[\[image:(.*?)(\|(.*?))?\]\]/i) { |image| markdown_image(image, images, content_type) }
   end
   markdown.join("\n")
 end

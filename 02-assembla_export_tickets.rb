@@ -12,17 +12,17 @@ else
 end
 
 ITEMS = [
-    {name: 'ticket_comments', per_page: 10},
+    { name: 'ticket_comments', per_page: 10 },
     # ticket-comments.csv
     # id,comment,user_id,created_on,updated_at,ticket_changes,user_name,user_avatar_url,ticket_id,ticket_number
-    {name: 'attachments'},
+    { name: 'attachments' },
     # ticket-attachments.csv
     # name,content_type,created_by,id,version,filename,filesize,updated_by,description,cached_tag_list,position,url,
     # created_at,updated_at,attachable_type,has_thumbnail,space_id,attachable_id,attachable_guid,ticket_id,ticket_number
-    {name: 'tags'},
+    { name: 'tags' },
     # ticket-tags.csv
     # id,name,space_id,state,created_at,updated_at,color,ticket_id,ticket_number
-    {name: 'ticket_associations', relationship: true}
+    { name: 'ticket_associations', relationship: true }
 # ticket-associations.csv
 # id,ticket1_id,ticket2_id,relationship,created_at,ticket_id,ticket_number,relationship_name
 ].freeze
@@ -52,14 +52,14 @@ def get_ticket_attr(space_id, ticket_number, attr, per_page, opts)
     full_url = url
     full_url += "&page=#{page}" if per_page
     response = http_request(full_url, opts)
-    count = get_response_count(response)
-    if count.positive?
-      JSON.parse(response.body).each do |result|
-        results << result
-      end
-      if per_page && count == per_page
-        page += 1
-        in_progress = true
+      count = get_response_count(response)
+      if count.positive?
+        JSON.parse(response.body).each do |result|
+          results << result
+        end
+        if per_page && count == per_page
+          page += 1
+          in_progress = true
       end
     end
   end
