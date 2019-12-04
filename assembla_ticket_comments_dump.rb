@@ -39,7 +39,7 @@ end
 comments_dump_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-comments-dump.csv"
 @comments_dump_assembla = csv_to_array(comments_dump_assembla_csv)
 
-found = []
+@found = []
 @comments_dump_assembla.each do |comment|
   # Skip empty comments
   next if comment['comment'].nil? || comment['comment'].strip.empty?
@@ -54,17 +54,20 @@ found = []
     unless @tickets[ticket_number].detect { |c| c['id'] == comment_id }
       comment['comment'].gsub!('\\n', "\n")
       @tickets[ticket_number] << comment
-      found << { number: ticket_number, id: comment_id}
+      @found << { number: ticket_number, id: comment_id, comment: comment['comment'] }
     end
   else
     puts "Cannot find ticket_number for ticket_id='#{ticket_id}' => SKIP"
   end
 end
 
-puts "New comments found: #{found.length}"
-found.each do |f|
-  puts "ticket_number='#{f[:number]}' comment_id='#{f[:id]}'"
-end
+puts "New comments @found: #{@found.length}"
+#@found.each do |f|
+#  puts "ticket_number='#{f[:number]}' comment_id='#{f[:id]}'"
+#  puts "---"
+#  puts "'#{f[:comment]}'"
+#  puts "---"
+#end
 
 @ticket_numbers = []
 @tickets.each do |ticket_number, comments|
@@ -74,23 +77,21 @@ end
 
 @ticket_numbers.sort_by { |tn| tn.to_i }
 
+@total_comments = 0
 @ticket_numbers.each do |ticket_number|
   puts "ticket_number = #{ticket_number}"
   comments = @tickets[ticket_number]
   comments.each_with_index do |comment, index|
+    @total_comments += 1
     comment_id = comment['id']
     created_on = comment['created_on']
-    puts "- #{index} #{comment_id} #{created_on}"
-    comment_comment = if comment['comment'].nil? || comment['comment'].strip.empty?
-                        comment['ticket_changes']
-                      else
-                        comment['comment']
-                      end
-    puts "-----"
-    puts comment_comment
-    puts "-----"
+    puts "- #{index + 1} #{comment_id} #{created_on}"
   end
 end
+
+puts
+puts "Found comments: #{@found.length}"
+puts "Total comments: #{@total_comments}"
 
 # id,ticket_id,user_id,created_on,updated_at,comment,ticket_changes,rendered
 #comments_dump_assembla_csv = "#{OUTPUT_DIR_ASSEMBLA}/ticket-comments-dump-3.csv"
