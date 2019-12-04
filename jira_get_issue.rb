@@ -23,6 +23,9 @@ def jira_get_issue_fields(issue_id, fields)
   result
 end
 
+issue_id = 'OOPM-1412'
+
+
 results = jira_get_issue_fields(issue_id, fields)
 if results
   fields.each do |field|
