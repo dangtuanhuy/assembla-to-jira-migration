@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-JIRA_API_USER_ATTRIBUTES = %w{name key accountId emailAddress displayName active}.freeze
 
 def jira_get_user_by_username(users_jira, username)
   return users_jira.detect { |user| user['name'] == username }
@@ -41,7 +40,7 @@ def jira_get_group(group_name)
 end
 
 # name,key,accountId,displayName,active,accountType
-def jira_get_users
+def jira_get_all_users
   users_jira = []
   JIRA_API_USER_GROUPS.split(',').each do |group|
     jira_get_group(group).each do |user|

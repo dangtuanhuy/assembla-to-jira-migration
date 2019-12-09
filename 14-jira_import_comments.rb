@@ -3,6 +3,22 @@
 load './lib/common.rb'
 load './lib/users-jira.rb'
 
+# Set to true if you just want to run and verify this script without actually importing any comments.
+DRY_RUN = false
+
+def dry_run_enabled(show)
+  if DRY_RUN && show
+    puts
+    puts '----------'
+    puts 'DRY RUN enabled!'
+    puts '----------'
+    puts
+  end
+  return DRY_RUN
+end
+
+dry_run_enabled(true)
+
 # Jira tickets
 # result,retries,message,jira_ticket_id,jira_ticket_key,project_id,summary,issue_type_id,issue_type_name,assignee_name,reporter_name,priority_name,status_name,labels,description,assembla_ticket_id,assembla_ticket_number,milestone_name,story_rank
 tickets_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-tickets.csv"
@@ -156,6 +172,13 @@ def jira_create_comment(issue_id, user_id, comment, counter)
   }.to_json
   percentage = ((counter * 100) / @comments_total).round.to_s.rjust(3)
   begin
+    if dry_run_enabled(false)
+      puts "issue_id='#{issue_id}' user_login='#{user_login}'"
+      puts '-----'
+      puts "'#{body}'"
+      puts '-----'
+      return
+    end
     response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
     result = JSON.parse(response.body)
     # Dry run: uncomment the following two lines and comment out the previous two lines.
@@ -212,6 +235,9 @@ end
   else
     result = jira_create_comment(issue_id, user_id, comment, counter)
   end
+
+  next if dry_run_enabled(false)
+
   if result
     comment_id = result['id']
     comment = {
@@ -237,6 +263,8 @@ end
     @total_imported_nok += 1
   end
 end
+
+return if dry_run_enabled(true)
 
 puts "Total imported: #{@total_imported}"
 puts @comments_jira_csv

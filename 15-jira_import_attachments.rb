@@ -42,7 +42,7 @@ downloaded_attachments_csv = "#{OUTPUT_DIR_JIRA}/jira-attachments-download.csv"
 puts "Total attachments: #{@total_attachments}"
 
 # Filter for ok tickets only
-@downloaded_attachments.select! { |c| @is_ticket_id[c['assembla_ticket_id']]}
+@downloaded_attachments.select! { |c| @is_ticket_id[c['assembla_ticket_id']] }
 @total_attachments = @downloaded_attachments.length
 
 puts "Total attachments after: #{@total_attachments}"
@@ -96,13 +96,32 @@ end
   #                    Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])
   #                  end
   # headers = { 'Authorization': "Basic #{base64_encoded}", 'X-Atlassian-Token': 'no-check' }
-  headers = JIRA_HEADERS_ADMIN.merge({'X-Atlassian-Token': 'no-check' })
+  headers = JIRA_HEADERS_ADMIN.merge({ 'X-Atlassian-Token': 'no-check' })
   percentage = ((counter * 100) / @total_attachments).round.to_s.rjust(3)
 
   begin
     response = RestClient::Request.execute(method: :post, url: url, payload: payload, headers: headers)
     result = JSON.parse(response.body)
+
+    # result = [{
+    #    "self": "http://www.example.com/jira/rest/api/2/attachments/10000",
+    #    "id": "10001",
+    #    "filename": "picture.jpg",
+    #    "author": { ... },
+    #    "created": "2019-12-03T06:07:46.143+0000",
+    #    "size": 23123,
+    #    "mimeType": "image/jpeg",
+    #    "content": "http://www.example.com/jira/attachments/10000",
+    #    "thumbnail": "http://www.example.com/jira/secure/thumbnail/10000"
+    # }]
+
     jira_attachment_id = result[0]['id']
+    jira_attachment_filename = result[0]['filename']
+    jira_attachment_created = result[0]['created']
+    jira_attachment_size = result[0]['size']
+    jira_attachment_mimetype = result[0]['mimeType']
+    jira_attachment_content = result[0]['content']
+    jira_attachment_thumbnail = result[0]['thumbnail']
     # Dry run: uncomment the following line and comment out the previous three lines.
     # jira_attachment_id = counter.even? ? counter : nil
     puts "#{percentage}% [#{counter}|#{@total_attachments}] POST #{url} '#{filename}' (#{content_type}) => OK"
@@ -114,29 +133,35 @@ end
   end
   if jira_attachment_id
     attachment_ok = {
-      jira_attachment_id: jira_attachment_id,
-      jira_ticket_id: jira_ticket_id,
-      jira_ticket_key: jira_ticket_key,
-      assembla_attachment_id: assembla_attachment_id,
-      assembla_ticket_id: assembla_ticket_id,
-      assembla_ticket_nr: assembla_ticket_nr,
-      created_at: created_at,
-      filename: filename,
-      content_type: content_type
+        jira_attachment_id: jira_attachment_id,
+        jira_attachment_filename: jira_attachment_filename,
+        jira_attachment_created: jira_attachment_created,
+        jira_attachment_size: jira_attachment_size,
+        jira_attachment_mimetype: jira_attachment_mimetype,
+        jira_attachment_content: jira_attachment_content,
+        jira_attachment_thumbnail: jira_attachment_thumbnail,
+        jira_ticket_id: jira_ticket_id,
+        jira_ticket_key: jira_ticket_key,
+        assembla_attachment_id: assembla_attachment_id,
+        assembla_ticket_id: assembla_ticket_id,
+        assembla_ticket_nr: assembla_ticket_nr,
+        created_at: created_at,
+        filename: filename,
+        content_type: content_type
     }
     write_csv_file_append(@attachments_ok_jira_csv, [attachment_ok], @total_attachments_ok.zero?)
     @total_attachments_ok += 1
   else
     attachment_nok = {
-      jira_ticket_id: jira_ticket_id,
-      jira_ticket_key: jira_ticket_key,
-      assembla_attachment_id: assembla_attachment_id,
-      assembla_ticket_id: assembla_ticket_id,
-      assembla_ticket_nr: assembla_ticket_nr,
-      created_at: created_at,
-      filename: filename,
-      content_type: content_type,
-      message: message
+        jira_ticket_id: jira_ticket_id,
+        jira_ticket_key: jira_ticket_key,
+        assembla_attachment_id: assembla_attachment_id,
+        assembla_ticket_id: assembla_ticket_id,
+        assembla_ticket_nr: assembla_ticket_nr,
+        created_at: created_at,
+        filename: filename,
+        content_type: content_type,
+        message: message
     }
     write_csv_file_append(@attachments_nok_jira_csv, [attachment_nok], @total_attachments_nok.zero?)
     @total_attachments_nok += 1

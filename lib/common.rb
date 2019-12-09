@@ -46,7 +46,7 @@ JIRA_API_DEFAULT_EMAIL = (ENV['JIRA_API_DEFAULT_EMAIL'] || 'example.org').gsub(/
 JIRA_API_UNKNOWN_USER = ENV['JIRA_API_UNKNOWN_USER'].freeze
 
 JIRA_API_IMAGES_THUMBNAIL = (ENV['JIRA_API_IMAGES_THUMBNAIL'] || 'description:false,comments:true').freeze
-JIRA_API_USER_GROUPS = (ENV['JIRA_API_USER_GROUPS'] || 'jira-administrators,jira-core-users,site-admins,jira-software-users').freeze
+JIRA_API_USER_GROUPS = (ENV['JIRA_API_USER_GROUPS'] || 'administrators,jira-administrators,jira-core-users,site-admins,jira-software-users').freeze
 
 JIRA_API_PROJECT_NAME = ENV['JIRA_API_PROJECT_NAME'].freeze
 JIRA_API_PROJECT_KEY = ENV['JIRA_API_PROJECT_KEY'].freeze
@@ -82,12 +82,9 @@ JIRA_API_STATUSES = ENV['JIRA_API_STATUSES']
 
 MAX_RETRY = 3
 
-# Insert the original assembly id in the jira issue title field: '#1234 Title...'
-JIRA_API_ASSEMBLA_ID_IN_TITLE = ENV['JIRA_API_ASSEMBLA_ID_IN_TITLE'] || false
-
 # By default we skip empty (body = "" or nil) and commit comments (contains 'Commit: [[r:...]]' text)
-JIRA_API_SKIP_EMPTY_COMMENTS = ENV['JIRA_API_SKIP_EMPTY_COMMENTS'] || true
-JIRA_API_SKIP_COMMIT_COMMENTS = ENV['JIRA_API_SKIP_COMMIT_COMMENTS'] || true
+JIRA_API_SKIP_EMPTY_COMMENTS = ENV['JIRA_API_SKIP_EMPTY_COMMENTS'] == 'true'
+JIRA_API_SKIP_COMMIT_COMMENTS = ENV['JIRA_API_SKIP_COMMIT_COMMENTS'] == 'true'
 
 def csv_to_array(pathname)
   csv = CSV::parse(File.open(pathname) { |f| f.read })
@@ -358,9 +355,9 @@ end
 
 def assembla_get_spaces
   response = http_request("#{ASSEMBLA_API_HOST}/spaces")
-    result = JSON.parse(response.body)
-    result&.each do |r|
-      r.delete_if { |k, _| k.to_s =~ /tabs_order/i }
+  result = JSON.parse(response.body)
+  result&.each do |r|
+    r.delete_if { |k, _| k.to_s =~ /tabs_order/i }
   end
   result
 end
@@ -395,14 +392,14 @@ def get_items(items, space)
       full_url = url
       full_url += "&page=#{page}" if more_pages
       response = http_request(full_url)
-        count = get_response_count(response)
-        if count.positive?
-          JSON.parse(response).each do |rec|
-            item[:results] << rec
-          end
-          if more_pages && count == per_page
-            page += 1
-            in_progress = true
+      count = get_response_count(response)
+      if count.positive?
+        JSON.parse(response).each do |rec|
+          item[:results] << rec
+        end
+        if more_pages && count == per_page
+          page += 1
+          in_progress = true
         end
       end
     end
@@ -501,18 +498,18 @@ def jira_create_project(project_name, project_key, project_type)
   result
 end
 
-def jira_get_all_users
-  result = nil
-  url = URL_JIRA_USERS
-  begin
-    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
-    result = JSON.parse(response)
-    puts "GET #{url} => OK (#{result.length})"
-  rescue => e
-    puts "GET #{url} => NOK (#{e.message})"
-  end
-  result
-end
+#def jira_get_all_users
+#  result = nil
+#  url = URL_JIRA_USERS
+#  begin
+#    response = RestClient::Request.execute(method: :get, url: url, headers: JIRA_HEADERS_ADMIN)
+#    result = JSON.parse(response)
+#    puts "GET #{url} => OK (#{result.length})"
+#  rescue => e
+#    puts "GET #{url} => NOK (#{e.message})"
+#  end
+#  result
+#end
 
 def jira_get_user_account_id(username)
   result = nil

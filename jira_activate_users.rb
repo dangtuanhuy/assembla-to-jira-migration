@@ -30,7 +30,7 @@ end
 @jira_administrators = jira_get_group('jira-administrators')
 
 # name,key,accountId,emailAddress,displayName,active
-jira_get_users.each do |user|
+jira_get_all_users.each do |user|
   next if user['emailAddress'] == JIRA_API_ADMIN_EMAIL
   jira_activate_user(user, ACTIVATE)
 end

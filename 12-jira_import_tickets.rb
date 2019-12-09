@@ -85,7 +85,7 @@ puts
 
 # Create a list of users who are inactive.
 @inactive_jira_users = []
-jira_get_users.each do |user|
+jira_get_all_users.each do |user|
   @inactive_jira_users << user['name'] unless user['active']
 end
 
@@ -165,9 +165,6 @@ def create_ticket_jira(ticket, counter, total)
   ticket_id = ticket['id']
   ticket_number = ticket['number']
   summary = reformat_markdown(ticket['summary'], logins: @assembla_login_to_jira_name, images: @list_of_images, content_type: 'summary', tickets: @assembla_number_to_jira_key)
-  if JIRA_API_ASSEMBLA_ID_IN_TITLE
-    summary = "##{ticket_number} #{summary}"
-  end
   created_on = ticket['created_on']
   completed_date = date_format_yyyy_mm_dd(ticket['completed_date'])
   reporter_id = ticket['reporter_id']

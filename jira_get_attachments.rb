@@ -2,8 +2,6 @@
 
 load './lib/common.rb'
 
-fields = %w{summary description duedate}
-
 def jira_get_issue_fields(issue_id, fields)
   result = nil
   url = "#{URL_JIRA_ISSUES}/#{issue_id}?#{fields.join('&')}"
@@ -24,13 +22,15 @@ def jira_get_issue_fields(issue_id, fields)
 end
 
 # DUMMY
-issue_id = 'OOPM-2695'
+#issue_id = 'OOPM-2695'
+# Example bad attachments bit
+issue_id = 'OOPM-2682'
 
-results = jira_get_issue_fields(issue_id, fields)
+results = jira_get_issue_fields(issue_id, ['attachment'])
 if results
-  fields.each do |field|
-    puts "--- #{field} ---"
-    puts results['fields'][field]
-    puts "------"
+  attachments = results['fields']['attachment']
+  puts "Attachments: #{attachments.length}"
+  attachments.each_with_index do |a, idx|
+    puts " #{idx + 1} id='#{a['id']}' filename='#{a['filename']}' mimeType='#{a['mimeType']}' content='#{a['content']}' thumbnail='#{a['thumbnail']}'"
   end
 end

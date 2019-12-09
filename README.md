@@ -215,7 +215,6 @@ JIRA_API_ADMIN_EMAIL=john.doe@example.org
 JIRA_API_UNKNOWN_USER=unknown.user
 JIRA_API_DEFAULT_EMAIL=example.org
 JIRA_API_IMAGES_THUMBNAIL=description:false,comments:true
-JIRA_API_ASSEMBLA_ID_IN_TITLE=true
 JIRA_API_SKIP_EMPTY_COMMENTS=true
 JIRA_API_SKIP_COMMIT_COMMENTS=true
 
@@ -666,15 +665,6 @@ if custom_field
   payload[:fields]["#{@customfield_name_to_id[assembla_custom_field]}".to_sym] = custom_field
 end
 ```
-
-
-If you would like to put the original Assembla ticket id in the Jira issue title, then make sure that the following line is present in the `.env` settings:
-
-```
-JIRA_API_ASSEMBLA_ID_IN_TITLE=true
-```
-The title will be formatted as `#1234 Title`.
-
 Now you are ready to import all of the tickets. Execute the following command:
 
 ```

@@ -2,7 +2,7 @@
 
 load './lib/common.rb'
 
-@customfield_story_points = 'customfield_10054'
+@customfield_story_points = 'customfield_10017'
 
 def jira_update_story_points(key, story_points)
   payload = {}

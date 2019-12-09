@@ -13,8 +13,10 @@ admin_administrator = @jira_administrators.detect { |user| user['emailAddress'] 
 @jira_site_admins = jira_get_group('site-admins')
 admin_site_admin = @jira_site_admins.detect { |user| user['emailAddress'] == JIRA_API_ADMIN_EMAIL }
 
+# You may have to uncomment out the following line to get things working
 goodbye("Admin user with JIRA_API_ADMIN_EMAIL='#{JIRA_API_ADMIN_EMAIL}' does NOT exist or does NOT belong to both the 'jira-administrators' and the 'site-admins' groups.") unless admin_site_admin && admin_administrator
 
+# You may have to uncomment out the following line to get things working
 goodbye("Admin user with JIRA_API_ADMIN_EMAIL='#{JIRA_API_ADMIN_EMAIL}' is NOT active, please activate user.") unless admin_site_admin['active'] && admin_administrator['active']
 
 # @user_assembla => count,id,login,name,picture,email,organization,phone,...
@@ -24,12 +26,12 @@ goodbye('Cannot get users!') unless @users_assembla.length.nonzero?
 
 # name,key,accountId,emailAddress,displayName,active
 # @existing_users_jira = jira_get_users
-# accountId,displayName,active
+# name,key,accountId,displayName,active,accountType
 @existing_users_jira = jira_get_all_users
 
 puts "Existings users: #{@existing_users_jira.length}"
-@existing_users_jira.each do |user|
-  puts "accountId='#{user['accountId']}' displayName='#{user['displayName']}' active='#{user['active']}'"
+@existing_users_jira.each do |u|
+  puts "name='#{u['name']}' key='#{u['key']}' accountId='#{u['accountId']}' displayName='#{u['displayName']}' active='#{u['active']}'"
 end
 
 @users_jira = []

@@ -2,7 +2,7 @@
 
 #
 # This script updates the 'duedate' field of all of the already imported jira issues using the 'due_date' field of
-# the associated alrwady exported assembla tickets.
+# the associated already exported assembla tickets.
 #
 
 load './lib/common.rb'
