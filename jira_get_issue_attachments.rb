@@ -24,7 +24,7 @@ end
 # DUMMY
 #issue_id = 'OOPM-2695'
 # Example bad attachments bit
-issue_id = 'OOPM-2682'
+issue_id = 'OOPM-1674'
 
 results = jira_get_issue_fields(issue_id, ['attachment'])
 if results
