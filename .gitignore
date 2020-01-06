@@ -57,3 +57,5 @@ build-iPhoneSimulator/
 .idea
 
 *.csv
+*.xls*
+screenshots/*
