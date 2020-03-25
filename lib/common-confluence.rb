@@ -59,7 +59,7 @@ puts
 [DATA, IMAGES, DOCUMENTS].each { |dir| Dir.mkdir(dir) unless File.exist?(dir) }
 
 # Authentication header
-base64_admin = Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + JIRA_API_KEY).gsub(/\n/, '')
+base64_admin = Base64.strict_encode64(JIRA_API_ADMIN_EMAIL + ':' + JIRA_API_KEY).gsub(/\n/, '')
 
 HEADERS = {
     'Authorization': "Basic #{base64_admin}",

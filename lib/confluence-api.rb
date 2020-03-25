@@ -199,7 +199,7 @@ def confluence_create_attachment(page_id, filepath, counter, total)
     }
   url = "#{API}/content/#{page_id}/child/attachment"
   headers = {
-    'Authorization': "Basic #{Base64.encode64("#{EMAIL}:#{PASSWORD}")}",
+    'Authorization': "Basic #{Base64.strict_encode64("#{EMAIL}:#{PASSWORD}")}",
     'Content-Type': 'application/json; charset=utf-8',
     'Accept': 'application/json',
     'X-Atlassian-Token': 'nocheck'

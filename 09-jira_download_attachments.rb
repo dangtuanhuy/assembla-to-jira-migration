@@ -62,7 +62,7 @@ end
 
 @attachments_total = @attachments_assembla.length
 
-@authorization = "Basic #{Base64.encode64(JIRA_API_ADMIN_USER + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])}"
+@authorization = "Basic #{Base64.strict_encode64(JIRA_API_ADMIN_USER + ':' + ENV['JIRA_API_ADMIN_PASSWORD'])}"
 
 attachments_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-attachments-download.csv"
 

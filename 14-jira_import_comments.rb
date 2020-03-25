@@ -130,7 +130,7 @@ def headers_user_login_comment(user_login, user_email)
   # Note: Jira cloud doesn't allow the user to create own comments, a user belonging to the jira-administrators
   # group must do that.
   headers_user_login(user_login, user_email)
-  # {'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json; charset=utf-8'}
+  # {'Authorization': "Basic #{Base64.strict_encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json; charset=utf-8'}
 end
 
 @comments_diffs_jira_csv = "#{OUTPUT_DIR_JIRA}/jira-comments-diffs.csv"

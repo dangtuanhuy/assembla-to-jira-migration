@@ -765,7 +765,7 @@ IMORTANT: For the cloud version, the import might fail initially with a `401 Una
 
 I was able to get things working by defining the following headers:
 ```
-auth = Base64.encode64(admin_email + ':' + admin_password)
+auth = Base64.strict_encode64(admin_email + ':' + admin_password)
 headers = { 'Authorization': "Basic #{auth}", 'X-Atlassian-Token': 'no-check' }
 ```
 
@@ -1436,7 +1436,7 @@ def headers_user_login(user_login, user_email)
   cloud = JIRA_SERVER_TYPE == 'cloud'
   user_login_or_email = cloud ? user_email : user_login
   user_password = user_login
-  base64_encoded = Base64.encode64(user_login_or_email + ':' + user_password)
+  base64_encoded = Base64.strict_encode64(user_login_or_email + ':' + user_password)
   {
     'Authorization': "Basic #{base64_encoded}",
     'Content-Type': 'application/json'

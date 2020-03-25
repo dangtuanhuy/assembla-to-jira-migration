@@ -228,10 +228,10 @@ unless /cloud|hosted/.match?(JIRA_SERVER_TYPE)
 end
 
 base64_admin = if JIRA_SERVER_TYPE == 'hosted'
-                 Base64.encode64(JIRA_API_ADMIN_USER + ':' + JIRA_API_ADMIN_PASSWORD)
+                 Base64.strict_encode64(JIRA_API_ADMIN_USER + ':' + JIRA_API_ADMIN_PASSWORD)
                else
-                 # Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + JIRA_API_ADMIN_PASSWORD)
-                 Base64.encode64(JIRA_API_ADMIN_EMAIL + ':' + JIRA_API_KEY).gsub(/\n/, '')
+                 # Base64.strict_encode64(JIRA_API_ADMIN_EMAIL + ':' + JIRA_API_ADMIN_PASSWORD)
+                 Base64.strict_encode64(JIRA_API_ADMIN_EMAIL + ':' + JIRA_API_KEY)
                end
 
 JIRA_HEADERS_ADMIN = {
@@ -244,8 +244,8 @@ JIRA_HEADERS_ADMIN = {
 # For the cloud we use the email otherwise login
 def headers_user_login(user_login, user_email)
   return JIRA_HEADERS_ADMIN if JIRA_SERVER_TYPE == 'hosted'
-  { 'Authorization': "Basic #{Base64.encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json; charset=utf-8' }
-  # { 'Authorization': "Basic #{Base64.encode64(user_email + ':' + JIRA_API_KEY).gsub(/\n/, '')}", 'Content-Type': 'application/json; charset=utf-8' }
+  { 'Authorization': "Basic #{Base64.strict_encode64(user_login + ':' + user_login)}", 'Content-Type': 'application/json; charset=utf-8' }
+  # { 'Authorization': "Basic #{Base64.strict_encode64(user_email + ':' + JIRA_API_KEY).gsub(/\n/, '')}", 'Content-Type': 'application/json; charset=utf-8' }
 end
 
 def get_hierarchy_type(n)
